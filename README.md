@@ -1,50 +1,102 @@
-# Welcome to your Expo app 👋
+# GrocerEase Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is the mobile application for GrocerEase, built using React Native with Expo.
 
-## Get started
+---
 
-1. Install dependencies
+# Development
 
-   ```bash
-   npm install
-   ```
+**Important Instructions For Source Control**:
 
-2. Start the app
+- Create **branch** for every development/fixes tasks
+  - For feature development create a branch with prefix `feat/`
+  - For bug fixes create a branch with prefix `fix/`
+- DO NOT push on **master or staging** branches directly, instead create a PRs.
+- DO NOT merge any PRs into **master** before review.
+- Before any branch creation from **staging** branch, make sure to pull the latest changes
 
-   ```bash
-   npx expo start
-   ```
+## Start Development
 
-In the output, you'll find options to open the app in a
+### Prerequisites
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Node.js (v18 or higher)
+- npm or yarn
+- Expo Go app (for testing on physical device)
+- Android Studio (for Android emulator) or Xcode (for iOS simulator)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### Clone the Repository
 
 ```bash
-npm run reset-project
+git clone https://github.com/Amr-Elharery/GrocerEase_app.git
+cd GrocerEase_app/prototype/grocerease_app
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Install Dependencies
 
-## Learn more
+```bash
+npm install
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+### Start Development Server
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm start
+# or
+npx expo start
+# or
+yarn start
+```
 
-## Join the community
+This will open the Expo Dev Tools. From there you can:
 
-Join our community of developers creating universal apps.
+- Press `a` to open in Android emulator
+- Press `i` to open in iOS simulator
+- Press `w` to open in web browser
+- Scan the QR code with Expo Go app on your phone
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Run on Specific Platform
+
+```bash
+npm run android    # Run on Android
+npm run ios        # Run on iOS
+npm run web        # Run on web
+```
+
+---
+
+# How to create branch and start working
+
+1. Create branch from staging branch
+   ```bash
+   git switch staging
+   git pull origin staging
+   git switch -c feat/your-feature-name
+   ```
+2. After completing your work, push your branch to remote
+   ```bash
+   git add .
+   git commit -m "Your commit message"
+   git push origin feat/your-feature-name
+   ```
+3. Create a Pull Request (PR) from your branch to staging branch on GitHub for review and merging.
+
+4. After PR is approved and merged, switch back to staging branch and pull the latest changes
+   ```bash
+   git switch staging
+   git pull origin staging
+   ```
+
+---
+
+# Notes
+
+- Please make sure to follow the above instructions carefully to maintain a clean and organized workflow.
+
+- Feel free to reach out if you have any questions or need assistance!
+
+- Good luck Team!
+
+---
+
+Best Regards,
+Amr Elharery
