@@ -1,0 +1,10 @@
+{
+  "common": {
+    "english": "الإنجليزية",
+    "arabic": "العربية"
+  },
+  "home": {
+    "edit": "حرر app/index.tsx لتعديل هذه الشاشة.",
+    "status": "NativeUI يعمل! 🎉"
+  }
+}

@@ -1,6 +1,10 @@
-import { Text, View } from 'react-native';
+import { setLanguage } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
+import { Pressable, Text, View } from 'react-native';
 
 export default function Index() {
+  const { t } = useTranslation();
+
   return (
     <View
       style={{
@@ -9,10 +13,34 @@ export default function Index() {
         alignItems: 'center',
       }}
     >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
+      <Text>{t('home.edit')}</Text>
       <Text className="text-2xl font-bold text-foreground">
-        NativeUI is working! 🎉
+        {t('home.status')}
       </Text>
+      <View style={{ flexDirection: 'row', marginTop: 16, gap: 12 }}>
+        <Pressable
+          onPress={() => setLanguage('en')}
+          style={{
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            borderWidth: 1,
+            borderRadius: 8,
+          }}
+        >
+          <Text>{t('common.english')}</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setLanguage('ar')}
+          style={{
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            borderWidth: 1,
+            borderRadius: 8,
+          }}
+        >
+          <Text>{t('common.arabic')}</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
