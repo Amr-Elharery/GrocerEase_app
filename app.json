@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "grocerease_app",
-    "slug": "grocerease_app",
+    "name": "Zad",
+    "slug": "Zad App",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "grocereaseapp",
+    "scheme": "zad",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
