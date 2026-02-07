@@ -1,21 +1,14 @@
-import { ThemeProvider } from '@/lib/theme-context';
-import { Text, View } from 'react-native';
-import './global.css';
+import { useEffect } from "react";
+import { useRouter } from "expo-router";
+
 export default function Index() {
-  return (
-    <ThemeProvider defaultTheme="system">
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <Text>Edit app/index.tsx to edit this screen.</Text>
-        <Text className="text-2xl font-bold text-foreground">
-          NativeUI is working! 🎉
-        </Text>
-      </View>
-    </ThemeProvider>
-  );
+  const router = useRouter();
+ useEffect(() => {
+  const timer = setTimeout(() => {
+    router.replace("/(tabs)/home");
+  }, 50); // 50ms delay
+
+  return () => clearTimeout(timer);
+}, [router]);
+
 }
