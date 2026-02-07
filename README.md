@@ -1,122 +1,50 @@
-# GrocerEase Mobile App
+# Welcome to your Expo app 👋
 
-This is the mobile application for GrocerEase, built using React Native with Expo.
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
----
+## Get started
 
-# Development
+1. Install dependencies
 
-**Important Instructions For Source Control**:
-
-- Create **branch** for every development/fixes tasks
-  - For feature development create a branch with prefix `feat/`
-  - For bug fixes create a branch with prefix `fix/`
-- DO NOT push on **master or staging** branches directly, instead create a PRs.
-- DO NOT merge any PRs into **master** before review.
-- Before any branch creation from **staging** branch, make sure to pull the latest changes
-
-## Start Development
-
-### Prerequisites
-
-- Node.js (v18 or higher)
-- npm or yarn
-- Expo Go app (for testing on physical device)
-- Android Studio (for Android emulator) or Xcode (for iOS simulator)
-
-### Clone the Repository
-
-```bash
-git clone https://github.com/Amr-Elharery/GrocerEase_app.git
-cd GrocerEase_app/prototype/grocerease_app
-```
-
-### Install Dependencies
-
-```bash
-npm install
-```
-
-### I18n Setup
-
-We use `i18next` + `react-i18next` + `expo-localization`.
-
-Install the packages:
-
-```bash
-npm install i18next react-i18next expo-localization
-```
-
-Translations are stored in [locales/en.json](locales/en.json) and [locales/ar.json](locales/ar.json) using namespaces (e.g., `common`, `home`).
-
-Switch language in code with `setLanguage('en')` / `setLanguage('ar')` from [lib/i18n/index.ts](lib/i18n/index.ts).
-
-### Add new screen (i18n)
-
-1. Create the screen file under [app/](app/) (Expo Router uses file-based routing). Example: [app/profile.tsx](app/profile.tsx).
-2. Add translation keys to [locales/en.json](locales/en.json) and [locales/ar.json](locales/ar.json) under a namespace for the screen (e.g., `profile`).
-3. Use the keys in the screen with `t('profile.title')` or similar.
-
-### Start Development Server
-
-```bash
-npm start
-# or
-npx expo start
-# or
-yarn start
-```
-
-This will open the Expo Dev Tools. From there you can:
-
-- Press `a` to open in Android emulator
-- Press `i` to open in iOS simulator
-- Press `w` to open in web browser
-- Scan the QR code with Expo Go app on your phone
-
-### Run on Specific Platform
-
-```bash
-npm run android    # Run on Android
-npm run ios        # Run on iOS
-npm run web        # Run on web
-```
-
----
-
-# How to create branch and start working
-
-1. Create branch from staging branch
    ```bash
-   git switch staging
-   git pull origin staging
-   git switch -c feat/your-feature-name
-   ```
-2. After completing your work, push your branch to remote
-   ```bash
-   git add .
-   git commit -m "Your commit message"
-   git push origin feat/your-feature-name
-   ```
-3. Create a Pull Request (PR) from your branch to staging branch on GitHub for review and merging.
-
-4. After PR is approved and merged, switch back to staging branch and pull the latest changes
-   ```bash
-   git switch staging
-   git pull origin staging
+   npm install
    ```
 
----
+2. Start the app
 
-# Notes
+   ```bash
+   npx expo start
+   ```
 
-- Please make sure to follow the above instructions carefully to maintain a clean and organized workflow.
+In the output, you'll find options to open the app in a
 
-- Feel free to reach out if you have any questions or need assistance!
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-- Good luck Team!
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
----
+## Get a fresh project
 
-Best Regards,
-Amr Elharery
+When you're ready, run:
+
+```bash
+npm run reset-project
+```
+
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+
+## Learn more
+
+To learn more about developing your project with Expo, look at the following resources:
+
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+
+## Join the community
+
+Join our community of developers creating universal apps.
+
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
