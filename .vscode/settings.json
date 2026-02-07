@@ -3,5 +3,9 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
-  }
+  },
+  "i18n-ally.localesPaths": [
+    "locales",
+    "lib/i18n"
+  ]
 }
