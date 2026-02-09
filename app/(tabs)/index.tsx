@@ -4,10 +4,13 @@ import { TopProducts } from '@/components/domain/home/top-products';
 import { TopStores } from '@/components/domain/home/top-stores';
 import { MOCK_PRODUCTS, MOCK_STORES } from '@/lib/mock-data';
 import type { ProductDisplay, ShopDisplay } from '@/lib/types';
+import { useRouter } from 'expo-router';
 import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
+  const router = useRouter();
+
   const handleZonePress = () => {
     console.log('Zone selector pressed');
     // TODO: Open zone/area selector modal
@@ -25,7 +28,7 @@ export default function HomeScreen() {
 
   const handleProductPress = (product: ProductDisplay) => {
     console.log('Product pressed:', product.product_name);
-    // TODO: Navigate to product details
+    router.push('/product-details');
   };
 
   return (
