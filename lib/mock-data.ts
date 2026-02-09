@@ -1,5 +1,21 @@
 import { Area, City, ProductDisplay, ShopDisplay } from './types';
 
+const productImages = {
+  tomatoes: require('../assets/images/tomatoes.jpg'),
+  milk: require('../assets/images/milk.jpg'),
+  bananas: require('../assets/images/banana.jpg'),
+  bread: require('../assets/images/bread.jpg'),
+  lettuce: require('../assets/images/lettuce.jpg'),
+  yogurt: require('../assets/images/yogurt.jpg'),
+};
+
+const storeImages = {
+  freshMarket: require('../assets/images/freshMarket.jpg'),
+  greenGrocers: require('../assets/images/greenGrocers.jpg'),
+  quickMart: require('../assets/images/quickMart.jpg'),
+  dailyEssentials: require('../assets/images/dailyEssentials.jpg'),
+};
+
 // Cities
 export const CITIES: City[] = [
   { id: 1, city_name: 'Cairo' },
@@ -29,8 +45,7 @@ export const MOCK_STORES: ShopDisplay[] = [
       {
         id: 1,
         shop_id: 1,
-        image_url:
-          'https://via.placeholder.com/150/FF6347/FFFFFF?text=Fresh+Market',
+        image_url: storeImages.freshMarket,
         created_at: '2024-01-15T10:00:00Z',
         updated_at: '2024-01-15T10:00:00Z',
       },
@@ -62,8 +77,7 @@ export const MOCK_STORES: ShopDisplay[] = [
       {
         id: 2,
         shop_id: 2,
-        image_url:
-          'https://via.placeholder.com/150/32CD32/FFFFFF?text=Green+Grocers',
+        image_url: storeImages.greenGrocers,
         created_at: '2024-01-16T10:00:00Z',
         updated_at: '2024-01-16T10:00:00Z',
       },
@@ -95,8 +109,7 @@ export const MOCK_STORES: ShopDisplay[] = [
       {
         id: 3,
         shop_id: 3,
-        image_url:
-          'https://via.placeholder.com/150/FFD700/000000?text=Quick+Mart',
+        image_url: storeImages.quickMart,
         created_at: '2024-01-17T10:00:00Z',
         updated_at: '2024-01-17T10:00:00Z',
       },
@@ -128,8 +141,7 @@ export const MOCK_STORES: ShopDisplay[] = [
       {
         id: 4,
         shop_id: 4,
-        image_url:
-          'https://via.placeholder.com/150/4169E1/FFFFFF?text=Daily+Essentials',
+        image_url: storeImages.dailyEssentials,
         created_at: '2024-01-18T10:00:00Z',
         updated_at: '2024-01-18T10:00:00Z',
       },
@@ -171,14 +183,13 @@ export const MOCK_PRODUCTS: ProductDisplay[] = [
       {
         id: 1,
         product_id: 1,
-        image_url:
-          'https://via.placeholder.com/200/FF6347/FFFFFF?text=Tomatoes',
+        image_url: productImages.tomatoes,
         is_primary: true,
         created_at: '2024-01-15T10:00:00Z',
         updated_at: '2024-01-15T10:00:00Z',
       },
     ],
-    primaryImage: 'https://via.placeholder.com/200/FF6347/FFFFFF?text=Tomatoes',
+    primaryImage: productImages.tomatoes,
     category: { id: 1, category_name: 'Vegetables' },
   },
   {
@@ -197,13 +208,13 @@ export const MOCK_PRODUCTS: ProductDisplay[] = [
       {
         id: 2,
         product_id: 2,
-        image_url: 'https://via.placeholder.com/200/FFFFFF/000000?text=Milk',
+        image_url: productImages.milk,
         is_primary: true,
         created_at: '2024-01-16T10:00:00Z',
         updated_at: '2024-01-16T10:00:00Z',
       },
     ],
-    primaryImage: 'https://via.placeholder.com/200/FFFFFF/000000?text=Milk',
+    primaryImage: productImages.milk,
     category: { id: 2, category_name: 'Dairy' },
   },
   {
@@ -222,13 +233,13 @@ export const MOCK_PRODUCTS: ProductDisplay[] = [
       {
         id: 3,
         product_id: 3,
-        image_url: 'https://via.placeholder.com/200/FFD700/000000?text=Bananas',
+        image_url: productImages.bananas,
         is_primary: true,
         created_at: '2024-01-17T10:00:00Z',
         updated_at: '2024-01-17T10:00:00Z',
       },
     ],
-    primaryImage: 'https://via.placeholder.com/200/FFD700/000000?text=Bananas',
+    primaryImage: productImages.bananas,
     category: { id: 3, category_name: 'Fruits' },
   },
   {
@@ -247,13 +258,13 @@ export const MOCK_PRODUCTS: ProductDisplay[] = [
       {
         id: 4,
         product_id: 4,
-        image_url: 'https://via.placeholder.com/200/F5DEB3/000000?text=Bread',
+        image_url: productImages.bread,
         is_primary: true,
         created_at: '2024-01-18T10:00:00Z',
         updated_at: '2024-01-18T10:00:00Z',
       },
     ],
-    primaryImage: 'https://via.placeholder.com/200/F5DEB3/000000?text=Bread',
+    primaryImage: productImages.bread,
     category: { id: 4, category_name: 'Bakery' },
   },
   {
@@ -272,13 +283,13 @@ export const MOCK_PRODUCTS: ProductDisplay[] = [
       {
         id: 5,
         product_id: 5,
-        image_url: 'https://via.placeholder.com/200/32CD32/FFFFFF?text=Lettuce',
+        image_url: productImages.lettuce,
         is_primary: true,
         created_at: '2024-01-19T10:00:00Z',
         updated_at: '2024-01-19T10:00:00Z',
       },
     ],
-    primaryImage: 'https://via.placeholder.com/200/32CD32/FFFFFF?text=Lettuce',
+    primaryImage: productImages.lettuce,
     category: { id: 1, category_name: 'Vegetables' },
   },
   {
@@ -297,13 +308,13 @@ export const MOCK_PRODUCTS: ProductDisplay[] = [
       {
         id: 6,
         product_id: 6,
-        image_url: 'https://via.placeholder.com/200/F0E68C/000000?text=Yogurt',
+        image_url: productImages.yogurt,
         is_primary: true,
         created_at: '2024-01-20T10:00:00Z',
         updated_at: '2024-01-20T10:00:00Z',
       },
     ],
-    primaryImage: 'https://via.placeholder.com/200/F0E68C/000000?text=Yogurt',
+    primaryImage: productImages.yogurt,
     category: { id: 2, category_name: 'Dairy' },
   },
 ];

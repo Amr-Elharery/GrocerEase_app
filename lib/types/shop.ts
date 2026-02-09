@@ -1,3 +1,5 @@
+import type { ImageSourcePropType } from 'react-native';
+
 export interface Shop {
   id: number;
   user_id: number;
@@ -33,7 +35,7 @@ export interface ShopReview {
 export interface ShopImage {
   id: number;
   shop_id: number;
-  image_url: string;
+  image_url: ImageSourcePropType;
   created_at: string;
   updated_at: string;
 }

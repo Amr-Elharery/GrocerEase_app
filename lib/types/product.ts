@@ -1,3 +1,5 @@
+import type { ImageSourcePropType } from 'react-native';
+
 export interface Product {
   id: number;
   category_id: number;
@@ -20,7 +22,7 @@ export interface ShopProduct {
 export interface ProductImage {
   id: number;
   product_id: number;
-  image_url: string;
+  image_url: ImageSourcePropType;
   is_primary: boolean;
   created_at: string;
   updated_at: string;
@@ -38,6 +40,6 @@ export interface ProductDisplay extends Product {
   shop_price: number;
   stock: number;
   images: ProductImage[];
-  primaryImage?: string;
+  primaryImage?: ImageSourcePropType;
   category?: Category;
 }
