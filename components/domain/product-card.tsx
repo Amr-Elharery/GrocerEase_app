@@ -7,8 +7,10 @@ interface ProductCardProps {
   onPress?: (product: ProductDisplay) => void;
 }
 
+const fallbackProductImage = require('../../assets/images/icon.png');
+
 export function ProductCard({ product, onPress }: ProductCardProps) {
-  const imageUrl = product.primaryImage || 'https://via.placeholder.com/200';
+  const imageSource = product.primaryImage ?? fallbackProductImage;
 
   return (
     <Pressable
@@ -16,7 +18,7 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
       className="bg-card border border-border rounded-lg p-3 mb-3"
     >
       <Image
-        source={{ uri: imageUrl }}
+        source={imageSource}
         className="w-full h-32 rounded-md mb-2"
         resizeMode="cover"
       />

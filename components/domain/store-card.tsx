@@ -8,8 +8,8 @@ interface StoreCardProps {
 }
 
 export function StoreCard({ store, onPress }: StoreCardProps) {
-  const imageUrl =
-    store.images[0]?.image_url || 'https://via.placeholder.com/150';
+  const imageSource =
+    store.images[0]?.image_url ?? require('../../assets/images/icon.png');
 
   return (
     <Pressable
@@ -17,7 +17,7 @@ export function StoreCard({ store, onPress }: StoreCardProps) {
       className="bg-card border border-border rounded-lg p-3 mr-3 w-40"
     >
       <Image
-        source={{ uri: imageUrl }}
+        source={imageSource}
         className="w-full h-24 rounded-md mb-2"
         resizeMode="cover"
       />
