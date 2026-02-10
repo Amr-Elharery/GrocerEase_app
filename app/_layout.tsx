@@ -30,6 +30,7 @@ export default function RootLayout() {
             name="product-details"
             options={{ headerShown: false }}
           />
+           <Stack.Screen name="delivery" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>

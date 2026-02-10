@@ -1,63 +1,64 @@
-import { useRouter } from 'expo-router';
+import { MOCK_PRODUCTS } from "@/lib/mock-data";
+import { useRouter } from "expo-router";
 import {
   ChevronLeft,
   CircleDollarSign,
   ShoppingBag,
-} from 'lucide-react-native';
-import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "lucide-react-native";
+import { useState } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const optimizationOptions = [
   {
-    id: 'cheapest',
-    title: 'Cheapest Total',
-    accent: 'Save 32 EGP',
-    detail: 'Split between: Kazyon, Spinneys, Al Othaim',
-    eta: 'Estimated Delivery: 1 hours',
+    id: "cheapest",
+    title: "Cheapest Total",
+    accent: "Save 32 EGP",
+    detail: "Split between: Kazyon, Spinneys, Al Othaim",
+    eta: "Estimated Delivery: 1 hours",
     icon: CircleDollarSign,
   },
   {
-    id: 'minimum-stores',
-    title: 'Minimum Stores',
-    accent: 'All from Spinneys',
-    detail: 'Save time with a single delivery',
-    eta: 'Estimated Delivery: 30 mins',
+    id: "minimum-stores",
+    title: "Minimum Stores",
+    accent: "All from Spinneys",
+    detail: "Save time with a single delivery",
+    eta: "Estimated Delivery: 30 mins",
     icon: ShoppingBag,
   },
 ];
 
 const storeGroups = [
   {
-    id: 'group-1',
-    title: 'Store Group 1: Kazyon (3 items)',
-    items: ['2 x Milk 1L: 70 EGP (Save 10 EGP)', 'Eggs: 150 EGP (Save 10 EGP)'],
-    savings: '-20 EGP',
-  },
-  {
-    id: 'group-2',
-    title: 'Store Group 2: Spinneys (5 items)',
+    id: "group-1",
+    storeName: "Kazyon",
     items: [
-      '4 x Juhayna Plain Yogurt: 35 EGP (Save 5 EGP)',
-      'Raw Sea Salt Potatoes: 15 EGP (Save 2 EGP)',
+      { id: "item-1", product: MOCK_PRODUCTS[0], quantity: 2 },
+      { id: "item-2", product: MOCK_PRODUCTS[1], quantity: 1 },
     ],
-    savings: '-7 EGP',
+    savings: "-20 EGP",
   },
   {
-    id: 'group-3',
-    title: 'Store Group 3: Al Othaim (2 items)',
-    items: ['2 x Corona Dark Chocolate: 25 EGP (Save 5 EGP)'],
-    savings: '-5 EGP',
+    id: "group-2",
+    storeName: "Spinneys",
+    items: [{ id: "item-3", product: MOCK_PRODUCTS[2], quantity: 6 }],
+    savings: "-7 EGP",
+  },
+  {
+    id: "group-3",
+    storeName: "Al Othaim",
+    items: [{ id: "item-4", product: MOCK_PRODUCTS[3], quantity: 3 }],
+    savings: "-5 EGP",
   },
 ];
 
 export default function OptimizationScreen() {
   const router = useRouter();
 
-  const [selectedOptionId, setSelectedOptionId] = useState('cheapest');
+  const [selectedOptionId, setSelectedOptionId] = useState("cheapest");
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
       <View className="flex-1">
         <ScrollView className="flex-1" contentContainerClassName="px-4 pb-6">
           <View className="flex-row items-center gap-3 py-4">
@@ -86,17 +87,17 @@ export default function OptimizationScreen() {
                 <Pressable
                   key={option.id}
                   onPress={() => {
-                    setSelectedOptionId('minimum-stores');
+                    setSelectedOptionId(option.id);
                   }}
                   className={`flex-1 rounded-2xl border p-4 bg-card ${
-                    isSelected ? 'border-primary shadow' : 'border-border'
+                    isSelected ? "border-primary shadow" : "border-border"
                   }`}
                 >
                   <View className="h-12 w-12 rounded-full items-center justify-center bg-muted mb-3">
                     <Icon
                       size={24}
                       className={
-                        isSelected ? 'text-primary' : 'text-muted-foreground'
+                        isSelected ? "text-primary" : "text-muted-foreground"
                       }
                     />
                   </View>
@@ -105,7 +106,7 @@ export default function OptimizationScreen() {
                   </Text>
                   <Text
                     className={`text-xs font-semibold mt-1 ${
-                      isSelected ? 'text-primary' : 'text-muted-foreground'
+                      isSelected ? "text-primary" : "text-muted-foreground"
                     }`}
                   >
                     {option.accent}
@@ -129,7 +130,7 @@ export default function OptimizationScreen() {
               >
                 <View className="flex-row items-center justify-between">
                   <Text className="text-foreground text-sm font-semibold">
-                    {group.title}
+                    {group.storeName} ({group.items.length} items)
                   </Text>
                   <Text className="text-primary text-sm font-semibold">
                     {group.savings}
@@ -137,9 +138,14 @@ export default function OptimizationScreen() {
                 </View>
                 <View className="mt-2 gap-1">
                   {group.items.map((item) => (
-                    <Text key={item} className="text-muted-foreground text-xs">
-                      {item}
-                    </Text>
+                    <View
+                      key={item.id}
+                      className="flex-row justify-between items-center"
+                    >
+                      <Text className="text-muted-foreground text-xs flex-1">
+                        {item.quantity} × {item.product?.product_name}
+                      </Text>
+                    </View>
                   ))}
                 </View>
               </View>

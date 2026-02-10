@@ -1,13 +1,6 @@
 import { useTheme } from "@/lib/theme-context";
 import { Tabs } from "expo-router";
-import {
-  BarChart3,
-  ClipboardList,
-  Home,
-  Search,
-  ShoppingBag,
-  User,
-} from "lucide-react-native";
+import { Home, Package, User } from "lucide-react-native";
 
 export default function TabsLayout() {
   const { theme } = useTheme();
@@ -37,37 +30,22 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="search"
-        options={{
-          title: "Search",
-          tabBarIcon: ({ color, size }) => <Search size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="shopping-list"
-        options={{
-          title: "Lists",
-          tabBarIcon: ({ color, size }) => (
-            <ClipboardList size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="insights"
-        options={{
-          title: "Insights",
-          tabBarIcon: ({ color, size }) => (
-            <BarChart3 size={size} color={color} />
-          ),
-        }}
-      />
-    
+
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="orders"
+        options={{
+          title: "Orders",
+          tabBarIcon: ({ color, size }) => (
+            <Package size={size} color={color} />
+          ),
         }}
       />
     </Tabs>
