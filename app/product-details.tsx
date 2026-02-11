@@ -1,6 +1,6 @@
 import { MOCK_PRODUCTS } from '@/lib/mock-data';
 import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Plus } from 'lucide-react-native';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -17,9 +17,18 @@ export default function ProductDetailsScreen() {
   const product = MOCK_PRODUCTS[0];
   const imageSource = product?.primaryImage ?? fallbackProductImage;
 
+  const handleAddToCart = () => {
+    console.log('Added to cart:', product?.id);
+  };
+
+  const handleQuickAdd = (id: number) => {
+    console.log('Quick add:', id);
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <ScrollView className="flex-1" contentContainerClassName="px-4 pb-6">
+        {/* HEADER */}
         <View className="flex-row items-center gap-3 py-4">
           <Pressable
             onPress={() => router.back()}
@@ -32,22 +41,38 @@ export default function ProductDetailsScreen() {
           </Text>
         </View>
 
+        {/* PRODUCT CARD */}
         <View className="bg-card border border-border rounded-2xl p-4 mb-6">
           <Image
             source={imageSource}
             className="w-full h-48 rounded-xl mb-4"
             resizeMode="cover"
           />
+
           <Text className="text-foreground text-xl font-semibold mb-2">
             {product?.product_name}
           </Text>
+
           <Text className="text-muted-foreground text-sm mb-4">
             {product?.description}
           </Text>
 
+          {/* ADD TO CART BUTTON */}
+          <Pressable
+            onPress={handleAddToCart}
+            className="flex-row items-center justify-center gap-2 bg-primary py-3 rounded-xl mb-4"
+          >
+            <Plus size={18} className="text-primary-foreground" />
+            <Text className="text-primary-foreground font-semibold">
+              Add to Shopping Liist
+            </Text>
+          </Pressable>
+
+          {/* STORE PRICES */}
           <Text className="text-foreground text-base font-semibold mb-3">
             Available at
           </Text>
+
           <View className="gap-2">
             {storePrices.map((store) => (
               <View
@@ -65,9 +90,11 @@ export default function ProductDetailsScreen() {
           </View>
         </View>
 
+        {/* SIMILAR PRODUCTS */}
         <Text className="text-foreground text-lg font-semibold mb-3">
           Similar Products
         </Text>
+
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View className="flex-row gap-3">
             {MOCK_PRODUCTS.slice(1, 6).map((item) => (
@@ -80,12 +107,14 @@ export default function ProductDetailsScreen() {
                   className="w-full h-24 rounded-lg mb-3"
                   resizeMode="cover"
                 />
+
                 <Text
                   className="text-foreground text-sm font-semibold"
                   numberOfLines={2}
                 >
                   {item.product_name}
                 </Text>
+
                 <Text className="text-muted-foreground text-xs mt-1">
                   {item.shop_price.toFixed(2)} EGP
                 </Text>
