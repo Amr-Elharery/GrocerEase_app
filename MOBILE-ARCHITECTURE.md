@@ -32,6 +32,28 @@ assets/              ← Images, icons
 - **Icons**: Lucide React Native
 - **Type Safety**: TypeScript
 
+## @react-native-reusables/cli Overview
+
+Use `@react-native-reusables/cli` to scaffold reusable mobile UI patterns quickly.
+
+### Quick Start
+
+```bash
+npx @react-native-reusables/cli add button
+```
+
+Then import and use the generated component in your screen:
+
+```tsx
+import { Button } from '@/components/ui/button';
+
+export default function ExampleScreen() {
+  return <Button onPress={() => console.log('Pressed')}>Continue</Button>;
+}
+```
+
+Visit the official docs for more details: [https://react-native-reusables.vercel.app](https://react-native-reusables.vercel.app)
+
 ---
 
 ## Planned Layers (Future)
