@@ -1,102 +1,81 @@
-import { vars } from "nativewind";
+import { DarkTheme, DefaultTheme, type Theme } from '@react-navigation/native';
 
-export const themes = {
-    light: vars({
-      // Primary colors
-      "--color-primary":      "0 0 0",
-      "--color-primary-foreground": "255 255 255",
-      "--color-foreground":   "13 13 13",
+export const THEME = {
+  light: {
+    background: 'hsl(0 0% 100%)',
+    foreground: 'hsl(0 0% 3.9%)',
+    card: 'hsl(0 0% 100%)',
+    cardForeground: 'hsl(0 0% 3.9%)',
+    popover: 'hsl(0 0% 100%)',
+    popoverForeground: 'hsl(0 0% 3.9%)',
+    primary: 'hsl(0 0% 9%)',
+    primaryForeground: 'hsl(0 0% 98%)',
+    secondary: 'hsl(0 0% 96.1%)',
+    secondaryForeground: 'hsl(0 0% 9%)',
+    muted: 'hsl(0 0% 96.1%)',
+    mutedForeground: 'hsl(0 0% 45.1%)',
+    accent: 'hsl(0 0% 96.1%)',
+    accentForeground: 'hsl(0 0% 9%)',
+    destructive: 'hsl(0 84.2% 60.2%)',
+    border: 'hsl(0 0% 89.8%)',
+    input: 'hsl(0 0% 89.8%)',
+    ring: 'hsl(0 0% 63%)',
+    radius: '0.625rem',
+    chart1: 'hsl(12 76% 61%)',
+    chart2: 'hsl(173 58% 39%)',
+    chart3: 'hsl(197 37% 24%)',
+    chart4: 'hsl(43 74% 66%)',
+    chart5: 'hsl(27 87% 67%)',
+  },
+  dark: {
+    background: 'hsl(0 0% 3.9%)',
+    foreground: 'hsl(0 0% 98%)',
+    card: 'hsl(0 0% 3.9%)',
+    cardForeground: 'hsl(0 0% 98%)',
+    popover: 'hsl(0 0% 3.9%)',
+    popoverForeground: 'hsl(0 0% 98%)',
+    primary: 'hsl(0 0% 98%)',
+    primaryForeground: 'hsl(0 0% 9%)',
+    secondary: 'hsl(0 0% 14.9%)',
+    secondaryForeground: 'hsl(0 0% 98%)',
+    muted: 'hsl(0 0% 14.9%)',
+    mutedForeground: 'hsl(0 0% 63.9%)',
+    accent: 'hsl(0 0% 14.9%)',
+    accentForeground: 'hsl(0 0% 98%)',
+    destructive: 'hsl(0 70.9% 59.4%)',
+    border: 'hsl(0 0% 14.9%)',
+    input: 'hsl(0 0% 14.9%)',
+    ring: 'hsl(300 0% 45%)',
+    radius: '0.625rem',
+    chart1: 'hsl(220 70% 50%)',
+    chart2: 'hsl(160 60% 45%)',
+    chart3: 'hsl(30 80% 55%)',
+    chart4: 'hsl(280 65% 60%)',
+    chart5: 'hsl(340 75% 55%)',
+  },
+};
 
-      // General context (background) and cards / popovers
-      "--color-background":   "255 255 255",
-      "--color-background-foreground": "13 13 13",
-      "--color-card":         "255 255 255",
-      "--color-card-foreground": "13 13 13",
-      "--color-popover":      "255 255 255",
-      "--color-popover-foreground": "13 13 13",
-
-      // Secondary colors
-      "--color-secondary":    "45 45 45",
-      "--color-secondary-foreground": "255 255 255",
-      "--color-foreground-muted": "115 115 115",
-      "--color-muted-foreground": "115 115 115",
-      "--color-muted":        "240 240 240", 
-
-      // Accent colors
-      "--color-accent":       "145 145 145",
-      "--color-accent-foreground": "255 255 255",
-
-      // Status colors
-      "--color-destructive":  "239 68 68",
-      "--color-destructive-foreground": "250 250 250",
-
-      "--color-success":      "34 197 94",
-      "--color-success-foreground": "250 250 250",
-
-      "--color-warning":      "234 179  8",
-      "--color-warning-foreground": "13 13 13",
-
-      "--color-info":         "59 130 246",
-      "--color-info-foreground": "250 250 250",
-
-      // Borders, inputs and "rings"
-      "--border":             "229 231 235",
-      "--border-foreground": "13 13 13",
-      "--input":              "229 231 235",
-      "--input-foreground": "13 13 13",
-      "--ring":               "13 13 13",
-      
-      // Toggle specific colors
-      "--toggle-active":      "45 45 45",
-      "--toggle-active-foreground": "255 255 255",
-      "--toggle-border":      "229 231 235",
-    }),
-
-    dark: vars({
-      // Primary colors
-      "--color-primary":      "255 255 255",
-      "--color-primary-foreground": "13 13 13",
-      "--color-foreground":   "250 250 250",
-
-      // General context (background) and cards / popovers
-      "--color-background":   "23 23 28",
-      "--color-background-foreground": "250 250 250",
-      "--color-card":         "32 32 36",
-      "--color-card-foreground": "250 250 250",
-      "--color-popover":      "32 32 36",
-      "--color-popover-foreground": "250 250 250",
-
-      // Secondary colors
-      "--color-secondary":    "58 58 58",
-      "--color-muted":        "75 85 99",
-      "--color-foreground-muted": "209 213 219",
-      "--color-muted-foreground": "209 213 219", 
-
-      // Accent colors
-      "--color-accent":       "58  58  58",
-      "--color-accent-foreground": "250 250 250",
-
-      // Status colors
-      "--color-destructive":  "153  27  27",
-      "--color-destructive-foreground": "250 250 250",
-
-      "--color-success":      "22 163  74",
-      "--color-success-foreground": "250 250 250",
-
-      "--color-warning":      "161  98   7",
-      "--color-warning-foreground": "250 250 250",
-
-      "--color-info":         " 37  99 235",
-      "--color-info-foreground": "250 250 250",
-
-      // Borders, inputs and "rings"
-      "--border":             "75 85 99", 
-      "--input":              " 38  38  38",
-      "--ring":               "212 212 212",
-      
-      // Toggle specific colors
-      "--toggle-active":      "120 120 120",
-      "--toggle-active-foreground": "250 250 250",
-      "--toggle-border":      "100 100 100",
-    }),
-} as const;
+export const NAV_THEME: Record<'light' | 'dark', Theme> = {
+  light: {
+    ...DefaultTheme,
+    colors: {
+      background: THEME.light.background,
+      border: THEME.light.border,
+      card: THEME.light.card,
+      notification: THEME.light.destructive,
+      primary: THEME.light.primary,
+      text: THEME.light.foreground,
+    },
+  },
+  dark: {
+    ...DarkTheme,
+    colors: {
+      background: THEME.dark.background,
+      border: THEME.dark.border,
+      card: THEME.dark.card,
+      notification: THEME.dark.destructive,
+      primary: THEME.dark.primary,
+      text: THEME.dark.foreground,
+    },
+  },
+};

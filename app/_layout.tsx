@@ -1,5 +1,6 @@
 import i18n, { initI18n } from '@/lib/i18n';
 import { ThemeProvider } from '@/lib/theme-context';
+import { PortalHost } from '@rn-primitives/portal';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
@@ -32,6 +33,7 @@ export default function RootLayout() {
           />
         </Stack>
         <StatusBar style="auto" />
+        <PortalHost />
       </ThemeProvider>
     </I18nextProvider>
   );
