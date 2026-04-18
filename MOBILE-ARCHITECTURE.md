@@ -52,7 +52,7 @@ export default function ExampleScreen() {
 }
 ```
 
-Visit the official docs for more details: [https://react-native-reusables.vercel.app](https://react-native-reusables.vercel.app)
+Visit the official docs for more details: [https://reactnativereusables.com/docs]
 
 ---
 
