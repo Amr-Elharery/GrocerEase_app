@@ -1,7 +1,7 @@
 import { useColorScheme as useNativewindColorScheme } from 'nativewind';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useColorScheme as useNativeColorScheme, View } from 'react-native';
-import { themes } from './theme';
+import { THEME } from './theme';
 
 type ThemeType = 'light' | 'dark';
 
@@ -30,11 +30,11 @@ export function ThemeProvider({
     setColorScheme(theme);
   }, [theme, setColorScheme]);
 
-  const activeTheme = themes[theme];
+  const activeTheme = THEME[theme];
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, activeTheme }}>
-      <View style={[{ flex: 1 }, activeTheme]}>{children}</View>
+      <View style={{ flex: 1 }}>{children}</View>
     </ThemeContext.Provider>
   );
 }

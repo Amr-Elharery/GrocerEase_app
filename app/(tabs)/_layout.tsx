@@ -1,3 +1,4 @@
+import { THEME } from '@/lib/theme';
 import { useTheme } from '@/lib/theme-context';
 import { Tabs } from 'expo-router';
 import {
@@ -5,16 +6,15 @@ import {
   ClipboardList,
   Home,
   Search,
-  ShoppingBag,
   User,
 } from 'lucide-react-native';
 
 export default function TabsLayout() {
   const { theme } = useTheme();
+  const tokens = THEME[theme];
 
-  const iconColor = theme === 'dark' ? 'rgb(250 250 250)' : 'rgb(13 13 13)';
-  const inactiveColor =
-    theme === 'dark' ? 'rgb(115 115 115)' : 'rgb(115 115 115)';
+  const iconColor = tokens.foreground;
+  const inactiveColor = tokens.mutedForeground;
 
   return (
     <Tabs
@@ -22,10 +22,8 @@ export default function TabsLayout() {
         tabBarActiveTintColor: iconColor,
         tabBarInactiveTintColor: inactiveColor,
         tabBarStyle: {
-          backgroundColor:
-            theme === 'dark' ? 'rgb(32 32 36)' : 'rgb(255 255 255)',
-          borderTopColor:
-            theme === 'dark' ? 'rgb(75 85 99)' : 'rgb(229 231 235)',
+          backgroundColor: tokens.background,
+          borderTopColor: tokens.border,
         },
         headerShown: false,
       }}
