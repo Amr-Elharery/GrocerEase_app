@@ -1,9 +1,10 @@
-import { ChevronDown, MapPin } from 'lucide-react-native';
-import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { SearchBar } from '../search-bar';
+import { useRouter } from "expo-router";
+import { ChevronDown, LogIn, MapPin } from "lucide-react-native";
+import { useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { SearchBar } from "../search-bar";
 
-type SearchMode = 'product' | 'store';
+type SearchMode = "product" | "store";
 
 interface HeaderProps {
   zone?: string;
@@ -11,16 +12,21 @@ interface HeaderProps {
   onSearch?: (query: string, mode: SearchMode) => void;
 }
 
-export function Header({ zone = 'Cairo', onZonePress, onSearch }: HeaderProps) {
-  const [searchMode, setSearchMode] = useState<SearchMode>('product');
+export function Header({ zone = "Cairo", onZonePress, onSearch }: HeaderProps) {
+  const [searchMode, setSearchMode] = useState<SearchMode>("product");
+  const router = useRouter();
 
   const handleSearch = (query: string) => {
     onSearch?.(query, searchMode);
   };
 
+  const handleLoginPress = () => {
+    router.push("/login");
+  };
+
   return (
     <View className="bg-background border-b border-border px-4 py-3">
-      {/* Top Row: Zone */}
+      {/* Top Row: Zone + Login Icon */}
       <View className="flex-row items-center justify-between mb-3">
         <Pressable onPress={onZonePress} className="flex-row items-center">
           <MapPin size={20} className="text-primary mr-1" />
@@ -28,6 +34,10 @@ export function Header({ zone = 'Cairo', onZonePress, onSearch }: HeaderProps) {
             {zone}
           </Text>
           <ChevronDown size={16} className="text-muted-foreground ml-1" />
+        </Pressable>
+
+        <Pressable onPress={handleLoginPress}>
+          <LogIn size={24} className="text-foreground" />
         </Pressable>
       </View>
 
@@ -43,32 +53,32 @@ export function Header({ zone = 'Cairo', onZonePress, onSearch }: HeaderProps) {
         {/* Toggle Switch */}
         <View className="flex-row bg-muted border border-border rounded-lg p-1">
           <Pressable
-            onPress={() => setSearchMode('product')}
+            onPress={() => setSearchMode("product")}
             className={`px-3 py-1.5 rounded ${
-              searchMode === 'product' ? 'bg-primary' : 'bg-transparent'
+              searchMode === "product" ? "bg-primary" : "bg-transparent"
             }`}
           >
             <Text
               className={`text-sm font-medium ${
-                searchMode === 'product'
-                  ? 'text-primary-foreground'
-                  : 'text-muted-foreground'
+                searchMode === "product"
+                  ? "text-primary-foreground"
+                  : "text-muted-foreground"
               }`}
             >
               Product
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => setSearchMode('store')}
+            onPress={() => setSearchMode("store")}
             className={`px-3 py-1.5 rounded ${
-              searchMode === 'store' ? 'bg-primary' : 'bg-transparent'
+              searchMode === "store" ? "bg-primary" : "bg-transparent"
             }`}
           >
             <Text
               className={`text-sm font-medium ${
-                searchMode === 'store'
-                  ? 'text-primary-foreground'
-                  : 'text-muted-foreground'
+                searchMode === "store"
+                  ? "text-primary-foreground"
+                  : "text-muted-foreground"
               }`}
             >
               Store
