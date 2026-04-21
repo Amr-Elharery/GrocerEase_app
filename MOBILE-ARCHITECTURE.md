@@ -32,6 +32,114 @@ assets/              ← Images, icons
 - **Icons**: Lucide React Native
 - **Type Safety**: TypeScript
 
+## Architecture Rule: Feature-Based Design
+
+All new code should follow a **feature-based design pattern**.
+
+- Organize files by domain feature first (for example: `auth`, `products`, `stores`, `shopping-list`).
+- Keep each feature self-contained with its own UI, hooks, and business logic.
+- Share only truly generic code through common folders such as `components/ui`, `lib`, and `shared`.
+- Avoid creating folders by technical type at the top level when the code belongs to one feature.
+
+Example structure:
+
+```text
+features/
+  auth/
+    components/
+    hooks/
+    services/
+    types/
+  products/
+    components/
+    hooks/
+    services/
+```
+
+## Final Folder Structure Hierarchy
+
+Target structure for the project after refactoring to feature-based architecture:
+
+```text
+.
+|-- app/
+|   |-- _layout.tsx
+|   |-- (tabs)/
+|   |   |-- _layout.tsx
+|   |   |-- index.tsx
+|   |   |-- insights.tsx
+|   |   |-- profile.tsx
+|   |   |-- search.tsx
+|   |   \-- shopping-list.tsx
+|   |-- auth/
+|   |   |-- login.tsx
+|   |   |-- sign-up.tsx
+|   |   |-- forgot-password.tsx
+|   |   |-- verification-code.tsx
+|   |   |-- reset-password.tsx
+|   |   \-- change-password.tsx
+|   |-- products/
+|   |   |-- index.tsx
+|   |   \-- [id].tsx
+|   |-- optimization/
+|   |   \-- index.tsx
+|   \-- global.css
+|
+|-- features/
+|   |-- auth/
+|   |   |-- components/
+|   |   |-- hooks/
+|   |   |-- services/
+|   |   \-- types/
+|   |-- products/
+|   |   |-- components/
+|   |   |-- hooks/
+|   |   |-- services/
+|   |   \-- types/
+|   |-- stores/
+|   |   |-- components/
+|   |   |-- hooks/
+|   |   |-- services/
+|   |   \-- types/
+|   \-- shopping-list/
+|       |-- components/
+|       |-- hooks/
+|       |-- services/
+|       \-- types/
+|
+|-- components/
+|   \-- ui/
+|
+|-- shared/
+|   |-- api/
+|   |-- constants/
+|   \-- utils/
+|
+|-- lib/
+|   |-- theme/
+|   \-- i18n/
+|
+|-- types/
+|   \-- common/
+|
+|-- assets/
+|   \-- images/
+|
+\-- locales/
+    |-- en.json
+    \-- ar.json
+```
+
+Description:
+
+- `app/`: Route files only (navigation and screen entry points).
+- `features/`: Domain-first modules where each feature owns its components, hooks, services, and types.
+- `components/ui/`: Cross-feature reusable UI primitives only.
+- `shared/`: Generic non-UI code reused by many features (API clients, constants, helpers).
+- `lib/`: App-wide providers/configuration (theme, localization bootstrap, global contexts).
+- `types/common/`: Shared global type definitions that are not feature-specific.
+- `assets/` and `locales/`: Static resources and translation files.
+
 ## @react-native-reusables/cli Overview
 
 Use `@react-native-reusables/cli` to scaffold reusable mobile UI patterns quickly.
