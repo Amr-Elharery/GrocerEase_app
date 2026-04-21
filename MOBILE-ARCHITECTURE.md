@@ -4,6 +4,46 @@ React Native (Expo) with Expo Router, NativeWind, and TypeScript.
 
 ---
 
+## Development
+
+**Important Instructions For Source Control**:
+
+- Create a branch for every development/fix task.
+- For feature development, use `feat/` prefix.
+- For bug fixes, use `fix/` prefix.
+- Do not push directly to `master` or `staging`; always open a Pull Request.
+- Do not merge Pull Requests to `master` before review.
+- Before creating a branch from `staging`, always pull latest changes.
+
+### How to Create Branch and Start Working
+
+1. Create a branch from `staging`.
+
+```bash
+git switch staging
+git pull origin staging
+git switch -c feat/your-feature-name
+```
+
+2. After completing your work, push the branch.
+
+```bash
+git add .
+git commit -m "Your commit message"
+git push origin feat/your-feature-name
+```
+
+3. Create a Pull Request from your branch to `staging` for review and merge.
+
+4. After PR approval and merge, sync local `staging`.
+
+```bash
+git switch staging
+git pull origin staging
+```
+
+---
+
 ## Current Structure
 
 ```
@@ -31,6 +71,59 @@ assets/              ← Images, icons
 - **Animations**: React Native Reanimated
 - **Icons**: Lucide React Native
 - **Type Safety**: TypeScript
+
+## Layers (Mobile)
+
+### 1. HTTP Service
+
+A central network client used for all API requests.
+Handles:
+
+- base URL
+- headers and auth token injection
+- interceptors
+- shared error handling
+
+This layer does not contain business logic.
+
+### 2. Feature Service
+
+A domain layer for each feature (for example: `authService`, `productService`).
+Responsibilities:
+
+- business logic
+- request/response validation (for example with Zod)
+- calling the HTTP service
+
+This keeps behavior consistent for screens, hooks, and tests.
+
+### 3. Data Layer (Hooks / Query)
+
+Feature hooks handle:
+
+- screen-ready data shaping
+- loading and error state mapping
+- server-state integration (React Query when used)
+- cache invalidation and refetch triggers
+
+Hooks expose simple APIs for UI consumption.
+
+### 4. View Layer (Screens/Components)
+
+Screens and components are responsible for:
+
+- rendering UI
+- handling user interaction
+- triggering hooks/actions
+- basic form-level validation for instant feedback
+
+Screens/components should not include business logic.
+
+## Validation Strategy (Mobile)
+
+- **Form-level validation (UI)**: inside screens/components/hooks for immediate UX feedback.
+- **Business-level validation**: inside feature services before API write operations.
+- **API contract validation**: in service layer when parsing backend responses.
 
 ## Architecture Rule: Feature-Based Design
 
