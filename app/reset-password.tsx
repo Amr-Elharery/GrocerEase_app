@@ -1,7 +1,25 @@
+/**
+ * Reset Password Screen
+ * Part of Authentication Feature
+ *
+ * Architecture: Feature-Based Design Pattern
+ * - Validation logic: shared/validators.ts
+ * - Form state: lib/hooks/useFormValidation.ts
+ * - API calls: shared/auth.service.ts
+ * - UI Components: components/domain/auth/
+ */
+
+import {
+  AuthButton,
+  AuthSuccess,
+  PasswordInput,
+} from "@/components/domain/auth";
+import { useResetPasswordForm } from "@/lib/hooks/useFormValidation";
 import { THEME } from "@/lib/theme";
 import { useTheme } from "@/lib/theme-context";
+import { authService } from "@/shared/auth.service";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ArrowLeft, CheckCircle, Eye, EyeOff } from "lucide-react-native";
+import { ArrowLeft } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -9,7 +27,6 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,84 +40,12 @@ export default function ResetPasswordScreen() {
   }>();
   const tokens = THEME[theme];
 
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  // Form state managed by custom hook with validation
+  const { values, errors, touched, handleChange, handleBlur, validateAll } =
+    useResetPasswordForm();
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState<{
-    newPassword?: string;
-    confirmPassword?: string;
-  }>({});
-  const [touched, setTouched] = useState<{
-    newPassword?: boolean;
-    confirmPassword?: boolean;
-  }>({});
-
-  // Validation functions
-  const validatePassword = (password: string) => {
-    if (!password) return "Password is required";
-    if (password.length < 8) return "Password must be at least 8 characters";
-    if (!/(?=.*[a-z])/.test(password))
-      return "Password must contain at least one lowercase letter";
-    if (!/(?=.*[A-Z])/.test(password))
-      return "Password must contain at least one uppercase letter";
-    if (!/(?=.*\d)/.test(password))
-      return "Password must contain at least one number";
-    return "";
-  };
-
-  const validateConfirmPassword = (
-    confirmPassword: string,
-    password: string,
-  ) => {
-    if (!confirmPassword) return "Please confirm your password";
-    if (confirmPassword !== password) return "Passwords do not match";
-    return "";
-  };
-
-  // Handle input changes with validation
-  const handlePasswordChange = (value: string) => {
-    setNewPassword(value);
-    if (touched.newPassword) {
-      setErrors((prev) => ({ ...prev, newPassword: validatePassword(value) }));
-    }
-    // Also validate confirm password if it's been touched
-    if (touched.confirmPassword && confirmPassword) {
-      setErrors((prev) => ({
-        ...prev,
-        confirmPassword: validateConfirmPassword(confirmPassword, value),
-      }));
-    }
-  };
-
-  const handleConfirmPasswordChange = (value: string) => {
-    setConfirmPassword(value);
-    if (touched.confirmPassword) {
-      setErrors((prev) => ({
-        ...prev,
-        confirmPassword: validateConfirmPassword(value, newPassword),
-      }));
-    }
-  };
-
-  // Handle blur events
-  const handlePasswordBlur = () => {
-    setTouched((prev) => ({ ...prev, newPassword: true }));
-    setErrors((prev) => ({
-      ...prev,
-      newPassword: validatePassword(newPassword),
-    }));
-  };
-
-  const handleConfirmPasswordBlur = () => {
-    setTouched((prev) => ({ ...prev, confirmPassword: true }));
-    setErrors((prev) => ({
-      ...prev,
-      confirmPassword: validateConfirmPassword(confirmPassword, newPassword),
-    }));
-  };
 
   // Auto-navigate after success
   useEffect(() => {
@@ -113,35 +58,31 @@ export default function ResetPasswordScreen() {
   }, [success, router]);
 
   const handleResetPassword = async () => {
-    // Mark all fields as touched
-    setTouched({ newPassword: true, confirmPassword: true });
-
     // Validate all fields
-    const passwordError = validatePassword(newPassword);
-    const confirmPasswordError = validateConfirmPassword(
-      confirmPassword,
-      newPassword,
-    );
-
-    setErrors({
-      newPassword: passwordError,
-      confirmPassword: confirmPasswordError,
-    });
-
-    if (passwordError || confirmPasswordError) {
+    if (!validateAll()) {
       return;
     }
 
     setLoading(true);
     try {
-      // TODO: Implement reset password API call with email, code, and newPassword
-      console.log("Resetting password for:", email, "with code:", code);
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setSuccess(true);
+      // Call auth service to reset password
+      if (email && code) {
+        await authService.resetPassword({
+          email,
+          code,
+          newPassword: values.newPassword,
+        });
+        setSuccess(true);
+      } else {
+        throw new Error("Missing email or verification code");
+      }
     } catch (error) {
       console.error("Reset password error:", error);
-      alert("Failed to reset password. Please try again.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to reset password. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -173,22 +114,12 @@ export default function ResetPasswordScreen() {
           {/* Success State */}
           {success ? (
             <View className="flex-1 justify-center items-center pb-20">
-              <CheckCircle size={80} color={tokens.primary} strokeWidth={1.5} />
+              <AuthSuccess
+                title="Password Reset Successful!"
+                message="Your password has been updated successfully. You can now sign in with your new password."
+              />
               <Text
-                className="text-xl font-bold text-center mt-6"
-                style={{ color: tokens.foreground }}
-              >
-                Password Reset Successful!
-              </Text>
-              <Text
-                className="text-center mt-3"
-                style={{ color: tokens.mutedForeground }}
-              >
-                Your password has been updated successfully. You can now sign in
-                with your new password.
-              </Text>
-              <Text
-                className="text-center mt-4 text-sm"
+                className="text-center mt-6 text-sm"
                 style={{ color: tokens.mutedForeground }}
               >
                 Redirecting to login...
@@ -210,127 +141,41 @@ export default function ResetPasswordScreen() {
               </View>
 
               {/* New Password Input */}
-              <View className="mb-6">
-                <Text
-                  className="text-sm font-medium mb-2"
-                  style={{ color: tokens.foreground }}
-                >
-                  New Password
-                </Text>
-                <View
-                  className="flex-row items-center px-4 py-3 rounded-lg border"
-                  style={{
-                    backgroundColor: tokens.background,
-                    borderColor:
-                      errors.newPassword && touched.newPassword
-                        ? tokens.destructive
-                        : tokens.border,
-                  }}
-                >
-                  <TextInput
-                    className="flex-1"
-                    style={{
-                      color: tokens.foreground,
-                    }}
-                    placeholder="Enter new password"
-                    placeholderTextColor={tokens.mutedForeground}
-                    secureTextEntry={!showPassword}
-                    value={newPassword}
-                    onChangeText={handlePasswordChange}
-                    onBlur={handlePasswordBlur}
-                    editable={!loading}
-                  />
-                  <Pressable
-                    onPress={() => setShowPassword(!showPassword)}
-                    className="ml-2"
-                  >
-                    {showPassword ? (
-                      <EyeOff size={20} color={tokens.mutedForeground} />
-                    ) : (
-                      <Eye size={20} color={tokens.mutedForeground} />
-                    )}
-                  </Pressable>
-                </View>
-                {errors.newPassword && touched.newPassword && (
-                  <Text
-                    className="text-sm mt-1"
-                    style={{ color: tokens.destructive }}
-                  >
-                    {errors.newPassword}
-                  </Text>
-                )}
-              </View>
+              <PasswordInput
+                value={values.newPassword}
+                onChangeText={(value: string) =>
+                  handleChange("newPassword", value)
+                }
+                onBlur={() => handleBlur("newPassword")}
+                error={touched.newPassword ? errors.newPassword : undefined}
+                label="New Password"
+                placeholder="Enter new password"
+                editable={!loading}
+              />
 
               {/* Confirm Password Input */}
-              <View className="mb-8">
-                <Text
-                  className="text-sm font-medium mb-2"
-                  style={{ color: tokens.foreground }}
-                >
-                  Confirm Password
-                </Text>
-                <View
-                  className="flex-row items-center px-4 py-3 rounded-lg border"
-                  style={{
-                    backgroundColor: tokens.background,
-                    borderColor:
-                      errors.confirmPassword && touched.confirmPassword
-                        ? tokens.destructive
-                        : tokens.border,
-                  }}
-                >
-                  <TextInput
-                    className="flex-1"
-                    style={{
-                      color: tokens.foreground,
-                    }}
-                    placeholder="Confirm new password"
-                    placeholderTextColor={tokens.mutedForeground}
-                    secureTextEntry={!showConfirmPassword}
-                    value={confirmPassword}
-                    onChangeText={handleConfirmPasswordChange}
-                    onBlur={handleConfirmPasswordBlur}
-                    editable={!loading}
-                  />
-                  <Pressable
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="ml-2"
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff size={20} color={tokens.mutedForeground} />
-                    ) : (
-                      <Eye size={20} color={tokens.mutedForeground} />
-                    )}
-                  </Pressable>
-                </View>
-                {errors.confirmPassword && touched.confirmPassword && (
-                  <Text
-                    className="text-sm mt-1"
-                    style={{ color: tokens.destructive }}
-                  >
-                    {errors.confirmPassword}
-                  </Text>
-                )}
-              </View>
+              <PasswordInput
+                value={values.confirmPassword}
+                onChangeText={(value: string) =>
+                  handleChange("confirmPassword", value)
+                }
+                onBlur={() => handleBlur("confirmPassword")}
+                error={
+                  touched.confirmPassword ? errors.confirmPassword : undefined
+                }
+                label="Confirm Password"
+                placeholder="Confirm new password"
+                editable={!loading}
+              />
 
               {/* Reset Button */}
-              <Pressable
+              <AuthButton
                 onPress={handleResetPassword}
                 disabled={loading}
-                className="py-4 rounded-lg mb-6"
-                style={{
-                  backgroundColor: tokens.primary,
-                  opacity: loading ? 0.6 : 1,
-                }}
+                loading={loading}
               >
-                <Text
-                  className="text-center font-semibold text-base"
-                  style={{ color: tokens.primaryForeground }}
-                >
-                  {loading ? "Resetting..." : "Reset Password"}
-                </Text>
-              </Pressable>
- gi
+                Reset Password
+              </AuthButton>
             </>
           )}
         </ScrollView>
