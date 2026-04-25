@@ -124,7 +124,7 @@ export default function ForgotPasswordScreen() {
                 className="text-center mt-3"
                 style={{ color: tokens.mutedForeground }}
               >
-                We've sent a verification code to {email}
+                We have sent a verification code to {email}
               </Text>
               <Text
                 className="text-center mt-4 text-sm"
@@ -144,7 +144,7 @@ export default function ForgotPasswordScreen() {
                   Forgot Your Password?
                 </Text>
                 <Text style={{ color: tokens.mutedForeground }}>
-                  Enter your email address and we'll send you a link to reset
+                  Enter your email address and we will send you a link to reset
                   your password.
                 </Text>
               </View>

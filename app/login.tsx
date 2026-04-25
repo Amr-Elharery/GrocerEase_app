@@ -169,7 +169,7 @@ export default function LoginScreen() {
           {/* Sign Up Link */}
           <View className="flex-row justify-center">
             <Text style={{ color: tokens.mutedForeground }}>
-              Don't have an account?{" "}
+              Do not have an account?{" "}
             </Text>
             <Pressable onPress={handleSignUp}>
               <Text className="font-semibold" style={{ color: tokens.primary }}>

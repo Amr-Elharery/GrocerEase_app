@@ -2,7 +2,7 @@ import { THEME } from "@/lib/theme";
 import { useTheme } from "@/lib/theme-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft } from "lucide-react-native";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -52,14 +52,7 @@ export default function VerificationCodeScreen() {
   // Check if code is complete
   const isCodeComplete = code.every((digit) => digit !== "");
 
-  // Auto-verify when code is complete
-  useEffect(() => {
-    if (isCodeComplete) {
-      handleVerifyCode();
-    }
-  }, [isCodeComplete]);
-
-  const handleVerifyCode = async () => {
+  const handleVerifyCode = useCallback(async () => {
     const verificationCode = code.join("");
 
     // Validate code format (should be 6 digits)
@@ -95,7 +88,14 @@ export default function VerificationCodeScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [code, email, router]);
+
+  // Auto-verify when code is complete
+  useEffect(() => {
+    if (isCodeComplete) {
+      handleVerifyCode();
+    }
+  }, [handleVerifyCode, isCodeComplete]);
 
   const handleResendCode = async () => {
     try {
@@ -140,7 +140,7 @@ export default function VerificationCodeScreen() {
               Enter Verification Code
             </Text>
             <Text style={{ color: tokens.mutedForeground }}>
-              We've sent a 6-digit code to {email}
+              We have sent a 6-digit code to {email}
             </Text>
           </View>
 
@@ -196,7 +196,7 @@ export default function VerificationCodeScreen() {
           {/* Resend Code */}
           <View className="flex-row justify-center mb-6">
             <Text style={{ color: tokens.mutedForeground }}>
-              Didn't receive the code?{" "}
+              Did not receive the code?{" "}
             </Text>
             <Pressable onPress={handleResendCode}>
               <Text className="font-semibold" style={{ color: tokens.primary }}>

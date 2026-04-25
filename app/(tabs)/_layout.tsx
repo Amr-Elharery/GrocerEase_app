@@ -3,9 +3,10 @@ import { useTheme } from '@/lib/theme-context';
 import { Tabs } from 'expo-router';
 import {
   BarChart3,
+  Bell,
   ClipboardList,
   Home,
-  Search,
+  ShoppingBag,
   User,
 } from 'lucide-react-native';
 
@@ -38,8 +39,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="search"
         options={{
-          title: 'Search',
-          tabBarIcon: ({ color, size }) => <Search size={size} color={color} />,
+          title: 'Products',
+          tabBarIcon: ({ color, size }) => <ShoppingBag size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -57,6 +58,15 @@ export default function TabsLayout() {
           title: 'Insights',
           tabBarIcon: ({ color, size }) => (
             <BarChart3 size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="wishlist"
+        options={{
+          title: 'Watchlist',
+          tabBarIcon: ({ color, size }) => (
+            <Bell size={size} color={color} />
           ),
         }}
       />

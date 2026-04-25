@@ -7,7 +7,7 @@ export default function Index() {
   useEffect(() => {
     // Redirect to tabs home screen
     router.replace('./(tabs)/');
-  }, []);
+  }, [router]);
 
   return null;
 }
