@@ -5,7 +5,7 @@ import { View } from 'react-native';
 
 type ThemeOption = 'light' | 'dark';
 
-const options: Array<{ value: ThemeOption; label: string }> = [
+const options: { value: ThemeOption; label: string }[] = [
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' },
 ];
