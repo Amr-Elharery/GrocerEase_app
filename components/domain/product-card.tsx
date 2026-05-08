@@ -1,6 +1,7 @@
 import type { ProductDisplay } from '@/lib/types';
 import { Store } from 'lucide-react-native';
 import { Image, Pressable, Text, View } from 'react-native';
+import { AddToListButton } from './add-to-list-button';
 
 interface ProductCardProps {
   product: ProductDisplay;
