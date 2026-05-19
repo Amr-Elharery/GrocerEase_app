@@ -38,8 +38,12 @@ export default function RootLayout() {
       });
     };
 
-    Linking.getInitialURL().then(openFromPayloadUrl).catch(() => null);
-    const sub = Linking.addEventListener("url", (event) => openFromPayloadUrl(event.url));
+    Linking.getInitialURL()
+      .then(openFromPayloadUrl)
+      .catch(() => null);
+    const sub = Linking.addEventListener("url", (event) =>
+      openFromPayloadUrl(event.url),
+    );
     return () => sub.remove();
   }, [router]);
 
@@ -69,6 +73,7 @@ export default function RootLayout() {
                 name="forgot-password"
                 options={{ headerShown: false }}
               />
+              <Stack.Screen name="checkout" options={{ headerShown: false }} />
               <Stack.Screen
                 name="verification-code"
                 options={{ headerShown: false }}

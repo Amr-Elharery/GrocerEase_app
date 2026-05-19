@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
-
+import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CartScreen() {
@@ -178,11 +178,14 @@ export default function CartScreen() {
               </View>
 
               {/* Checkout Button */}
-              <TouchableOpacity className="bg-green-600 py-4 rounded-2xl mt-5">
-                <Text className="text-white text-center text-lg font-bold">
-                  Proceed To Checkout
-                </Text>
-              </TouchableOpacity>
+           <TouchableOpacity
+  onPress={() => router.push("/checkout")}
+  className="bg-green-600 py-4 rounded-2xl mt-5"
+>
+  <Text className="text-white text-center text-lg font-bold">
+    Proceed To Checkout
+  </Text>
+</TouchableOpacity>
             </View>
           </>
         )}
