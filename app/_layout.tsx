@@ -74,6 +74,8 @@ export default function RootLayout() {
                 options={{ headerShown: false }}
               />
               <Stack.Screen name="checkout" options={{ headerShown: false }} />
+               <Stack.Screen name="delivery-detail" options={{ headerShown: false }} />
+                <Stack.Screen name="delivery-home" options={{ headerShown: false }} />
               <Stack.Screen
                 name="verification-code"
                 options={{ headerShown: false }}
