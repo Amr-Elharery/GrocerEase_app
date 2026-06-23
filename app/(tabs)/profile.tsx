@@ -1,3 +1,4 @@
+import { ProtectedScreen } from "@/components/domain/ProtectedScreen";
 import { ThemeSwitcher } from "@/components/domain/theme-switcher";
 import { useAuth } from "@/lib/auth-context";
 import { THEME } from "@/lib/theme";
@@ -18,7 +19,7 @@ export default function ProfileScreen() {
     name: user?.name || "User",
     email: user?.email || "user@example.com",
     phone: user?.phone || "+1 (555) 123-4567",
-    joinedDate: user?.joinedDate || "January 2024",
+  
   };
 
   const handleChangePassword = () => {
@@ -39,140 +40,142 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
-      <ScrollView className="flex-1" contentContainerClassName="px-4 pb-8">
-        {/* Header */}
-        <View className="py-4 mb-6">
-          <Text className="text-foreground text-2xl font-bold">Profile</Text>
-          <Text className="text-muted-foreground text-sm mt-1">
-            Manage your account preferences.
-          </Text>
-        </View>
-
-        {/* User Profile Section */}
-        <View
-          className="p-4 rounded-lg border mb-6"
-          style={{
-            backgroundColor: tokens.muted,
-            borderColor: tokens.border,
-          }}
-        >
-          {/* Profile Header */}
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center flex-1">
-              <View
-                className="w-16 h-16 rounded-full flex-center justify-center"
-                style={{ backgroundColor: tokens.primary }}
-              >
-                <User size={32} color={tokens.primaryForeground} />
-              </View>
-              <View className="ml-4 flex-1">
-                <Text
-                  className="text-lg font-bold"
-                  style={{ color: tokens.foreground }}
-                >
-                  {userProfile.name}
-                </Text>
-                <Text
-                  className="text-sm mt-1"
-                  style={{ color: tokens.mutedForeground }}
-                >
-                  Member since {userProfile.joinedDate}
-                </Text>
-              </View>
-            </View>
-            <Pressable onPress={handleEditProfile}>
-              <ChevronRight size={24} color={tokens.primary} />
-            </Pressable>
+    <ProtectedScreen screenName="Profile">
+      <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
+        <ScrollView className="flex-1" contentContainerClassName="px-4 pb-8">
+          {/* Header */}
+          <View className="py-4 mb-6">
+            <Text className="text-foreground text-2xl font-bold">Profile</Text>
+            <Text className="text-muted-foreground text-sm mt-1">
+              Manage your account preferences.
+            </Text>
           </View>
 
-          {/* Contact Information */}
+          {/* User Profile Section */}
           <View
-            className="border-t pt-4"
-            style={{ borderTopColor: tokens.border }}
-          >
-            {/* Email */}
-            <View className="flex-row items-center mb-4">
-              <Mail size={20} color={tokens.mutedForeground} />
-              <View className="ml-3 flex-1">
-                <Text
-                  className="text-xs"
-                  style={{ color: tokens.mutedForeground }}
-                >
-                  Email
-                </Text>
-                <Text
-                  className="text-sm font-medium mt-1"
-                  style={{ color: tokens.foreground }}
-                >
-                  {userProfile.email}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Security Section */}
-        <View className="mb-6">
-          <Text
-            className="text-sm font-semibold mb-3"
-            style={{ color: tokens.foreground }}
-          >
-            Security
-          </Text>
-          <Pressable
-            onPress={handleChangePassword}
-            className="flex-row items-center justify-between p-4 rounded-lg border mb-3"
+            className="p-4 rounded-lg border mb-6"
             style={{
-              backgroundColor: tokens.background,
+              backgroundColor: tokens.muted,
               borderColor: tokens.border,
             }}
           >
-            <View className="flex-row items-center flex-1">
-              <Lock size={20} color={tokens.primary} />
-              <Text
-                className="text-base font-medium ml-3"
-                style={{ color: tokens.foreground }}
-              >
-                Change Password
-              </Text>
+            {/* Profile Header */}
+            <View className="flex-row items-center justify-between mb-4">
+              <View className="flex-row items-center flex-1">
+                <View
+                  className="w-16 h-16 rounded-full flex-center justify-center"
+                  style={{ backgroundColor: tokens.primary }}
+                >
+                  <User size={32} color={tokens.primaryForeground} />
+                </View>
+                <View className="ml-4 flex-1">
+                  <Text
+                    className="text-lg font-bold"
+                    style={{ color: tokens.foreground }}
+                  >
+                    {userProfile.name}
+                  </Text>
+                  <Text
+                    className="text-sm mt-1"
+                    style={{ color: tokens.mutedForeground }}
+                  >
+                   
+                  </Text>
+                </View>
+              </View>
+              <Pressable onPress={handleEditProfile}>
+                <ChevronRight size={24} color={tokens.primary} />
+              </Pressable>
             </View>
-            <ChevronRight size={20} color={tokens.mutedForeground} />
-          </Pressable>
-        </View>
 
-        {/* Preferences Section */}
-        <View className="mb-6">
-          <Text
-            className="text-sm font-semibold mb-3"
-            style={{ color: tokens.foreground }}
-          >
-            Preferences
-          </Text>
-          <ThemeSwitcher />
-        </View>
-
-        {/* Logout Section */}
-        <View>
-          <Pressable
-            onPress={handleLogout}
-            disabled={isLoading}
-            className="flex-row items-center justify-center p-4 rounded-lg opacity-100"
-            style={{
-              backgroundColor: tokens.destructive,
-              opacity: isLoading ? 0.6 : 1,
-            }}
-          >
-            <LogOut size={20} color={tokens.background} />
-            <Text
-              className="text-base font-semibold ml-2"
-              style={{ color: tokens.background }}
+            {/* Contact Information */}
+            <View
+              className="border-t pt-4"
+              style={{ borderTopColor: tokens.border }}
             >
-              {isLoading ? "Logging out..." : "Logout"}
+              {/* Email */}
+              <View className="flex-row items-center mb-4">
+                <Mail size={20} color={tokens.mutedForeground} />
+                <View className="ml-3 flex-1">
+                  <Text
+                    className="text-xs"
+                    style={{ color: tokens.mutedForeground }}
+                  >
+                    Email
+                  </Text>
+                  <Text
+                    className="text-sm font-medium mt-1"
+                    style={{ color: tokens.foreground }}
+                  >
+                    {userProfile.email}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Security Section */}
+          <View className="mb-6">
+            <Text
+              className="text-sm font-semibold mb-3"
+              style={{ color: tokens.foreground }}
+            >
+              Security
             </Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            <Pressable
+              onPress={handleChangePassword}
+              className="flex-row items-center justify-between p-4 rounded-lg border mb-3"
+              style={{
+                backgroundColor: tokens.background,
+                borderColor: tokens.border,
+              }}
+            >
+              <View className="flex-row items-center flex-1">
+                <Lock size={20} color={tokens.primary} />
+                <Text
+                  className="text-base font-medium ml-3"
+                  style={{ color: tokens.foreground }}
+                >
+                  Change Password
+                </Text>
+              </View>
+              <ChevronRight size={20} color={tokens.mutedForeground} />
+            </Pressable>
+          </View>
+
+          {/* Preferences Section */}
+          <View className="mb-6">
+            <Text
+              className="text-sm font-semibold mb-3"
+              style={{ color: tokens.foreground }}
+            >
+              Preferences
+            </Text>
+            <ThemeSwitcher />
+          </View>
+
+          {/* Logout Section */}
+          <View>
+            <Pressable
+              onPress={handleLogout}
+              disabled={isLoading}
+              className="flex-row items-center justify-center p-4 rounded-lg opacity-100"
+              style={{
+                backgroundColor: tokens.destructive,
+                opacity: isLoading ? 0.6 : 1,
+              }}
+            >
+              <LogOut size={20} color={tokens.background} />
+              <Text
+                className="text-base font-semibold ml-2"
+                style={{ color: tokens.background }}
+              >
+                {isLoading ? "Logging out..." : "Logout"}
+              </Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </ProtectedScreen>
   );
 }

@@ -8,10 +8,7 @@ import {
 } from "@/shared/shopping-list.service";
 
 import { useRouter } from "expo-router";
-import {
-  ChevronLeft,
-  Trash2,
-} from "lucide-react-native";
+import { ChevronLeft, Trash2 } from "lucide-react-native";
 
 import { useCallback, useEffect, useState } from "react";
 
@@ -25,6 +22,7 @@ import {
   View,
 } from "react-native";
 
+import { ProtectedScreen } from "@/components/domain/ProtectedScreen";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const fallbackProductImage = require("../../assets/images/icon.png");
@@ -91,10 +89,10 @@ export default function ShoppingListScreen() {
         qty: 1,
       },
     ];
-  
+
     setItems(mockData);
     setIsLoading(false);
-  
+
     // later switch back to:
     // loadShoppingList();
   }, []);
@@ -111,10 +109,7 @@ export default function ShoppingListScreen() {
 
         const newQty = Math.max(1, item.qty + delta);
 
-        const updated = await updateShoppingListQuantity(
-          productId,
-          newQty,
-        );
+        const updated = await updateShoppingListQuantity(productId, newQty);
 
         setItems(updated);
       } catch (error) {
@@ -185,221 +180,198 @@ export default function ShoppingListScreen() {
   const isEmpty = items.length === 0;
 
   return (
-    <SafeAreaView
-      className="flex-1 bg-background"
-      edges={["top"]}
-    >
-      <View className="flex-1">
-
-        {/* ================= HEADER ================= */}
-        <View className="flex-row items-center gap-3 px-4 py-4 border-b border-border">
-
-          <Pressable
-            onPress={() => router.back()}
-            className="h-10 w-10 items-center justify-center rounded-full bg-muted"
-          >
-            <ChevronLeft size={22} className="text-foreground" />
-          </Pressable>
-
-          <View className="flex-1">
-            <Text className="text-foreground text-2xl font-bold">
-              Shopping List
-            </Text>
-
-            {!isEmpty && (
-              <Text className="text-muted-foreground text-xs mt-1">
-                {items.length} item
-                {items.length !== 1 ? "s" : ""}
-              </Text>
-            )}
-          </View>
-        </View>
-
-        {/* ================= LOADING ================= */}
-        {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" />
-          </View>
-        ) : isEmpty ? (
-
-          /* ================= EMPTY STATE ================= */
-
-          <View className="flex-1 items-center justify-center px-6">
-
-            <View className="h-20 w-20 rounded-full bg-muted items-center justify-center mb-4">
-              <Text className="text-4xl">📋</Text>
-            </View>
-
-            <Text className="text-foreground text-xl font-semibold mb-2">
-              Your list is empty
-            </Text>
-
-            <Text className="text-muted-foreground text-center mb-6">
-              Add products from the browse screen.
-            </Text>
-
+    <ProtectedScreen screenName="Shopping Lists">
+      <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
+        <View className="flex-1">
+          {/* ================= HEADER ================= */}
+          <View className="flex-row items-center gap-3 px-4 py-4 border-b border-border">
             <Pressable
-              onPress={() => router.push("/(tabs)")}
-              className="bg-primary rounded-full px-6 py-3"
+              onPress={() => router.back()}
+              className="h-10 w-10 items-center justify-center rounded-full bg-muted"
             >
-              <Text className="text-primary-foreground font-semibold">
-                Browse Products
-              </Text>
+              <ChevronLeft size={22} className="text-foreground" />
             </Pressable>
+
+            <View className="flex-1">
+              <Text className="text-foreground text-2xl font-bold">
+                Shopping List
+              </Text>
+
+              {!isEmpty && (
+                <Text className="text-muted-foreground text-xs mt-1">
+                  {items.length} item
+                  {items.length !== 1 ? "s" : ""}
+                </Text>
+              )}
+            </View>
           </View>
-        ) : (
 
-          /* ================= LIST ITEMS ================= */
+          {/* ================= LOADING ================= */}
+          {isLoading ? (
+            <View className="flex-1 items-center justify-center">
+              <ActivityIndicator size="large" />
+            </View>
+          ) : isEmpty ? (
+            /* ================= EMPTY STATE ================= */
 
-          <ScrollView
-            className="flex-1"
-            contentContainerStyle={{
-              padding: 16,
-              paddingBottom: 120,
-            }}
-          >
-            {items.map((item) => {
-              const imageSource = item.image_url
-                ? { uri: item.image_url }
-                : fallbackProductImage;
+            <View className="flex-1 items-center justify-center px-6">
+              <View className="h-20 w-20 rounded-full bg-muted items-center justify-center mb-4">
+                <Text className="text-4xl">📋</Text>
+              </View>
 
-              return (
-                <View
-                  key={item.product_id}
-                  className="flex-row gap-3 bg-card border border-border rounded-2xl p-3 mb-3"
-                >
-                  {/* Product Image */}
-                  <Image
-                    source={imageSource}
-                    className="h-20 w-20 rounded-xl"
-                    resizeMode="cover"
-                  />
+              <Text className="text-foreground text-xl font-semibold mb-2">
+                Your list is empty
+              </Text>
 
-                  {/* Product Info */}
-                  <View className="flex-1">
+              <Text className="text-muted-foreground text-center mb-6">
+                Add products from the browse screen.
+              </Text>
 
-                    <View className="flex-row justify-between items-start">
+              <Pressable
+                onPress={() => router.push("/(tabs)")}
+                className="bg-primary rounded-full px-6 py-3"
+              >
+                <Text className="text-primary-foreground font-semibold">
+                  Browse Products
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            /* ================= LIST ITEMS ================= */
 
-                      <View className="flex-1 pr-2">
+            <ScrollView
+              className="flex-1"
+              contentContainerStyle={{
+                padding: 16,
+                paddingBottom: 120,
+              }}
+            >
+              {items.map((item) => {
+                const imageSource = item.image_url
+                  ? { uri: item.image_url }
+                  : fallbackProductImage;
 
-                        <Text
-                          className="text-foreground font-semibold text-base"
-                          numberOfLines={1}
-                        >
-                          {item.product_name}
-                        </Text>
+                return (
+                  <View
+                    key={item.product_id}
+                    className="flex-row gap-3 bg-card border border-border rounded-2xl p-3 mb-3"
+                  >
+                    {/* Product Image */}
+                    <Image
+                      source={imageSource}
+                      className="h-20 w-20 rounded-xl"
+                      resizeMode="cover"
+                    />
 
-                        {!!item.brand && (
-                          <Text className="text-muted-foreground text-xs mt-1">
-                            {item.brand}
+                    {/* Product Info */}
+                    <View className="flex-1">
+                      <View className="flex-row justify-between items-start">
+                        <View className="flex-1 pr-2">
+                          <Text
+                            className="text-foreground font-semibold text-base"
+                            numberOfLines={1}
+                          >
+                            {item.product_name}
                           </Text>
-                        )}
-                      </View>
 
-                      {/* Delete */}
-                      <Pressable
-                        onPress={() =>
-                          Alert.alert(
-                            "Remove Item",
-                            `Remove ${item.product_name} from list?`,
-                            [
-                              {
-                                text: "Cancel",
-                                style: "cancel",
-                              },
-                              {
-                                text: "Remove",
-                                style: "destructive",
-                                onPress: () =>
-                                  deleteItem(item.product_id),
-                              },
-                            ],
-                          )
-                        }
-                        className="h-8 w-8 rounded-full items-center justify-center bg-destructive/10"
-                      >
-                        <Trash2
-                          size={16}
-                          className="text-destructive"
-                        />
-                      </Pressable>
-                    </View>
-
-                    {/* Quantity Stepper */}
-                    <View className="flex-row items-center justify-between mt-4">
-
-                      <Text className="text-muted-foreground text-xs">
-                        Qty
-                      </Text>
-
-                      <View className="flex-row items-center gap-2">
-
-                        <Pressable
-                          onPress={() =>
-                            updateQuantity(item.product_id, -1)
-                          }
-                          className="h-7 w-7 rounded-full bg-muted items-center justify-center"
-                        >
-                          <Text className="text-foreground text-sm font-bold">
-                            −
-                          </Text>
-                        </Pressable>
-
-                        <View className="min-w-[40px] items-center rounded-full bg-muted px-3 py-1">
-                          <Text className="text-foreground text-xs font-semibold">
-                            {item.qty}
-                          </Text>
+                          {!!item.brand && (
+                            <Text className="text-muted-foreground text-xs mt-1">
+                              {item.brand}
+                            </Text>
+                          )}
                         </View>
 
+                        {/* Delete */}
                         <Pressable
                           onPress={() =>
-                            updateQuantity(item.product_id, 1)
+                            Alert.alert(
+                              "Remove Item",
+                              `Remove ${item.product_name} from list?`,
+                              [
+                                {
+                                  text: "Cancel",
+                                  style: "cancel",
+                                },
+                                {
+                                  text: "Remove",
+                                  style: "destructive",
+                                  onPress: () => deleteItem(item.product_id),
+                                },
+                              ],
+                            )
                           }
-                          className="h-7 w-7 rounded-full bg-muted items-center justify-center"
+                          className="h-8 w-8 rounded-full items-center justify-center bg-destructive/10"
                         >
-                          <Text className="text-foreground text-sm font-bold">
-                            +
-                          </Text>
+                          <Trash2 size={16} className="text-destructive" />
                         </Pressable>
+                      </View>
+
+                      {/* Quantity Stepper */}
+                      <View className="flex-row items-center justify-between mt-4">
+                        <Text className="text-muted-foreground text-xs">
+                          Qty
+                        </Text>
+
+                        <View className="flex-row items-center gap-2">
+                          <Pressable
+                            onPress={() => updateQuantity(item.product_id, -1)}
+                            className="h-7 w-7 rounded-full bg-muted items-center justify-center"
+                          >
+                            <Text className="text-foreground text-sm font-bold">
+                              −
+                            </Text>
+                          </Pressable>
+
+                          <View className="min-w-[40px] items-center rounded-full bg-muted px-3 py-1">
+                            <Text className="text-foreground text-xs font-semibold">
+                              {item.qty}
+                            </Text>
+                          </View>
+
+                          <Pressable
+                            onPress={() => updateQuantity(item.product_id, 1)}
+                            className="h-7 w-7 rounded-full bg-muted items-center justify-center"
+                          >
+                            <Text className="text-foreground text-sm font-bold">
+                              +
+                            </Text>
+                          </Pressable>
+                        </View>
                       </View>
                     </View>
                   </View>
-                </View>
-              );
-            })}
-          </ScrollView>
-        )}
+                );
+              })}
+            </ScrollView>
+          )}
 
-        {/* ================= OPTIMIZE BUTTON ================= */}
+          {/* ================= OPTIMIZE BUTTON ================= */}
 
-        {!isEmpty && !isLoading && (
-          <View className="px-4 pb-6 pt-3 border-t border-border bg-background">
+          {!isEmpty && !isLoading && (
+            <View className="px-4 pb-6 pt-3 border-t border-border bg-background">
+              <Pressable
+                onPress={handleOptimize}
+                disabled={isOptimizing}
+                className="bg-primary rounded-full py-4 items-center"
+              >
+                {isOptimizing ? (
+                  <View className="flex-row items-center gap-2">
+                    <ActivityIndicator size="small" color="#ffffff" />
 
-            <Pressable
-              onPress={handleOptimize}
-              disabled={isOptimizing}
-              className="bg-primary rounded-full py-4 items-center"
-            >
-              {isOptimizing ? (
-                <View className="flex-row items-center gap-2">
-                  <ActivityIndicator
-                    size="small"
-                    color="#ffffff"
-                  />
-
+                    <Text className="text-primary-foreground font-semibold text-base">
+                      Finding the best deal...
+                    </Text>
+                  </View>
+                ) : (
                   <Text className="text-primary-foreground font-semibold text-base">
-                    Finding the best deal...
+                    Optimize
                   </Text>
-                </View>
-              ) : (
-                <Text className="text-primary-foreground font-semibold text-base">
-                  Optimize 
-                </Text>
-              )}
-            </Pressable>
-          </View>
-        )}
-      </View>
-    </SafeAreaView>
+                )}
+              </Pressable>
+            </View>
+          )}
+        </View>
+      </SafeAreaView>
+    </ProtectedScreen>
   );
 }

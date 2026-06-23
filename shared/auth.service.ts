@@ -12,10 +12,12 @@ export interface LoginPayload {
 }
 
 export interface SignUpPayload {
-  fullName: string;
+  full_name: string;
   email: string;
   password: string;
-}
+  confirmPassword: string;
+  phone:string;
+}  
 
 export interface ResetPasswordPayload {
   email: string;
@@ -78,7 +80,20 @@ export const authService = {
    */
   async signup(payload: SignUpPayload): Promise<AuthResponse> {
     try {
-      const response = await httpService.post("/auth/signup", payload);
+      // Convert camelCase to snake_case for API
+      const apiPayload = {
+        full_name: payload.full_name,
+        email: payload.email,
+        phone:payload.phone,
+        password: payload.password,
+        confirmPassword: payload.confirmPassword,
+      };
+      console.log(apiPayload)
+      const response = await httpService.post(
+        "/auth/register",
+        apiPayload,
+      );
+        
       return response.data;
     } catch (error) {
       throw handleError(error);
@@ -90,7 +105,7 @@ export const authService = {
    */
   async forgotPassword(payload: ForgotPasswordPayload): Promise<AuthResponse> {
     try {
-      const response = await httpService.post("/auth/forgot-password", payload);
+      const response = await httpService.post("auth/forgot-password", payload);
       return response.data;
     } catch (error) {
       throw handleError(error);
@@ -126,7 +141,15 @@ export const authService = {
    */
   async changePassword(payload: ChangePasswordPayload): Promise<AuthResponse> {
     try {
-      const response = await httpService.post("/auth/change-password", payload);
+      // Convert camelCase to snake_case for API
+      const apiPayload = {
+        current_password: payload.currentPassword,
+        new_password: payload.newPassword,
+      };
+      const response = await httpService.post(
+        "/auth/change-password",
+        apiPayload,
+      );
       return response.data;
     } catch (error) {
       throw handleError(error);

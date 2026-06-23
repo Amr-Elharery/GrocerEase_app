@@ -8,7 +8,7 @@
  * - Auth context: lib/auth-context.tsx
  * - UI Components: components/domain/auth/
  */
-
+import * as React from 'react';
 import {
   AuthButton,
   EmailInput,
@@ -52,8 +52,13 @@ export default function SignUpScreen() {
 
     setLoading(true);
     try {
-      await signup(values.fullName, values.email, values.password);
-      // Navigation is handled by auth context
+      await signup(
+        values.full_name,
+        values.email,
+        values.phone,
+        values.password,
+        values.confirmPassword,
+      );
     } catch (error) {
       console.error("Sign up error:", error);
       alert(
@@ -108,12 +113,25 @@ export default function SignUpScreen() {
 
           {/* Full Name Input */}
           <TextInputField
-            value={values.fullName}
-            onChangeText={(value: string) => handleChange("fullName", value)}
-            onBlur={() => handleBlur("fullName")}
-            error={touched.fullName ? errors.fullName : undefined}
+            value={values.full_name}
+            onChangeText={(value: string) => handleChange("full_name", value)}
+            onBlur={() => handleBlur("full_name")}
+            error={touched.full_name ? errors.full_name : undefined}
             label="Full Name"
             placeholder="Enter your full name"
+            editable={!loading}
+          />
+          {/* Phone Input */}
+          <TextInputField
+            value={values.phone}
+            onChangeText={(value: string) => handleChange("phone", value)}
+            onBlur={() =>
+              handleBlur("phone" as Parameters<typeof handleBlur>[0])
+            }
+            error={touched.phone ? errors.phone : undefined}
+            label="Phone Number"
+            placeholder="Enter your phone number"
+            keyboardType="phone-pad"
             editable={!loading}
           />
 
@@ -150,7 +168,6 @@ export default function SignUpScreen() {
             placeholder="Confirm your password"
             editable={!loading}
           />
-
           {/* Sign Up Button */}
           <AuthButton
             onPress={handleSignUp}

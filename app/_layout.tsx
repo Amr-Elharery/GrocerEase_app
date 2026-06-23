@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { I18nextProvider } from "react-i18next";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "./global.css";
+import * as React from 'react';
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
@@ -86,7 +87,12 @@ export default function RootLayout() {
                 name="change-password"
                 options={{ headerShown: false }}
               />
+                   <Stack.Screen
+                name="location-setup"
+                options={{ headerShown: false }}
+              />
             </Stack>
+            
             <StatusBar style="auto" />
             <PortalHost />
           </AuthProvider>

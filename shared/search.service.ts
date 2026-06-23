@@ -95,6 +95,31 @@ function normalizeFilterOptions(raw: any): SearchFilterOptionsResponse {
   };
 }
 
+function normalizeProduct(raw: any): ProductSearchItem {
+  const image = toArray<any>(raw?.product_images).find((img: any) => img?.is_primary) || toArray<any>(raw?.product_images)[0];
+  return {
+    id: toNumber(raw?.id),
+    product_name: String(raw?.product_name ?? ''),
+    brand: raw?.brand ? String(raw.brand) : undefined,
+    sub_category_name: String(raw?.sub_category?.sub_category_name ?? raw?.category?.category_name ?? ''),
+    category_id: toNumber(raw?.category?.id),
+    sub_category_id: toNumber(raw?.sub_category?.id),
+    cheapest_price: 0,
+    thumbnail: image?.image_url ? String(image.image_url) : null,
+  };
+}
+
+function normalizeProductsResponse(raw: any): ProductSearchResponse {
+  const items = toArray<any>(raw).map(normalizeProduct);
+  return {
+    items,
+    page: 1,
+    limit: items.length,
+    total: items.length,
+    has_next_page: false,
+  };
+}
+
 function buildSearchParams(filters: ProductSearchFilters): Record<string, string> {
   const params: Record<string, string> = {};
   if (filters.q) params.q = filters.q;
@@ -295,5 +320,10 @@ export const searchService = {
     }
 
     return getMockFilterOptions();
+  },
+
+  async fetchSampleProducts(): Promise<ProductSearchResponse> {
+    const response = await httpService.get('/products');
+    return normalizeProductsResponse(response.data);
   },
 };

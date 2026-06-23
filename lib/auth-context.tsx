@@ -1,7 +1,9 @@
+import { authService } from "@/shared/auth.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { createContext, useContext, useEffect, useState } from "react";
-
+import { Alert } from "react-native";
+import * as React from 'react';
 export interface User {
   id: string;
   name: string;
@@ -14,10 +16,16 @@ export interface User {
 export interface AuthContextType {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isLoading: boolean;
   isLoggedIn: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (fullName: string, email: string, password: string) => Promise<void>;
+  signup: (
+    full_name: string,
+    email: string,
+    password: string,
+    phone: string,
+  ) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -26,6 +34,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -34,10 +43,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initializeAuth = async () => {
       try {
         const storedToken = await AsyncStorage.getItem("auth_token");
+        const storedRefreshToken = await AsyncStorage.getItem("refresh_token");
         const storedUser = await AsyncStorage.getItem("user_data");
 
         if (storedToken && storedUser) {
           setToken(storedToken);
+          setRefreshToken(storedRefreshToken);
           setUser(JSON.parse(storedUser));
         }
       } catch (error) {
@@ -53,59 +64,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      // TODO: Replace with actual API call
-      console.log("Login attempt:", { email, password });
 
-      // Simulate API response
-      const mockToken = "mock_token_" + Date.now();
-      const mockUser: User = {
-        id: "user_123",
-        name: "John Doe",
-        email: email,
-        phone: "+1 (555) 123-4567",
-        joinedDate: "January 2024",
+      const response = await authService.login({
+        email,
+        password,
+      });
+
+      const userData = response.user_data;
+      const token = response.access_token;
+      const refreshToken = response.refresh_token;
+
+      if (!token || !userData) {
+        throw new Error("Invalid login response");
+      }
+
+      const user: User = {
+        id: userData.id,
+        name: userData.full_name,
+        email: userData.email,
+        phone: userData.phone,
       };
 
-      // Store in AsyncStorage
-      await AsyncStorage.setItem("auth_token", mockToken);
-      await AsyncStorage.setItem("user_data", JSON.stringify(mockUser));
+      await AsyncStorage.multiSet([
+        ["auth_token", token],
+        ["refresh_token", refreshToken],
+        ["user_data", JSON.stringify(user)],
+      ]);
 
-      // Update state
-      setToken(mockToken);
-      setUser(mockUser);
+      setToken(token);
+      setRefreshToken(refreshToken);
+      setUser(user);
+
+      // navigate to location setup
+      router.replace("/location-setup");
     } catch (error) {
-      console.error("Login error:", error);
-      throw error;
+      console.log("Login error:", error);
+
+      Alert.alert("Login Failed", "Invalid email or password");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signup = async (fullName: string, email: string, password: string) => {
+  const signup = async (
+    full_name: string,
+    email: string,
+    phone: string,
+    password: string,
+    confirmPassword: string,
+  ) => {
     try {
       setIsLoading(true);
-      // TODO: Replace with actual API call
-      console.log("Signup attempt:", { fullName, email, password });
+      // Call signup API
+      const response = await authService.signup({
+        full_name,
+        email,
+        phone,
+        password,
+        confirmPassword,
+      });
+      console.log("Signup response:", response);
 
-      // Simulate API response
-      const mockToken = "mock_token_" + Date.now();
-      const mockUser: User = {
-        id: "user_" + Date.now(),
-        name: fullName,
-        email: email,
-        joinedDate: new Date().toLocaleString("en-US", {
-          month: "long",
-          year: "numeric",
-        }),
-      };
+      // Show success message
+      const successMessage = response.message || "User registered successfully";
 
-      // Store in AsyncStorage
-      await AsyncStorage.setItem("auth_token", mockToken);
-      await AsyncStorage.setItem("user_data", JSON.stringify(mockUser));
-
-      // Update state
-      setToken(mockToken);
-      setUser(mockUser);
+      Alert.alert("Sign Up Successful", successMessage, [
+        {
+          text: "OK",
+          onPress: () => router.replace("/login"),
+        },
+      ]);
     } catch (error) {
       console.error("Signup error:", error);
       throw error;
@@ -121,14 +149,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Clear AsyncStorage
       await AsyncStorage.removeItem("auth_token");
+      await AsyncStorage.removeItem("refresh_token");
       await AsyncStorage.removeItem("user_data");
 
       // Reset state
       setToken(null);
+      setRefreshToken(null);
       setUser(null);
 
       // Navigate to login
-      router.replace("/login");
+      router.replace("/");
     } catch (error) {
       console.error("Logout error:", error);
       throw error;
@@ -140,6 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value: AuthContextType = {
     user,
     token,
+    refreshToken,
     isLoading,
     isLoggedIn: !!user && !!token,
     login,

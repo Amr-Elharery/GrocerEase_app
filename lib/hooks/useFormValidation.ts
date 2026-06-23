@@ -115,9 +115,9 @@ export function useLoginForm() {
  */
 export function useSignUpForm() {
   return useFormValidation(
-    { fullName: "", email: "", password: "", confirmPassword: "" },
+    { full_name: "", email: "", password: "", confirmPassword: "" ,phone:""},
     {
-      fullName: validators.fullName,
+      full_name: validators.full_name,
       email: validators.email,
       password: validators.passwordStrong,
       confirmPassword: (confirmPassword, formValues) =>
