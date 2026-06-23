@@ -1,5 +1,6 @@
 import { THEME } from "@/lib/theme";
 import { useTheme } from "@/lib/theme-context";
+import { authService } from "@/shared/auth.service";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react-native";
 import { useState } from "react";
@@ -176,16 +177,27 @@ export default function ChangePasswordScreen() {
 
     setLoading(true);
     try {
-      // TODO: Implement change password API call
-      console.log("Changing password...");
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      alert("Password changed successfully!");
-      router.back();
+      // Call the change password API
+      const response = await authService.changePassword({
+        currentPassword,
+        newPassword,
+      });
+          
+      if (response.success) {
+        alert(response.message || "Password changed successfully!");
+        router.back();
+      } else {
+        alert(
+          response.message || "Failed to change password. Please try again.",
+        );
+      }
     } catch (error) {
       console.error("Change password error:", error);
-      alert("Failed to change password. Please try again.");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to change password. Please try again.";
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }

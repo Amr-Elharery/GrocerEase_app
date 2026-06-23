@@ -32,8 +32,10 @@ import {
 import { THEME } from "@/lib/theme";
 import { useTheme } from "@/lib/theme-context";
 import type { ProductSearchFilters, ProductSearchItem } from "@/lib/types";
+import { searchService } from "@/shared/search.service";
+import { useRouter } from "expo-router";
 import { Filter } from "lucide-react-native";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -45,6 +47,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SearchScreen() {
+  const router = useRouter();
   const { theme } = useTheme();
   const tokens = THEME[theme];
 
@@ -72,6 +75,40 @@ export default function SearchScreen() {
   // Filter options state
   const { options: filterOptions, isLoading: optionsLoading } =
     useSearchFilterOptions();
+
+  // Sample products state
+  const [sampleProducts, setSampleProducts] = useState<ProductSearchItem[]>([]);
+  const [sampleLoading, setSampleLoading] = useState(false);
+  const [sampleError, setSampleError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isActive = true;
+    const loadSamples = async () => {
+      try {
+        setSampleLoading(true);
+        setSampleError(null);
+        const data = await searchService.fetchSampleProducts();
+        if (isActive) {
+          setSampleProducts(data.items);
+        }
+      } catch (err) {
+        if (isActive) {
+          setSampleError(
+            err instanceof Error ? err.message : "Failed to fetch products",
+          );
+        }
+      } finally {
+        if (isActive) {
+          setSampleLoading(false);
+        }
+      }
+    };
+
+    loadSamples();
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   // Category matching
   const { matchingCategory, findCategory } = useFindMatchingCategory();
@@ -174,16 +211,12 @@ export default function SearchScreen() {
   }, [matchingCategory, updateFilters, setQuery]);
 
   // Handle product card tap
-  const handleProductPress = useCallback((product: ProductSearchItem) => {
-    // TODO: Navigate to product details
-    console.log("Product pressed:", product);
-  }, []);
-
-  // Handle add to cart
-  const handleAddToCart = useCallback((product: ProductSearchItem) => {
-    // TODO: Add product to shopping list/cart
-    console.log("Add to cart:", product);
-  }, []);
+  const handleProductPress = useCallback(
+    (product: ProductSearchItem) => {
+      router.push(`/product-details?id=${product.id}`);
+    },
+    [router],
+  );
 
   // Handle infinite scroll
   const handleEndReached = useCallback(() => {
@@ -282,11 +315,7 @@ export default function SearchScreen() {
                   numColumns={2}
                   columnWrapperStyle={{ justifyContent: "space-between" }}
                   renderItem={({ item }) => (
-                    <ProductCard
-                      product={item}
-                      onPress={handleProductPress}
-                      onAddToCart={handleAddToCart}
-                    />
+                    <ProductCard product={item} onPress={handleProductPress} />
                   )}
                   onEndReached={handleEndReached}
                   onEndReachedThreshold={0.5}
@@ -313,10 +342,37 @@ export default function SearchScreen() {
           </>
         ) : (
           /* Empty State */
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-lg" style={{ color: tokens.mutedForeground }}>
-              Start searching to find products
-            </Text>
+          <View className="flex-1">
+            {sampleError ? (
+              <View className="flex-1 items-center justify-center px-4 gap-2">
+                <Text
+                  className="text-base text-center"
+                  style={{ color: tokens.foreground }}
+                ></Text>
+                <ErrorSearchState
+                  error={sampleError}
+                  onRetry={async () => {}}
+                />
+              </View>
+            ) : sampleLoading ? (
+              <View className="flex-1 items-center justify-center">
+                <ActivityIndicator size="large" color={tokens.primary} />
+              </View>
+            ) : (
+              <FlatList
+                data={sampleProducts}
+                keyExtractor={(item) => `sample-${item.id}`}
+                numColumns={2}
+                columnWrapperStyle={{ justifyContent: "space-between" }}
+                renderItem={({ item }) => (
+                  <ProductCard product={item} onPress={handleProductPress} />
+                )}
+                contentContainerStyle={{
+                  paddingHorizontal: 4,
+                  paddingVertical: 8,
+                }}
+              />
+            )}
           </View>
         )}
       </View>

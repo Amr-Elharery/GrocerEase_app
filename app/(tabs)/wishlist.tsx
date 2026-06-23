@@ -1,3 +1,4 @@
+import { ProtectedScreen } from "@/components/domain/ProtectedScreen";
 import { watchlistService } from "@/shared/watchlist.service";
 import { useFocusEffect, useRouter } from "expo-router";
 import {
@@ -80,121 +81,123 @@ export default function WishlistScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={{ paddingVertical: 16 }}>
-          <Text className="text-foreground text-2xl font-bold">Wishlist</Text>
-          <Text className="text-muted-foreground text-sm mt-1">
-            Track target prices and react to price drops.
-          </Text>
-        </View>
+    <ProtectedScreen screenName="Wishlist">
+      <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={{ paddingVertical: 16 }}>
+            <Text className="text-foreground text-2xl font-bold">Wishlist</Text>
+            <Text className="text-muted-foreground text-sm mt-1">
+              Track target prices and react to price drops.
+            </Text>
+          </View>
 
-        {/* حالات العرض */}
-        {errorMessage ? (
-          <View className="bg-card border border-red-500 rounded-xl p-4 mb-3">
-            <View className="flex-row items-center gap-2 mb-1">
-              <TriangleAlert size={18} className="text-red-500" />
-              <Text className="text-foreground font-semibold">
-                Cannot load wishlist
+          {/* حالات العرض */}
+          {errorMessage ? (
+            <View className="bg-card border border-red-500 rounded-xl p-4 mb-3">
+              <View className="flex-row items-center gap-2 mb-1">
+                <TriangleAlert size={18} className="text-red-500" />
+                <Text className="text-foreground font-semibold">
+                  Cannot load wishlist
+                </Text>
+              </View>
+              <Text className="text-muted-foreground text-sm">
+                {errorMessage}
               </Text>
             </View>
-            <Text className="text-muted-foreground text-sm">
-              {errorMessage}
-            </Text>
-          </View>
-        ) : isLoading ? (
-          <View className="bg-card border border-border rounded-xl p-4 mb-3">
-            <Text className="text-muted-foreground">Loading wishlist...</Text>
-          </View>
-        ) : items.length === 0 ? (
-          <View className="bg-card border border-border rounded-xl p-4 mb-3">
-            <Text className="text-foreground font-semibold mb-1">
-              No watched products yet
-            </Text>
-            <Text className="text-muted-foreground text-sm">
-              Use the bell on product details to watch price and set a target.
-            </Text>
-          </View>
-        ) : (
-          items.map((item) => (
-            <Swipeable
-              key={item.id}
-              overshootRight={false}
-              rightThreshold={40}
-              onSwipeableOpen={() => onDelete(item)}
-              renderRightActions={() => (
-                <View className="w-20 bg-red-500 rounded-xl items-center justify-center mx-1 my-1">
-                  <Text className="text-white font-semibold">Delete</Text>
-                </View>
-              )}
-            >
-              <Pressable
-                className="flex-row items-center bg-card border border-border rounded-2xl p-4 mb-3 w-full"
-                style={{ elevation: 2 }}
-                onPress={() =>
-                  router.push({
-                    pathname: "/product-details",
-                    params: { id: String(item.product_id) },
-                  })
-                }
+          ) : isLoading ? (
+            <View className="bg-card border border-border rounded-xl p-4 mb-3">
+              <Text className="text-muted-foreground">Loading wishlist...</Text>
+            </View>
+          ) : items.length === 0 ? (
+            <View className="bg-card border border-border rounded-xl p-4 mb-3">
+              <Text className="text-foreground font-semibold mb-1">
+                No watched products yet
+              </Text>
+              <Text className="text-muted-foreground text-sm">
+                Use the bell on product details to watch price and set a target.
+              </Text>
+            </View>
+          ) : (
+            items.map((item) => (
+              <Swipeable
+                key={item.id}
+                overshootRight={false}
+                rightThreshold={40}
+                onSwipeableOpen={() => onDelete(item)}
+                renderRightActions={() => (
+                  <View className="w-20 bg-red-500 rounded-xl items-center justify-center mx-1 my-1">
+                    <Text className="text-white font-semibold">Delete</Text>
+                  </View>
+                )}
               >
-                {/* Image */}
-                <Image
-                  source={
-                    item.product_image
-                      ? { uri: item.product_image }
-                      : fallbackProductImage
+                <Pressable
+                  className="flex-row items-center bg-card border border-border rounded-2xl p-4 mb-3 w-full"
+                  style={{ elevation: 2 }}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/product-details",
+                      params: { id: String(item.product_id) },
+                    })
                   }
-                  className="w-14 h-14 rounded-xl"
-                  resizeMode="cover"
-                />
+                >
+                  {/* Image */}
+                  <Image
+                    source={
+                      item.product_image
+                        ? { uri: item.product_image }
+                        : fallbackProductImage
+                    }
+                    className="w-14 h-14 rounded-xl"
+                    resizeMode="cover"
+                  />
 
-                {/* Info */}
-                <View className="flex-1 ml-3">
-                  <Text
-                    className="text-foreground font-semibold text-base"
-                    numberOfLines={1}
-                  >
-                    {item.product_name ?? `Product #${item.product_id}`}
-                  </Text>
-
-                  <View className="flex-row items-center justify-between mt-2">
+                  {/* Info */}
+                  <View className="flex-1 ml-3">
                     <Text
-                      className="text-muted-foreground text-xs flex-shrink"
+                      className="text-foreground font-semibold text-base"
                       numberOfLines={1}
                     >
-                      Target: {item.target_price.toFixed(2)} EGP
+                      {item.product_name ?? `Product #${item.product_id}`}
                     </Text>
 
-                    <TrendIndicator
-                      current={item.current_price}
-                      previous={item.previous_price}
-                      target={item.target_price}
-                    />
+                    <View className="flex-row items-center justify-between mt-2">
+                      <Text
+                        className="text-muted-foreground text-xs flex-shrink"
+                        numberOfLines={1}
+                      >
+                        Target: {item.target_price.toFixed(2)} EGP
+                      </Text>
+
+                      <TrendIndicator
+                        current={item.current_price}
+                        previous={item.previous_price}
+                        target={item.target_price}
+                      />
+                    </View>
+
+                    <Text
+                      className="text-primary font-bold text-base mt-1 flex-shrink"
+                      numberOfLines={1}
+                    >
+                      Current: {item.current_price.toFixed(2)} EGP
+                    </Text>
                   </View>
 
-                  <Text
-                    className="text-primary font-bold text-base mt-1 flex-shrink"
-                    numberOfLines={1}
-                  >
-                    Current: {item.current_price.toFixed(2)} EGP
-                  </Text>
-                </View>
-
-                <ChevronRight
-                  size={20}
-                  className="text-muted-foreground ml-2"
-                />
-              </Pressable>
-            </Swipeable>
-          ))
-        )}
-      </ScrollView>
-    </SafeAreaView>
+                  <ChevronRight
+                    size={20}
+                    className="text-muted-foreground ml-2"
+                  />
+                </Pressable>
+              </Swipeable>
+            ))
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </ProtectedScreen>
   );
 }

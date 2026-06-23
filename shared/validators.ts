@@ -56,7 +56,7 @@ export const validators = {
    * - At least 2 characters
    * - Only letters and spaces
    */
-  fullName: (name: string): string => {
+  full_name: (name: string): string => {
     if (!name.trim()) return "Full name is required";
     if (name.trim().length < 2)
       return "Full name must be at least 2 characters";
