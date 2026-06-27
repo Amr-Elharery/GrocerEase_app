@@ -1,0 +1,10 @@
+{
+  "common": {
+    "english": "English",
+    "arabic": "Arabic"
+  },
+  "home": {
+    "edit": "Edit app/index.tsx to edit this screen.",
+    "status": "NativeUI is working! 🎉"
+  }
+}
