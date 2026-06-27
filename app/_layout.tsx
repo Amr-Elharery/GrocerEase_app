@@ -1,4 +1,5 @@
 import { AuthProvider } from "@/lib/auth-context";
+import { CartProvider } from "@/lib/context/cartContext";
 import i18n, { initI18n } from "@/lib/i18n";
 import { ThemeProvider } from "@/lib/theme-context";
 import { PortalHost } from "@rn-primitives/portal";
@@ -57,44 +58,50 @@ export default function RootLayout() {
       <I18nextProvider i18n={i18n}>
         <ThemeProvider defaultTheme="system">
           <AuthProvider>
-            <Stack>
-              <Stack.Screen name="index" options={{ headerShown: false }} />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="optimization"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="product-details"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen name="login" options={{ headerShown: false }} />
-              <Stack.Screen name="sign-up" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="forgot-password"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen name="checkout" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="verification-code"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="reset-password"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="change-password"
-                options={{ headerShown: false }}
-              />
-                   <Stack.Screen
-                name="location-setup"
-                options={{ headerShown: false }}
-              />
-            </Stack>
-            
-            <StatusBar style="auto" />
-            <PortalHost />
+            <CartProvider>
+              <Stack>
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="optimization"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="product-details"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen name="login" options={{ headerShown: false }} />
+                <Stack.Screen name="sign-up" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="forgot-password"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen name="checkout" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="verification-code"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="reset-password"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="change-password"
+                  options={{ headerShown: false }}
+                />
+                     <Stack.Screen
+                  name="location-setup"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="shop"
+                  options={{ headerShown: false }}
+                />
+              </Stack>
+              
+              <StatusBar style="auto" />
+              <PortalHost />
+            </CartProvider>
           </AuthProvider>
         </ThemeProvider>
       </I18nextProvider>

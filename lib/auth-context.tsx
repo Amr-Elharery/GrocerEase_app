@@ -1,9 +1,9 @@
 import { authService } from "@/shared/auth.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import * as React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 import { Alert } from "react-native";
-import * as React from 'react';
 export interface User {
   id: string;
   name: string;
@@ -74,10 +74,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = response.access_token;
       const refreshToken = response.refresh_token;
 
-      if (!token || !userData) {
-        throw new Error("Invalid login response");
-      }
-
       const user: User = {
         id: userData.id,
         name: userData.full_name,
@@ -95,12 +91,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setRefreshToken(refreshToken);
       setUser(user);
 
-      // navigate to location setup
       router.replace("/location-setup");
-    } catch (error) {
+    } catch (error: any) {
       console.log("Login error:", error);
 
-      Alert.alert("Login Failed", "Invalid email or password");
+      const errorMessage = error?.message || "";
+
+      if (errorMessage.includes("401")) {
+        Alert.alert("Login Failed", "Invalid email or password");
+      } else if (errorMessage.includes("400")) {
+        Alert.alert("Invalid Data", "Please check your information");
+      } else if (errorMessage.includes("500")) {
+        Alert.alert("Server Error", "Please try again later");
+      } else {
+        Alert.alert("Error", "Something went wrong");
+      }
+
+      console.log("Handled error:", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         confirmPassword,
       });
       console.log("Signup response:", response);
-
+      router.replace("/login");
       // Show success message
       const successMessage = response.message || "User registered successfully";
 
@@ -134,10 +141,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           onPress: () => router.replace("/login"),
         },
       ]);
-    } catch (error) {
-      console.error("Signup error:", error);
-      throw error;
-    } finally {
+    }  catch (error: any) {
+  console.log("========== REGISTER ERROR ==========");
+
+  console.log("Full error:", error);
+  console.log("Message:", error?.message);
+
+  const errorMessage = error?.message || "";
+
+  if (errorMessage.includes("401")) {
+    console.log("401 Error: Email already exists");
+
+    Alert.alert(
+      "Registration Failed",
+      "This email is already registered"
+    );
+
+  } else if (errorMessage.includes("422")) {
+    console.log("422 Error: Invalid data. Please check your inputs");
+
+    Alert.alert(
+      "Registration Failed",
+      "Invalid data. Please check your inputs"
+    );
+
+  } else if (errorMessage.includes("400")) {
+    console.log("400 Error: Bad request");
+
+    Alert.alert(
+      "Registration Failed",
+      "Invalid registration data"
+    );
+
+  } else {
+    console.log("Unknown Register Error");
+
+    Alert.alert(
+      "Registration Failed",
+      "Something went wrong"
+    );
+  }
+
+  console.log("====================================");
+} finally {
+      console.log(Response);
       setIsLoading(false);
     }
   };

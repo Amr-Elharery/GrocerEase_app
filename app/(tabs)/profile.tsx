@@ -34,11 +34,6 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleEditProfile = () => {
-    // TODO: Implement edit profile functionality
-    alert("Edit profile functionality to be implemented");
-  };
-
   return (
     <ProtectedScreen screenName="Profile">
       <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
@@ -75,17 +70,8 @@ export default function ProfileScreen() {
                   >
                     {userProfile.name}
                   </Text>
-                  <Text
-                    className="text-sm mt-1"
-                    style={{ color: tokens.mutedForeground }}
-                  >
-                   
-                  </Text>
                 </View>
               </View>
-              <Pressable onPress={handleEditProfile}>
-                <ChevronRight size={24} color={tokens.primary} />
-              </Pressable>
             </View>
 
             {/* Contact Information */}

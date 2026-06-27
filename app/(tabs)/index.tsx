@@ -22,13 +22,15 @@ export default function HomeScreen() {
   };
 
   const handleStorePress = (store: ShopDisplay) => {
-    console.log('Store pressed:', store.shop_name);
-    // TODO: Navigate to store details
+    router.push({
+      pathname: "/shop/[id]",
+      params: { id: String(store.id) },
+    });
   };
 
   const handleProductPress = (product: ProductDisplay) => {
     console.log('Product pressed:', product.product_name);
-    router.push('/product-details');
+    router.push(`/product-details?id=${product.id}`);
   };
 
   return (
