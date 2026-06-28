@@ -8,7 +8,7 @@
  * - Auth context: lib/auth-context.tsx
  * - UI Components: components/domain/auth/
  */
-
+import * as React from 'react';
 import {
   AuthButton,
   EmailInput,
@@ -50,19 +50,22 @@ export default function LoginScreen() {
     }
 
     setLoading(true);
-    try {
-      await login(values.email, values.password);
-      // Navigation is handled by auth context
-    } catch (error) {
-      console.error("Login error:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Login failed. Please try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
+ try {
+  console.log("start login");
+
+  const result = await login(values.email, values.password);
+
+ 
+
+} catch (error) {
+  console.log("login error", error);
+
+  alert(
+    error instanceof Error
+      ? error.message
+      : "Login failed"
+  );
+}
   };
 
   const handleSignUp = () => {
@@ -172,7 +175,7 @@ export default function LoginScreen() {
               Do not have an account?{" "}
             </Text>
             <Pressable onPress={handleSignUp}>
-              <Text className="font-semibold" style={{ color: tokens.primary }}>
+              <Text className="font-semibold" style={{ color: tokens.primaryForeground }}>
                 Sign Up
               </Text>
             </Pressable>
