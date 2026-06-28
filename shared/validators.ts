@@ -50,7 +50,23 @@ export const validators = {
     if (confirmPassword !== password) return "Passwords do not match";
     return "";
   },
+/**
+ * Validates phone number
+ * - Must include country code
+ * - Starts with +
+ * - 8 to 15 digits
+ */
+phone: (phone: string): string => {
+  if (!phone) return "Phone number is required";
 
+  const phoneRegex = /^\+[1-9]\d{7,14}$/;
+
+  if (!phoneRegex.test(phone.replace(/\s/g, ""))) {
+    return "Enter phone number with country code (example: +201012345678)";
+  }
+
+  return "";
+},
   /**
    * Validates full name
    * - At least 2 characters

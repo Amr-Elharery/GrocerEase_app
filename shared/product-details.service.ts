@@ -1,15 +1,9 @@
-import { MOCK_PRODUCTS, MOCK_STORES } from '@/lib/mock-data';
+import type { ProductDetail } from '@/lib/types';
 import { httpService } from './httpService';
 
-export interface ProductDetailsData {
-  id: number;
-  product_name: string;
-  brand: string;
-  unit: string;
-  category_id: number;
-  sub_category_id: number;
-  category_name: string;
-  sub_category_name: string;
+function toNumber(value: unknown, fallback = 0): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 export interface ProductImageItem {
@@ -29,148 +23,107 @@ export interface ProductStoreOffer {
   is_active: boolean;
 }
 
-function toNumber(value: unknown, fallback = 0): number {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function normalizeProduct(raw: any): ProductDetailsData {
-  const item = raw?.data ?? raw ?? {};
+function normalizeProductDetail(raw: any): ProductDetail {
   return {
-    id: toNumber(item.id),
-    product_name: String(item.product_name ?? item.name ?? ''),
-    brand: String(item.brand ?? 'Unknown brand'),
-    unit: String(item.unit ?? item.measurement_unit ?? '1 unit'),
-    category_id: toNumber(item.category_id),
-    sub_category_id: toNumber(item.sub_category_id),
-    category_name: String(item.category_name ?? item.category?.category_name ?? 'Category'),
-    sub_category_name: String(
-      item.sub_category_name ?? item.sub_category?.category_name ?? 'Sub-category'
-    ),
+    id: toNumber(raw?.id),
+    product_name: String(raw?.product_name ?? ''),
+    description: String(raw?.description ?? ''),
+    brand: String(raw?.brand ?? ''),
+    unit: String(raw?.unit ?? ''),
+    category: raw?.category
+      ? {
+          id: toNumber(raw.category?.id),
+          category_name: String(raw.category?.category_name ?? ''),
+        }
+      : { id: 0, category_name: '' },
+    sub_category: raw?.sub_category
+      ? {
+          id: toNumber(raw.sub_category?.id),
+          category_name: String(raw.sub_category?.category_name ?? ''),
+        }
+      : null,
+    product_images: Array.isArray(raw?.product_images)
+      ? raw.product_images.map((img: any) => ({
+          id: toNumber(img?.id),
+          product_id: toNumber(img?.product_id),
+          image_url: img?.image_url ?? null,
+          is_primary: Boolean(img?.is_primary),
+          created_at: String(img?.created_at ?? ''),
+          updated_at: String(img?.updated_at ?? ''),
+        }))
+      : [],
+    shops: Array.isArray(raw?.shops)
+      ? raw.shops.map((shop: any) => ({
+          id: toNumber(shop?.id),
+          shop_id: toNumber(shop?.shop_id),
+          available_stock: toNumber(shop?.available_stock),
+          price: toNumber(shop?.price),
+          is_active: Boolean(shop?.is_active),
+          is_available: Boolean(shop?.is_available),
+          shop: {
+            id: toNumber(shop?.shop?.id),
+            shop_name: String(shop?.shop?.shop_name ?? ''),
+            logo_url: shop?.shop?.logo_url ?? null,
+          },
+        }))
+      : [],
   };
 }
 
-function normalizeImages(raw: any): ProductImageItem[] {
+function normalizeProductImages(raw: any): ProductImageItem[] {
   const payload = raw?.data ?? raw ?? [];
-  const rows = Array.isArray(payload) ? payload : Array.isArray(payload.items) ? payload.items : [];
-  return rows.map((item: any) => ({
-    id: toNumber(item.id),
-    detail_url: String(item.detail_url ?? item.variants?.detail ?? item.image_url ?? ''),
-    thumbnail_url: String(item.thumbnail_url ?? item.variants?.thumbnail ?? item.image_url ?? ''),
+  const rows = Array.isArray(payload) ? payload : payload.images ?? [];
+  return rows.map((img: any) => ({
+    id: toNumber(img?.id),
+    detail_url: String(img?.detail_url ?? img?.image_url ?? ''),
+    thumbnail_url: String(img?.thumbnail_url ?? img?.image_url ?? ''),
   }));
 }
 
-function normalizeStoreOffers(raw: any): ProductStoreOffer[] {
-  const payload = raw?.data ?? raw ?? [];
-  const rows = Array.isArray(payload)
-    ? payload
-    : Array.isArray(payload.items)
-      ? payload.items
-      : Array.isArray(payload.shop_products)
-        ? payload.shop_products
-        : [];
-
-  return rows.map((item: any) => ({
-    id: toNumber(item.id),
-    shop_id: toNumber(item.shop_id),
-    store_name: String(item.store_name ?? item.shop_name ?? item.shop?.shop_name ?? 'Store'),
-    price: toNumber(item.price),
-    delivery_cost: toNumber(item.delivery_cost),
-    available_stock: toNumber(item.available_stock ?? item.stock),
-    low_stock_threshold: toNumber(item.low_stock_threshold, 5),
-    is_active: Boolean(item.is_active),
-  }));
-}
-
-function mockProductById(productId: number): ProductDetailsData {
-  const product = MOCK_PRODUCTS.find((item) => item.id === productId) ?? MOCK_PRODUCTS[0];
-  return {
-    id: product.id,
-    product_name: product.product_name,
-    brand: 'GrocerEase',
-    unit: '1 pack',
-    category_id: product.category_id,
-    sub_category_id: product.category_id + 100,
-    category_name: 'Groceries',
-    sub_category_name: product.category?.category_name ?? 'General',
-  };
-}
-
-function mockImagesById(productId: number): ProductImageItem[] {
-  const product = MOCK_PRODUCTS.find((item) => item.id === productId);
-  if (!product?.primaryImage || typeof product.primaryImage !== 'number') return [];
-  return [
-    {
-      id: productId,
-      detail_url: '',
-      thumbnail_url: '',
-    },
-  ];
-}
-
-function mockStoreOffersById(productId: number): ProductStoreOffer[] {
-  const candidates = MOCK_PRODUCTS.filter((item) => item.id === productId);
-  if (!candidates.length) {
-    return MOCK_STORES.slice(0, 3).map((store, index) => ({
-      id: index + 1,
-      shop_id: store.id,
-      store_name: store.shop_name,
-      price: 20 + index * 3,
-      delivery_cost: 8 + index,
-      available_stock: 5 + index * 4,
-      low_stock_threshold: 4,
-      is_active: true,
-    }));
-  }
-
-  return candidates.map((item, index) => ({
-    id: index + 1,
-    shop_id: item.shop_id,
-    store_name: item.shop_name,
-    price: item.shop_price,
-    delivery_cost: 8 + index,
-    available_stock: item.stock,
-    low_stock_threshold: 5,
-    is_active: true,
+function normalizeProductShops(raw: any): ProductStoreOffer[] {
+  const payload = raw?.shops ?? raw ?? [];
+  const rows = Array.isArray(payload) ? payload : [];
+  return rows.map((shop: any) => ({
+    id: toNumber(shop?.id),
+    shop_id: toNumber(shop?.shop_id ?? shop?.shop?.id),
+    store_name: String(shop?.shop?.shop_name ?? shop?.shop_name ?? ''),
+    price: toNumber(shop?.price),
+    delivery_cost: toNumber(shop?.delivery_cost ?? shop?.deliveryPrice ?? 0),
+    available_stock: toNumber(shop?.available_stock ?? shop?.stock ?? 0),
+    low_stock_threshold: toNumber(shop?.low_stock_threshold ?? 5),
+    is_active: Boolean(shop?.is_active),
   }));
 }
 
 export const productDetailsService = {
-  async getProduct(productId: number): Promise<ProductDetailsData> {
+  async getProduct(productId: number): Promise<ProductDetail | null> {
     try {
       const response = await httpService.get(`/products/${productId}`);
-      return normalizeProduct(response.data);
-    } catch {
-      return mockProductById(productId);
+      const payload = response.data?.data ?? response.data ?? {};
+      return normalizeProductDetail(payload);
+    } catch (error) {
+      console.error('Failed to fetch product:', error);
+      return null;
     }
   },
 
   async getProductImages(productId: number): Promise<ProductImageItem[]> {
     try {
       const response = await httpService.get(`/products/${productId}/images`);
-      return normalizeImages(response.data);
-    } catch {
-      return mockImagesById(productId);
+      return normalizeProductImages(response.data);
+    } catch (error) {
+      console.error('Failed to fetch product images:', error);
+      return [];
     }
   },
 
   async getStoreOffers(productId: number): Promise<ProductStoreOffer[]> {
-    const endpoints = [`/products/${productId}/shop-products`, `/shop-products`];
-
-    for (const endpoint of endpoints) {
-      try {
-        const response = await httpService.get(endpoint, {
-          params: endpoint === '/shop-products' ? { product_id: productId, is_active: true } : undefined,
-        });
-        const offers = normalizeStoreOffers(response.data).filter(
-          (item) => item.is_active && item.shop_id > 0
-        );
-        if (offers.length) return offers;
-      } catch {
-        // fallback to next endpoint
-      }
+    try {
+      const response = await httpService.get(`/products/${productId}/shops`);
+      return normalizeProductShops(response.data);
+    } catch (error) {
+      console.error('Failed to fetch store offers:', error);
+      return [];
     }
-
-    return mockStoreOffersById(productId);
   },
 };

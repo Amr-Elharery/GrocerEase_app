@@ -1,69 +1,54 @@
 import { ProtectedScreen } from "@/components/domain/ProtectedScreen";
+import { THEME } from "@/lib/theme";
+import { useCart } from "@/lib/context/cartContext";
+import { useTheme } from "@/lib/theme-context";
+import { MOCK_STORES } from "@/lib/mock-data";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CartScreen() {
-  // Empty cart initially
-  const [cartItems, setCartItems] = useState<any[]>([]);
+  const { cart, shopId, removeItem, updateQty, subtotal } = useCart();
+  const { theme } = useTheme();
+  const tokens = THEME[theme];
 
-  // Increase quantity
+  const cartShop = shopId
+    ? MOCK_STORES.find((s) => s.id === shopId)
+    : null;
+
   const increaseQty = (id: number) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity: item.quantity + 1,
-            }
-          : item,
-      ),
-    );
+    const item = cart.find((i) => i.id === id);
+    if (item) {
+      updateQty(id, item.quantity + 1);
+    }
   };
 
-  // Decrease quantity
   const decreaseQty = (id: number) => {
-    setCartItems((prev) =>
-      prev
-        .map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                quantity: item.quantity - 1,
-              }
-            : item,
-        )
-        .filter((item) => item.quantity > 0),
-    );
+    const item = cart.find((i) => i.id === id);
+    if (item) {
+      updateQty(id, item.quantity - 1);
+    }
   };
-
-  // Remove item
-  const removeItem = (id: number) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  // Subtotal
-  const subtotal = cartItems.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0,
-  );
 
   return (
     <ProtectedScreen screenName="Cart">
-      <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
+      <SafeAreaView
+        className="flex-1 bg-background"
+        edges={["top"]}
+        style={{ backgroundColor: tokens.background }}
+      >
         <View className="flex-1 px-4 pt-4">
-          {/* Header */}
           <View className="mb-6">
             <Text className="text-foreground text-3xl font-bold">My Cart</Text>
-
-            <Text className="text-muted-foreground mt-1">
-              Review your selected items
-            </Text>
+            {cartShop && (
+              <Text className="text-muted-foreground mt-1">
+                From {cartShop.shop_name}
+              </Text>
+            )}
           </View>
 
-          {/* Empty Cart */}
-          {cartItems.length === 0 ? (
+          {cart.length === 0 ? (
             <View className="flex-1 items-center justify-center">
               <Text className="text-foreground text-2xl font-bold">
                 Your cart is empty
@@ -75,42 +60,35 @@ export default function CartScreen() {
             </View>
           ) : (
             <>
-              {/* Cart List */}
               <FlatList
-                data={cartItems}
+                data={cart}
                 keyExtractor={(item) => item.id.toString()}
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{
-                  paddingBottom: 20,
-                }}
+                contentContainerStyle={{ paddingBottom: 20 }}
                 renderItem={({ item }) => (
                   <View className="bg-card border border-border p-4 rounded-2xl mb-4 flex-row">
-                    {/* Product Image */}
                     <Image
-                      source={{ uri: item.image }}
+                      source={item.primaryImage || { uri: item.image }}
                       className="w-24 h-24 rounded-xl"
                       resizeMode="cover"
                     />
 
-                    {/* Product Info */}
                     <View className="flex-1 ml-4 justify-between">
                       <View>
                         <Text className="text-foreground text-xl font-bold">
-                          {item.title}
+                          {item.product_name || item.title}
                         </Text>
 
                         <Text className="text-muted-foreground mt-1">
-                          ${item.price}
+                          {item.shop_price
+                            ? `${item.shop_price} EGP`
+                            : `$${item.price}`}
                         </Text>
                       </View>
 
-                      {/* Quantity + Remove */}
                       <View className="flex-row items-center justify-between mt-4">
-                        {/* Quantity Controls */}
                         <View className="flex-row items-center bg-background border border-border rounded-xl px-3 py-2">
-                          <TouchableOpacity
-                            onPress={() => decreaseQty(item.id)}
-                          >
+                          <TouchableOpacity onPress={() => decreaseQty(item.id)}>
                             <Text className="text-foreground text-xl font-bold">
                               -
                             </Text>
@@ -120,16 +98,13 @@ export default function CartScreen() {
                             {item.quantity}
                           </Text>
 
-                          <TouchableOpacity
-                            onPress={() => increaseQty(item.id)}
-                          >
+                          <TouchableOpacity onPress={() => increaseQty(item.id)}>
                             <Text className="text-foreground text-xl font-bold">
                               +
                             </Text>
                           </TouchableOpacity>
                         </View>
 
-                        {/* Remove Button */}
                         <TouchableOpacity
                           onPress={() => removeItem(item.id)}
                           className="bg-red-500 px-4 py-2 rounded-xl"
@@ -142,20 +117,17 @@ export default function CartScreen() {
                 )}
               />
 
-              {/* Bottom Section */}
               <View className="bg-card border border-border p-5 rounded-2xl">
-                {/* Subtotal */}
                 <View className="flex-row justify-between items-center">
                   <Text className="text-foreground text-xl font-bold">
                     Subtotal
                   </Text>
 
                   <Text className="text-foreground text-xl font-bold">
-                    ${subtotal.toFixed(2)}
+                    {subtotal.toFixed(2)} EGP
                   </Text>
                 </View>
 
-                {/* Checkout Button */}
                 <TouchableOpacity
                   onPress={() => router.push("/checkout")}
                   className="bg-green-600 py-4 rounded-2xl mt-5"

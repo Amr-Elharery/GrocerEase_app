@@ -7,10 +7,37 @@ import React, {
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const CartContext = createContext();
+interface CartContextValue {
+  cart: any[];
+  shopId: number | null;
+  addItem: (item: any) => void;
+  conflictAddItem: (item: any) => void;
+  removeItem: (id: number) => void;
+  updateQty: (id: number, qty: number) => void;
+  clearCart: () => void;
+  canAddItem: (shopId: number) => boolean;
+  getCartShopId: () => number | null;
+  subtotal: number;
+  cartCount: number;
+}
+
+const CartContext = createContext<CartContextValue>({
+  cart: [],
+  shopId: null,
+  addItem: () => {},
+  conflictAddItem: () => {},
+  removeItem: () => {},
+  updateQty: () => {},
+  clearCart: () => {},
+  canAddItem: () => true,
+  getCartShopId: () => null,
+  subtotal: 0,
+  cartCount: 0,
+});
 
 const initialState = {
   cart: [],
+  shopId: null,
 };
 
 function cartReducer(state, action) {
@@ -20,29 +47,29 @@ function cartReducer(state, action) {
         (item) => item.id === action.payload.id
       );
 
-      if (existing) {
-        return {
-          ...state,
-          cart: state.cart.map((item) =>
+      const newItems = existing
+        ? state.cart.map((item) =>
             item.id === action.payload.id
               ? {
                   ...item,
                   quantity: item.quantity + 1,
                 }
               : item
-          ),
-        };
-      }
+          )
+        : [...state.cart, { ...action.payload, quantity: 1 }];
 
       return {
         ...state,
-        cart: [
-          ...state.cart,
-          {
-            ...action.payload,
-            quantity: 1,
-          },
-        ],
+        cart: newItems,
+        shopId: action.payload.shop_id ?? state.shopId,
+      };
+    }
+
+    case "CONFLICT_ADD_ITEM": {
+      return {
+        ...state,
+        cart: [{ ...action.payload, quantity: 1 }],
+        shopId: action.payload.shop_id,
       };
     }
 
@@ -71,12 +98,14 @@ function cartReducer(state, action) {
       return {
         ...state,
         cart: [],
+        shopId: null,
       };
 
     case "SET_CART":
       return {
         ...state,
-        cart: action.payload,
+        cart: action.payload.cart,
+        shopId: action.payload.shopId ?? null,
       };
 
     default:
@@ -84,7 +113,7 @@ function cartReducer(state, action) {
   }
 }
 
-export function CartProvider({ children }) {
+export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(
     cartReducer,
     initialState
@@ -98,17 +127,25 @@ export function CartProvider({ children }) {
   // Save Cart
   useEffect(() => {
     saveCart();
-  }, [state.cart]);
+  }, [state.cart, state.shopId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadCart() {
     try {
       const data = await AsyncStorage.getItem("cart");
 
       if (data) {
-        dispatch({
-          type: "SET_CART",
-          payload: JSON.parse(data),
-        });
+        const parsed = JSON.parse(data);
+        if (parsed && typeof parsed === "object" && "cart" in parsed) {
+          dispatch({
+            type: "SET_CART",
+            payload: parsed,
+          });
+        } else {
+          dispatch({
+            type: "SET_CART",
+            payload: { cart: parsed, shopId: null },
+          });
+        }
       }
     } catch (error) {
       console.log(error);
@@ -119,7 +156,7 @@ export function CartProvider({ children }) {
     try {
       await AsyncStorage.setItem(
         "cart",
-        JSON.stringify(state.cart)
+        JSON.stringify({ cart: state.cart, shopId: state.shopId })
       );
     } catch (error) {
       console.log(error);
@@ -130,6 +167,13 @@ export function CartProvider({ children }) {
   const addItem = (item) => {
     dispatch({
       type: "ADD_ITEM",
+      payload: item,
+    });
+  };
+
+  const conflictAddItem = (item) => {
+    dispatch({
+      type: "CONFLICT_ADD_ITEM",
       payload: item,
     });
   };
@@ -159,6 +203,13 @@ export function CartProvider({ children }) {
     });
   };
 
+  const canAddItem = (shopId) => {
+    if (!state.shopId || state.cart.length === 0) return true;
+    return state.shopId === shopId;
+  };
+
+  const getCartShopId = () => state.shopId;
+
   const subtotal = state.cart.reduce(
     (total, item) =>
       total + item.price * item.quantity,
@@ -174,10 +225,14 @@ export function CartProvider({ children }) {
     <CartContext.Provider
       value={{
         cart: state.cart,
+        shopId: state.shopId,
         addItem,
+        conflictAddItem,
         removeItem,
         updateQty,
         clearCart,
+        canAddItem,
+        getCartShopId,
         subtotal,
         cartCount,
       }}
