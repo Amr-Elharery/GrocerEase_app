@@ -11,8 +11,8 @@ export function StoreCard({ store, onPress }: StoreCardProps) {
   const imageSource = store.logo_url
     ? { uri: store.logo_url }
     : require("../../assets/images/icon.png");
-
-
+console.log("logo:", store);
+   
   return (
     <Pressable
       onPress={() => onPress?.(store)}

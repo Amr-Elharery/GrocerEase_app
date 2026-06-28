@@ -7,40 +7,13 @@ function toNumber(value: unknown, fallback = 0): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function normalizeShop(raw: any): ShopDisplay {
+ function normalizeShop(shop: any): ShopDisplay {
   return {
-    id: toNumber(raw?.id),
-    user_id: toNumber(raw?.user_id),
-    shop_name: String(raw?.shop_name ?? ''),
-    created_at: String(raw?.created_at ?? new Date().toISOString()),
-    updated_at: String(raw?.updated_at ?? new Date().toISOString()),
-    images: Array.isArray(raw?.images)
-      ? raw.images.map((img: any) => ({
-          id: toNumber(img?.id),
-          shop_id: toNumber(img?.shop_id),
-          image_url: img?.image_url,
-          created_at: String(img?.created_at ?? ''),
-          updated_at: String(img?.updated_at ?? ''),
-        }))
-      : [],
-    location: raw?.location
-      ? {
-          id: toNumber(raw.location?.id),
-          shop_id: toNumber(raw.location?.shop_id),
-          area_id: toNumber(raw.location?.area_id),
-          city: String(raw.location?.city ?? ''),
-          building_name: String(raw.location?.building_name ?? ''),
-          street_name: String(raw.location?.street_name ?? ''),
-          street_number: toNumber(raw.location?.street_number),
-          longitude: toNumber(raw.location?.longitude),
-          latitude: toNumber(raw.location?.latitude),
-          created_at: String(raw.location?.created_at ?? ''),
-          updated_at: String(raw.location?.updated_at ?? ''),
-        }
-      : undefined,
-    averageRating: toNumber(raw?.average_rating ?? raw?.averageRating),
-    reviewCount: toNumber(raw?.review_count ?? raw?.reviewCount),
-    deliveryTime: raw?.delivery_time ? String(raw.delivery_time) : undefined,
+    id: shop.id,
+    shop_name: shop.shop_name,
+    description: shop.description,
+    logo_url: shop.logo_url,
+    is_active: shop.is_active,
   };
 }
 
@@ -100,20 +73,28 @@ function groupProductsByCategory(products: ProductDisplay[]): { category_name: s
 }
 
 export const shopService = {
-  async getShops(areaId?: number): Promise<ShopDisplay[]> {
-    try {
-      const response = await httpService.get('/shops', {
-        params: { area_id: areaId },
-      });
-      console.log(response)
-      const payload = response.data ?? [];
-      const shops = Array.isArray(payload) ? payload.map(normalizeShop) : [];
-      return shops.length ? shops : MOCK_STORES;
-    } catch {
-      return MOCK_STORES;
-    }
-  },
+async getShops(areaId?: number): Promise<ShopDisplay[]> {
+  try {
+    const response = await httpService.get('/shops', {
+      params: { area_id: areaId , limit: 50,
+    offset: 0,},
+    });
 
+    console.log("API SHOPS:", response.data);
+
+    const shops = response.data.map((shop: any) =>
+      normalizeShop(shop)
+    );
+
+    console.log("NORMALIZED SHOPS:", shops);
+
+    return shops;
+
+  } catch (error) {
+    console.log("SHOP ERROR:", error);
+    return [];
+  }
+},
 async getShopProducts(shopId: number): Promise<{
    products: ProductDisplay[];
    categories: { category_name: string; products: ProductDisplay[] }[];

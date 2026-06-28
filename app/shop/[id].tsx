@@ -2,7 +2,7 @@ import { CartConflictModal } from "@/components/domain/CartConflictModal";
 import { ProductCard } from "@/components/domain/product-card";
 import { Button } from "@/components/ui/button";
 import { THEME } from "@/lib/theme";
-import { useCart } from "@/lib/context/cartContext";
+import { useCart, useToast } from "@/lib/context/cartContext";
 import { useTheme } from "@/lib/theme-context";
 import type { ProductDisplay, ShopDisplay } from "@/lib/types";
 import { shopService } from "@/shared/shop.service";
@@ -25,6 +25,7 @@ export default function ShopProductsScreen() {
   const tokens = THEME[theme];
   const { shopId, addItem, clearCart, conflictAddItem, cartCount } =
     useCart();
+  const { showToast } = useToast();
 
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [pendingProduct, setPendingProduct] = useState<ProductDisplay | null>(null);
@@ -85,6 +86,7 @@ export default function ShopProductsScreen() {
         return;
       }
       addItem(product);
+      showToast("Added to cart successfully");
     },
     [addItem, shopId]
   );
@@ -93,10 +95,11 @@ export default function ShopProductsScreen() {
     if (pendingProduct) {
       clearCart();
       conflictAddItem(pendingProduct);
+      showToast("Added to cart successfully");
     }
     setShowConflictModal(false);
     setPendingProduct(null);
-  }, [pendingProduct, clearCart, conflictAddItem]);
+  }, [pendingProduct, clearCart, conflictAddItem, showToast]);
 
   const handleCancelConflict = useCallback(() => {
     setShowConflictModal(false);
