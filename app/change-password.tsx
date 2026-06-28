@@ -183,10 +183,15 @@ export default function ChangePasswordScreen() {
         newPassword,
       });
           
-      if (response.success) {
-        alert(response.message || "Password changed successfully!");
-        router.back();
-      } else {
+if (response.success) {
+         alert(response.message || "Password changed successfully!");
+         setCurrentPassword("");
+         setNewPassword("");
+         setConfirmPassword("");
+         setTouched({});
+         setErrors({});
+         router.back();
+       } else {
         alert(
           response.message || "Failed to change password. Please try again.",
         );

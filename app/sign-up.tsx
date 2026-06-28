@@ -121,20 +121,28 @@ export default function SignUpScreen() {
             placeholder="Enter your full name"
             editable={!loading}
           />
-          {/* Phone Input */}
-          <TextInputField
-            value={values.phone}
-            onChangeText={(value: string) => handleChange("phone", value)}
-            onBlur={() =>
-              handleBlur("phone" as Parameters<typeof handleBlur>[0])
-            }
-            error={touched.phone ? errors.phone : undefined}
-            label="Phone Number"
-            placeholder="Enter your phone number"
-            keyboardType="phone-pad"
-            editable={!loading}
-          />
+           {/* Phone Input */}
+<View>
+  <TextInputField
+    value={values.phone}
+    onChangeText={(value: string) => {
+      // allow any country code + numbers only
+      const formatted = value.replace(/[^\d+]/g, "");
 
+      handleChange("phone", formatted);
+    }}
+    onBlur={() =>
+      handleBlur("phone" as Parameters<typeof handleBlur>[0])
+    }
+    error={touched.phone ? errors.phone : undefined}
+    label="Phone Number"
+    placeholder="+201012345678"
+    keyboardType="phone-pad"
+    editable={!loading}
+  />
+
+  
+</View>
           {/* Email Input */}
           <EmailInput
             value={values.email}
