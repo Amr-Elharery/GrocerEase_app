@@ -1,6 +1,5 @@
-import type { ShopDisplay } from '@/lib/types';
-import { Clock, Star } from 'lucide-react-native';
-import { Image, Pressable, Text, View } from 'react-native';
+import type { ShopDisplay } from "@/lib/types";
+import { Image, Pressable, Text, View } from "react-native";
 
 interface StoreCardProps {
   store: ShopDisplay;
@@ -8,43 +7,61 @@ interface StoreCardProps {
 }
 
 export function StoreCard({ store, onPress }: StoreCardProps) {
-  const imageSource =
-    store.images[0]?.image_url ?? require('../../assets/images/icon.png');
 
+  const imageSource = store.logo_url
+    ? { uri: store.logo_url }
+    : require("../../assets/images/icon.png");
+console.log("logo:", store);
+   
   return (
     <Pressable
       onPress={() => onPress?.(store)}
-      className="bg-card border border-border rounded-lg p-3 mr-3 w-40"
+      className="bg-card border border-border rounded-xl p-3 mr-3 w-full"
     >
-      <Image
-        source={imageSource}
-        className="w-full h-24 rounded-md mb-2"
-        resizeMode="cover"
-      />
+
+      {/* logo */}
+      <View className="w-full h-24 rounded-lg overflow-hidden mb-3">
+        <Image
+          source={imageSource}
+          className="w-full h-full "
+          resizeMode="cover"
+        />
+      </View>
+
+
+      {/* name */}
       <Text
-        className="text-card-foreground font-semibold text-sm mb-1"
+        className="text-card-foreground font-bold text-base"
         numberOfLines={1}
       >
         {store.shop_name}
       </Text>
 
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center">
-          <Star size={14} className="text-warning mr-1" fill="rgb(234 179 8)" />
-          <Text className="text-muted-foreground text-xs">
-            {store.averageRating.toFixed(1)} ({store.reviewCount})
-          </Text>
-        </View>
+
+      {/* description */}
+      <Text
+        className="text-muted-foreground text-xs mt-1"
+        numberOfLines={2}
+      >
+        {store.description || "No description"}
+      </Text>
+
+
+      {/* active status */}
+      <View className="mt-2 flex-row items-center">
+
+        <View
+          className={`w-2 h-2 rounded-full mr-2 ${
+            store.is_active ? "bg-green-500" : "bg-red-500"
+          }`}
+        />
+
+        <Text className="text-xs text-muted-foreground">
+          {store.is_active ? "Active" : "Inactive"}
+        </Text>
+
       </View>
 
-      {store.deliveryTime && (
-        <View className="flex-row items-center mt-1">
-          <Clock size={12} className="text-muted-foreground mr-1" />
-          <Text className="text-muted-foreground text-xs">
-            {store.deliveryTime}
-          </Text>
-        </View>
-      )}
     </Pressable>
   );
 }

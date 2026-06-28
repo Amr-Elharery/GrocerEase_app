@@ -16,8 +16,8 @@ export interface SignUpPayload {
   email: string;
   password: string;
   confirmPassword: string;
-  phone:string;
-}  
+  phone: string;
+}
 
 export interface ResetPasswordPayload {
   email: string;
@@ -78,27 +78,31 @@ export const authService = {
   /**
    * Sign up new user
    */
-  async signup(payload: SignUpPayload): Promise<AuthResponse> {
-    try {
-      // Convert camelCase to snake_case for API
-      const apiPayload = {
-        full_name: payload.full_name,
-        email: payload.email,
-        phone:payload.phone,
-        password: payload.password,
-        confirmPassword: payload.confirmPassword,
-      };
-      console.log(apiPayload)
-      const response = await httpService.post(
-        "/auth/register",
-        apiPayload,
-      );
-        
-      return response.data;
-    } catch (error) {
-      throw handleError(error);
-    }
-  },
+ async signup(payload: SignUpPayload): Promise<AuthResponse> {
+  try {
+    const apiPayload = {
+      full_name: payload.full_name,
+      email: payload.email,
+      phone: payload.phone,
+      password: payload.password,
+      confirmPassword: payload.confirmPassword,
+    };
+
+    const response = await httpService.post(
+      "/auth/customer/register",
+      apiPayload
+    );
+
+    console.log("Signup response:", response.data);
+
+    return response.data;
+
+  } catch (error: any) {
+    console.log("Signup API error:", error);
+
+    throw error; // keep axios error
+  }
+},
 
   /**
    * Request password reset
@@ -150,8 +154,10 @@ export const authService = {
         "/auth/change-password",
         apiPayload,
       );
+      console.log(response)
       return response.data;
     } catch (error) {
+      console.log(error)
       throw handleError(error);
     }
   },

@@ -1,15 +1,15 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button } from '@/components/ui/button';
 import { watchlistService } from '@/shared/watchlist.service';
+import { shoppingListService } from '@/shared/shopping-list.service';
 import { productDetailsService, type ProductImageItem, type ProductStoreOffer } from '@/shared/product-details.service';
+import { useAuth } from '@/lib/auth-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Bell, BellRing, ChevronLeft, TriangleAlert } from 'lucide-react-native';
-import { useEffect, useMemo, useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Bell, BellRing, ChevronLeft, TriangleAlert, LogIn } from 'lucide-react-native';
+import { useEffect, useMemo, useState, useCallback } from 'react';
+import { Alert, Image, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const fallbackProductImage = require('../assets/images/icon.png');
-const CART_KEY = 'cart_items_by_store';
 
 function getPlaceholderByCategory(categoryName: string) {
   const normalized = categoryName.toLowerCase();
@@ -33,6 +33,7 @@ export default function ProductDetailsScreen() {
     product_id?: string;
     select_cheapest?: string;
   }>();
+  const { isLoggedIn } = useAuth();
   const productId = Number(id ?? product_id ?? 0);
   const [product, setProduct] = useState<any>(null);
   const [images, setImages] = useState<ProductImageItem[]>([]);
@@ -41,7 +42,6 @@ export default function ProductDetailsScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [storePickerOpen, setStorePickerOpen] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [selectedOfferId, setSelectedOfferId] = useState<number | null>(null);
   const [watchModalOpen, setWatchModalOpen] = useState(false);
@@ -51,8 +51,7 @@ export default function ProductDetailsScreen() {
   const sortedOffers = useMemo(
     () =>
       [...offers]
-        .filter((item) => item.is_active)
-        .sort((a, b) => a.price + a.delivery_cost - (b.price + b.delivery_cost)),
+        .sort((a, b) => (a.price + a.delivery_cost) - (b.price + b.delivery_cost)),
     [offers]
   );
 
@@ -74,7 +73,7 @@ export default function ProductDetailsScreen() {
     return Number((base * 0.9).toFixed(2));
   }, [cheapestOffer?.price]);
 
-  const loadDetails = async () => {
+  const loadDetails = useCallback(async () => {
     if (!productId) {
       setErrorMessage('Invalid product id');
       setIsLoading(false);
@@ -84,28 +83,40 @@ export default function ProductDetailsScreen() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const [productResponse, imageResponse, storeResponse] = await Promise.all([
-        productDetailsService.getProduct(productId),
-        productDetailsService.getProductImages(productId),
-        productDetailsService.getStoreOffers(productId),
-      ]);
+      const productResponse = await productDetailsService.getProduct(productId);
       setProduct(productResponse);
+      
+      const imageResponse = await productDetailsService.getProductImages(productId);
       setImages(imageResponse);
-      setOffers(storeResponse.filter((item) => item.is_active));
+      
+      // Get all shops from the product endpoint
+      const allShops = productResponse?.shops ?? [];
+      setOffers(allShops.map((shop: any) => ({
+        id: shop.id,
+        shop_id: shop.shop_id ?? shop.shop?.id,
+        store_name: shop.shop?.shop_name ?? shop.shop_name ?? '',
+        price: shop.price ?? 0,
+        delivery_cost: 0,
+        available_stock: shop.available_stock ?? 0,
+        low_stock_threshold: 5,
+        is_active: shop.is_active ?? true,
+      })));
+      
       const watches = await watchlistService.getWatchlist();
       const existing = watches.find((item) => item.product_id === productId);
       setWatchEntryId(existing?.id ?? null);
       setActiveImageIndex(0);
-    } catch (error: any) {
-      setErrorMessage(error?.message ?? 'Failed to load product details.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to load product details.';
+      setErrorMessage(message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [productId]);
 
   useEffect(() => {
-    loadDetails().catch(() => undefined);
-  }, [productId]);
+    loadDetails();
+  }, [loadDetails]);
 
   useEffect(() => {
     if (select_cheapest === '1' && cheapestOffer?.id) {
@@ -113,8 +124,8 @@ export default function ProductDetailsScreen() {
     }
   }, [cheapestOffer?.id, select_cheapest]);
 
-  const breadcrumbCategory = product?.category_name ?? 'Category';
-  const breadcrumbSubCategory = product?.sub_category_name ?? 'Sub-category';
+  const breadcrumbCategory = product?.category?.category_name ?? 'Category';
+  const breadcrumbSubCategory = product?.sub_category?.category_name ?? 'Sub-category';
 
   const activeImage = previewImages[activeImageIndex];
   const activeImageSource =
@@ -123,6 +134,11 @@ export default function ProductDetailsScreen() {
       : getPlaceholderByCategory(breadcrumbSubCategory || breadcrumbCategory);
 
   const onOpenWatchModal = () => {
+    if (!isLoggedIn) {
+      Alert.alert('Login Required', 'Please login to add products to your watchlist');
+      router.push('/login');
+      return;
+    }
     const initial = suggestedTarget || cheapestOffer?.price || 0;
     setWatchTargetInput(initial ? String(initial) : '');
     setWatchModalOpen(true);
@@ -134,42 +150,52 @@ export default function ProductDetailsScreen() {
       setStatusMessage('Enter a valid target price');
       return;
     }
-    const entry = await watchlistService.create({
-      product_id: productId,
-      target_price: targetPrice,
-    });
-    setWatchEntryId(entry.id);
-    setWatchModalOpen(false);
-    setStatusMessage('Price watch enabled');
+    try {
+      const entry = await watchlistService.create({
+        product_id: productId,
+        target_price: targetPrice,
+      });
+      setWatchEntryId(entry.id);
+      setWatchModalOpen(false);
+      setStatusMessage('Added to watchlist');
+    } catch {
+      setStatusMessage('Failed to add to watchlist');
+    }
   };
 
-  const onSelectStoreForCart = async (offer: ProductStoreOffer) => {
-    const stored = await AsyncStorage.getItem(CART_KEY);
-    const parsed = stored ? JSON.parse(stored) : {};
-    const storeItems = Array.isArray(parsed[offer.shop_id]) ? parsed[offer.shop_id] : [];
-    const existing = storeItems.find((item: any) => item.product_id === productId);
-    const updated = existing
-      ? storeItems.map((item: any) =>
-          item.product_id === productId ? { ...item, quantity: Number(item.quantity ?? 1) + 1 } : item
-        )
-      : [
-          ...storeItems,
-          {
-            product_id: productId,
-            product_name: product?.product_name,
-            quantity: 1,
-            price: offer.price,
-            delivery_cost: offer.delivery_cost,
-          },
-        ];
-    const next = { ...parsed, [offer.shop_id]: updated };
-    await AsyncStorage.setItem(CART_KEY, JSON.stringify(next));
-    setStorePickerOpen(false);
-    setStatusMessage(`Added to cart (${offer.store_name})`);
+  const onAddToShoppingList = async () => {
+    if (!isLoggedIn) {
+      Alert.alert('Login Required', 'Please login to add items to your shopping list');
+      router.push('/login');
+      return;
+    }
+    
+    try {
+      // Use the first (cheapest) offer by default
+      await shoppingListService.addToShoppingList({
+        product_id: productId,
+        product_name: product?.product_name ?? '',
+        brand: product?.brand,
+        qty: 1,
+      });
+      setStatusMessage(`Added to shopping list`);
+      setTimeout(() => setStatusMessage(null), 2000);
+    } catch {
+      setStatusMessage('Failed to add to shopping list');
+    }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+      {!isLoggedIn && (
+        <View className="bg-primary/10 px-4 py-2 flex-row items-center justify-center gap-2">
+          <LogIn size={16} className="text-primary" />
+          <Pressable onPress={() => router.push('/login')}>
+            <Text className="text-primary font-semibold">Login to add to shopping list or watchlist</Text>
+          </Pressable>
+        </View>
+      )}
+      
       <ScrollView className="flex-1" contentContainerClassName="px-4 pb-6">
         <View className="flex-row items-center gap-3 py-4">
           <Pressable
@@ -184,7 +210,7 @@ export default function ProductDetailsScreen() {
                 onPress={() =>
                   router.push({
                     pathname: '/search',
-                    params: { category_id: String(product?.category_id ?? '') },
+                    params: { category_id: String(product?.category?.id ?? '') },
                   })
                 }
               >
@@ -196,8 +222,8 @@ export default function ProductDetailsScreen() {
                   router.push({
                     pathname: '/search',
                     params: {
-                      category_id: String(product?.category_id ?? ''),
-                      sub_category_id: String(product?.sub_category_id ?? ''),
+                      category_id: String(product?.category?.id ?? ''),
+                      sub_category_id: String(product?.sub_category?.id ?? ''),
                     },
                   })
                 }
@@ -291,13 +317,12 @@ export default function ProductDetailsScreen() {
               </View>
             </ScrollView>
 
-            <Text className="text-foreground text-base font-semibold mb-3">Price per store</Text>
+            <Text className="text-foreground text-base font-semibold mb-3">Available in Stores</Text>
             <View className="border border-border rounded-xl overflow-hidden mb-4">
               <View className="flex-row bg-muted px-3 py-2">
                 <Text className="text-foreground font-semibold flex-1">Store</Text>
                 <Text className="text-foreground font-semibold w-20 text-right">Price</Text>
                 <Text className="text-foreground font-semibold w-24 text-right">Stock</Text>
-                <Text className="text-foreground font-semibold w-20 text-right">Delivery</Text>
               </View>
               {sortedOffers.map((offer, index) => (
                 <Pressable
@@ -323,17 +348,21 @@ export default function ProductDetailsScreen() {
                   <Text className="text-foreground text-xs w-24 text-right">
                     {getStockLabel(offer.available_stock, offer.low_stock_threshold)}
                   </Text>
-                  <Text className="text-foreground text-sm w-20 text-right">{offer.delivery_cost.toFixed(2)}</Text>
                 </Pressable>
               ))}
             </View>
 
             <View className="flex-row gap-2">
               <Button className="flex-1" variant="outline" onPress={onOpenWatchModal}>
-                <Text>{watchEntryId ? 'Update Watch' : 'Watch Price'}</Text>
+                <Text className="text-foreground">{watchEntryId ? 'In Watchlist' : 'Add to Watchlist'}</Text>
               </Button>
-              <Button className="flex-1" onPress={() => setStorePickerOpen(true)}>
-                <Text>Add to Cart</Text>
+              <Button 
+                className="flex-1" 
+                onPress={onAddToShoppingList}
+              >
+                <Text className="text-primary-foreground font-semibold">
+                  {isLoggedIn ? 'Add to Shopping List' : 'Login to Add'}
+                </Text>
               </Button>
             </View>
             {statusMessage && <Text className="text-muted-foreground text-xs mt-3">{statusMessage}</Text>}
@@ -347,32 +376,11 @@ export default function ProductDetailsScreen() {
         </Pressable>
       </Modal>
 
-      <Modal visible={storePickerOpen} transparent animationType="slide" onRequestClose={() => setStorePickerOpen(false)}>
-        <Pressable className="flex-1 bg-black/40" onPress={() => setStorePickerOpen(false)}>
-          <Pressable className="mt-auto bg-background rounded-t-3xl p-4" onPress={() => undefined}>
-            <View className="w-12 h-1.5 bg-border rounded-full self-center mb-4" />
-            <Text className="text-foreground text-lg font-semibold mb-3">Choose store</Text>
-            {sortedOffers.map((offer) => (
-              <Pressable
-                key={`picker-${offer.id}`}
-                className="border border-border rounded-lg p-3 mb-2 bg-card"
-                onPress={() => onSelectStoreForCart(offer)}
-              >
-                <Text className="text-foreground font-semibold">{offer.store_name}</Text>
-                <Text className="text-muted-foreground text-xs mt-1">
-                  {offer.price.toFixed(2)} + delivery {offer.delivery_cost.toFixed(2)}
-                </Text>
-              </Pressable>
-            ))}
-          </Pressable>
-        </Pressable>
-      </Modal>
-
       <Modal visible={watchModalOpen} transparent animationType="slide" onRequestClose={() => setWatchModalOpen(false)}>
         <Pressable className="flex-1 bg-black/40" onPress={() => setWatchModalOpen(false)}>
           <Pressable className="mt-auto bg-background rounded-t-3xl p-4" onPress={() => undefined}>
             <View className="w-12 h-1.5 bg-border rounded-full self-center mb-4" />
-            <Text className="text-foreground text-lg font-semibold mb-3">Watch this product</Text>
+            <Text className="text-foreground text-lg font-semibold mb-3">Add to Watchlist</Text>
             <View className="bg-card border border-border rounded-xl p-3 mb-3">
               <Text className="text-muted-foreground text-xs">Current lowest price</Text>
               <Text className="text-foreground font-semibold text-base mt-1">

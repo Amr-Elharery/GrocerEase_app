@@ -115,13 +115,25 @@ export function useLoginForm() {
  */
 export function useSignUpForm() {
   return useFormValidation(
-    { full_name: "", email: "", password: "", confirmPassword: "" ,phone:""},
+    {
+      full_name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      phone: "",
+    },
     {
       full_name: validators.full_name,
       email: validators.email,
+      phone: validators.phone,
+
       password: validators.passwordStrong,
+
       confirmPassword: (confirmPassword, formValues) =>
-        validators.passwordMatch(confirmPassword, formValues?.password || ""),
+        validators.passwordMatch(
+          confirmPassword,
+          formValues?.password || ""
+        ),
     },
   );
 }
