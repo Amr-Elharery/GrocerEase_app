@@ -7,8 +7,9 @@ const createService = (baseURL: string) => {
     headers: { 'Content-Type': 'application/json' },
   });
 
-  // Interceptors
   return instance;
 };
 
-export const httpService = createService('https://api.example.com');
+export const httpService = createService(
+  process.env.EXPO_PUBLIC_API_URL || 'https://api.example.com',
+);
