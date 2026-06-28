@@ -1,6 +1,5 @@
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/context/cartContext";
-import { ToastProvider } from "@/lib/context/toastContext";
 import i18n, { initI18n } from "@/lib/i18n";
 import { ThemeProvider } from "@/lib/theme-context";
 import { PortalHost } from "@rn-primitives/portal";
@@ -59,8 +58,7 @@ export default function RootLayout() {
       <I18nextProvider i18n={i18n}>
         <ThemeProvider defaultTheme="system">
           <AuthProvider>
-            <ToastProvider>
-              <CartProvider>
+            <CartProvider>
               <Stack>
                 <Stack.Screen name="index" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -104,7 +102,6 @@ export default function RootLayout() {
               <StatusBar style="auto" />
               <PortalHost />
               </CartProvider>
-            </ToastProvider>
             </AuthProvider>
         </ThemeProvider>
       </I18nextProvider>
