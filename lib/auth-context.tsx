@@ -65,21 +65,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
 
-      const response = await authService.login({
+      const loginResponse = await authService.login({
         email,
         password,
       });
 
-      const userData = response.user_data;
-      const token = response.access_token;
-      const refreshToken = response.refresh_token;
+      const apiData = (loginResponse as any)?.data ?? loginResponse;
+      const rawToken = apiData?.access_token ?? apiData?.token;
+      const rawRefresh = apiData?.refresh_token;
+      const token = rawToken == null ? null : String(rawToken);
+      const refreshToken = rawRefresh == null ? null : String(rawRefresh);
+      const userData = apiData?.user_data ?? apiData?.user;
 
       const user: User = {
-        id: userData.id,
-        name: userData.full_name,
-        email: userData.email,
-        phone: userData.phone,
+        id: userData?.id,
+        name: userData?.full_name ?? userData?.name,
+        email: userData?.email,
+        phone: userData?.phone,
       };
+
+      if (!token || !refreshToken) {
+        console.warn('[auth] Login response missing tokens:', loginResponse);
+        Alert.alert('Login Failed', 'Authentication data missing. Please try again.');
+      }
 
       await AsyncStorage.multiSet([
         ["auth_token", token],

@@ -7,10 +7,11 @@ import { useTheme } from "@/lib/theme-context";
 import type { ProductDisplay, ShopDisplay } from "@/lib/types";
 import { shopService } from "@/shared/shop.service";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { ShoppingCart } from "lucide-react-native";
+import { ShoppingCart, Store } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Text,
   TouchableOpacity,
@@ -85,6 +86,7 @@ export default function ShopProductsScreen() {
         return;
       }
       addItem(product);
+      Alert.alert("Success", "Added to cart successfully");
     },
     [addItem, shopId]
   );
@@ -93,6 +95,7 @@ export default function ShopProductsScreen() {
     if (pendingProduct) {
       clearCart();
       conflictAddItem(pendingProduct);
+      Alert.alert("Success", "Added to cart successfully");
     }
     setShowConflictModal(false);
     setPendingProduct(null);
@@ -142,6 +145,17 @@ export default function ShopProductsScreen() {
       <Stack.Screen
         options={{
           title: shop.shop_name,
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.push("/(tabs)/shops")}
+              className="ml-4 mr-2 flex-row items-center"
+            >
+              <Store size={20} color={tokens.foreground} />
+              <Text className="ml-1 text-sm font-medium" style={{ color: tokens.foreground }}>
+                Shops
+              </Text>
+            </TouchableOpacity>
+          ),
           headerRight: () => (
             <TouchableOpacity
               onPress={() => router.push("/(tabs)/cart")}
