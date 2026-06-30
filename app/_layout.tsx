@@ -1,4 +1,5 @@
 import { AuthProvider } from "@/lib/auth-context";
+import { AddressProvider } from "@/lib/context/addressContext";
 import { CartProvider } from "@/lib/context/cartContext";
 import i18n, { initI18n } from "@/lib/i18n";
 import { ThemeProvider } from "@/lib/theme-context";
@@ -57,9 +58,10 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <I18nextProvider i18n={i18n}>
         <ThemeProvider defaultTheme="system">
-          <AuthProvider>
-            <CartProvider>
-              <Stack>
+        <AuthProvider>
+            <AddressProvider>
+              <CartProvider>
+                <Stack>
                 <Stack.Screen name="index" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen
@@ -76,7 +78,18 @@ export default function RootLayout() {
                   name="forgot-password"
                   options={{ headerShown: false }}
                 />
-                <Stack.Screen name="checkout" options={{ headerShown: false }} />
+                <Stack.Screen
+                   name="checkout"
+                   options={{ headerShown: false }}
+                 />
+                <Stack.Screen
+                   name="address-book"
+                   options={{ headerShown: false }}
+                 />
+                <Stack.Screen
+                   name="addresses"
+                   options={{ headerShown: false }}
+                 />
                 <Stack.Screen
                   name="verification-code"
                   options={{ headerShown: false }}
@@ -85,23 +98,24 @@ export default function RootLayout() {
                   name="reset-password"
                   options={{ headerShown: false }}
                 />
-                <Stack.Screen
-                  name="change-password"
-                  options={{ headerShown: false }}
-                />
-                     <Stack.Screen
-                  name="location-setup"
-                  options={{ headerShown: false }}
-                />
+                  <Stack.Screen
+                    name="change-password"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="location-setup"
+                    options={{ headerShown: false }}
+                  />
                 <Stack.Screen
                   name="shop"
                   options={{ headerShown: false }}
                 />
               </Stack>
               
-              <StatusBar style="auto" />
-              <PortalHost />
-              </CartProvider>
+               <StatusBar style="auto" />
+               <PortalHost />
+               </CartProvider>
+             </AddressProvider>
             </AuthProvider>
         </ThemeProvider>
       </I18nextProvider>
