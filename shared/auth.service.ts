@@ -3,7 +3,7 @@
  * Handles all auth-related API calls and business logic
  * Separated from components following Feature-Based Design Pattern
  */
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { httpService } from "./httpService";
 
 export interface LoginPayload {
@@ -69,6 +69,19 @@ export const authService = {
   async login(payload: LoginPayload): Promise<AuthResponse> {
     try {
       const response = await httpService.post("/auth/login", payload);
+       
+
+await AsyncStorage.setItem(
+  "access_token",
+  response.data.access_token
+);
+
+await AsyncStorage.setItem(
+  "refresh_token",
+  response.data.refresh_token
+);
+
+ 
       return response.data;
     } catch (error) {
       throw handleError(error);

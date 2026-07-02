@@ -19,7 +19,6 @@ export default function ProfileScreen() {
     name: user?.name || "User",
     email: user?.email || "user@example.com",
     phone: user?.phone || "+1 (555) 123-4567",
-  
   };
 
   const handleChangePassword = () => {
@@ -109,8 +108,27 @@ export default function ProfileScreen() {
               Security
             </Text>
             <Pressable
-              onPress={handleChangePassword}
+              onPress={() => router.push("/profile-orders")}
               className="flex-row items-center justify-between p-4 rounded-lg border mb-3"
+              style={{
+                backgroundColor: tokens.background,
+                borderColor: tokens.border,
+              }}
+            >
+              <View className="flex-row items-center flex-1">
+                <User size={20} color={tokens.primary} />
+                <Text
+                  className="text-base font-medium ml-3"
+                  style={{ color: tokens.foreground }}
+                >
+                  My Orders
+                </Text>
+              </View>
+              <ChevronRight size={20} color={tokens.mutedForeground} />
+            </Pressable>
+            <Pressable
+              onPress={handleChangePassword}
+              className="flex-row items-center justify-between p-4 rounded-lg border"
               style={{
                 backgroundColor: tokens.background,
                 borderColor: tokens.border,

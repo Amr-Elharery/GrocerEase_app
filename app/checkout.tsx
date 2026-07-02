@@ -8,18 +8,16 @@ import {
   View,
 } from "react-native";
 
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import { THEME } from "@/lib/theme";
-import { useCart } from "@/lib/context/cartContext";
+import { ProtectedScreen } from "@/components/domain/ProtectedScreen";
 import { useAddress } from "@/lib/context/addressContext";
+import { useCart } from "@/lib/context/cartContext";
+import { THEME } from "@/lib/theme";
 import { useTheme } from "@/lib/theme-context";
 import { httpService } from "@/shared/httpService";
-import { ProtectedScreen } from "@/components/domain/ProtectedScreen";
+import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL
-  ? `/orders`
-  : "https://your-api.com/orders";
+const API_URL = "/orders";
 
 export default function CheckoutScreen() {
   const { theme } = useTheme();
@@ -30,15 +28,13 @@ export default function CheckoutScreen() {
   const [paymentMethod, setPaymentMethod] = useState("cash_on_delivery");
   const [loading, setLoading] = useState(false);
 
-  const selectedAddress = addresses.find(
-    (a) => a.id === selectedAddressId
-  );
+  const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
 
   const deliveryFee = subtotal > 0 ? 15 : 0;
   const total = subtotal + deliveryFee;
 
   const handlePlaceOrder = async () => {
-    console.log('[checkout] handlePlaceOrder called', {
+    console.log("[checkout] handlePlaceOrder called", {
       selectedAddressId,
       addressesCount: addresses.length,
       cartLength: cart.length,
@@ -46,10 +42,7 @@ export default function CheckoutScreen() {
     });
 
     if (!selectedAddress) {
-      Alert.alert(
-        "Missing Information",
-        "Please select a delivery address."
-      );
+      Alert.alert("Missing Information", "Please select a delivery address.");
       return;
     }
 
@@ -89,17 +82,20 @@ export default function CheckoutScreen() {
       };
 
       const response = await httpService.post(API_URL, payload);
-
-      if (!response.data) {
+      console.log(response);
+      if (!response?.data) {
         throw new Error("Failed to place order");
       }
 
       clearCart();
       router.replace("/");
-    } catch {
+    } catch (error: any) {
+      console.error("[checkout] place order failed", error);
       Alert.alert(
         "Error",
-        "Something went wrong while placing the order."
+        error?.response?.data?.message ||
+          error?.message ||
+          "Something went wrong while placing the order.",
       );
     } finally {
       setLoading(false);
@@ -247,7 +243,8 @@ export default function CheckoutScreen() {
                   className="text-muted-foreground"
                   style={{ color: tokens.mutedForeground }}
                 >
-                  {selectedAddress.label || 'Address'} — {selectedAddress.street}
+                  {selectedAddress.label || "Address"} —{" "}
+                  {selectedAddress.street}
                   {selectedAddress.building
                     ? `, ${selectedAddress.building}`
                     : ""}

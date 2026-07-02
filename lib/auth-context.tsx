@@ -1,4 +1,5 @@
 import { authService } from "@/shared/auth.service";
+import { httpService } from "@/shared/httpService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import * as React from "react";
@@ -23,8 +24,9 @@ export interface AuthContextType {
   signup: (
     full_name: string,
     email: string,
-    password: string,
     phone: string,
+    password: string,
+    confirmPassword: string,
   ) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -46,11 +48,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedRefreshToken = await AsyncStorage.getItem("refresh_token");
         const storedUser = await AsyncStorage.getItem("user_data");
 
-        if (storedToken && storedUser) {
+        if (storedToken) {
           setToken(storedToken);
-          setRefreshToken(storedRefreshToken);
-          setUser(JSON.parse(storedUser));
+          // Also ensure httpService has the header for immediate use
+          try {
+            httpService.defaults.headers.common.Authorization = `Bearer ${storedToken}`;
+          } catch {}
         }
+
+        if (storedRefreshToken) setRefreshToken(storedRefreshToken);
+        if (storedUser) setUser(JSON.parse(storedUser));
       } catch (error) {
         console.error("Error initializing auth:", error);
       } finally {
@@ -85,19 +92,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
 
       if (!token || !refreshToken) {
-        console.warn('[auth] Login response missing tokens:', loginResponse);
-        Alert.alert('Login Failed', 'Authentication data missing. Please try again.');
+        console.warn("[auth] Login response missing tokens:", loginResponse);
+        Alert.alert(
+          "Login Failed",
+          "Authentication data missing. Please try again.",
+        );
       }
 
-      await AsyncStorage.multiSet([
-        ["auth_token", token],
-        ["refresh_token", refreshToken],
-        ["user_data", JSON.stringify(user)],
-      ]);
+      const toSet: [string, string][] = [];
+      if (token) toSet.push(["auth_token", token]);
+      if (refreshToken) toSet.push(["refresh_token", refreshToken]);
+      if (user) toSet.push(["user_data", JSON.stringify(user)]);
 
-      setToken(token);
-      setRefreshToken(refreshToken);
-      setUser(user);
+      if (toSet.length > 0) {
+        await AsyncStorage.multiSet(toSet as [string, string][]);
+      }
+
+      if (token) {
+        setToken(token);
+        try {
+          httpService.defaults.headers.common.Authorization = `Bearer ${token}`;
+        } catch {}
+      }
+      if (refreshToken) setRefreshToken(refreshToken);
+      if (user) setUser(user);
 
       router.replace("/location-setup");
     } catch (error: any) {
@@ -149,49 +167,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           onPress: () => router.replace("/login"),
         },
       ]);
-    }  catch (error: any) {
-  console.log("========== REGISTER ERROR ==========");
+    } catch (error: any) {
+      console.log("========== REGISTER ERROR ==========");
 
-  console.log("Full error:", error);
-  console.log("Message:", error?.message);
+      console.log("Full error:", error);
+      console.log("Message:", error?.message);
 
-  const errorMessage = error?.message || "";
+      const errorMessage = error?.message || "";
 
-  if (errorMessage.includes("401")) {
-    console.log("401 Error: Email already exists");
+      if (errorMessage.includes("401")) {
+        console.log("401 Error: Email already exists");
 
-    Alert.alert(
-      "Registration Failed",
-      "This email is already registered"
-    );
+        Alert.alert("Registration Failed", "This email is already registered");
+      } else if (errorMessage.includes("422")) {
+        console.log("422 Error: Invalid data. Please check your inputs");
 
-  } else if (errorMessage.includes("422")) {
-    console.log("422 Error: Invalid data. Please check your inputs");
+        Alert.alert(
+          "Registration Failed",
+          "Invalid data. Please check your inputs",
+        );
+      } else if (errorMessage.includes("400")) {
+        console.log("400 Error: Bad request");
 
-    Alert.alert(
-      "Registration Failed",
-      "Invalid data. Please check your inputs"
-    );
+        Alert.alert("Registration Failed", "Invalid registration data");
+      } else {
+        console.log("Unknown Register Error");
 
-  } else if (errorMessage.includes("400")) {
-    console.log("400 Error: Bad request");
+        Alert.alert("Registration Failed", "Something went wrong");
+      }
 
-    Alert.alert(
-      "Registration Failed",
-      "Invalid registration data"
-    );
-
-  } else {
-    console.log("Unknown Register Error");
-
-    Alert.alert(
-      "Registration Failed",
-      "Something went wrong"
-    );
-  }
-
-  console.log("====================================");
-} finally {
+      console.log("====================================");
+    } finally {
       console.log(Response);
       setIsLoading(false);
     }
@@ -203,9 +209,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // TODO: Call logout API endpoint if needed
 
       // Clear AsyncStorage
-      await AsyncStorage.removeItem("auth_token");
-      await AsyncStorage.removeItem("refresh_token");
-      await AsyncStorage.removeItem("user_data");
+      await AsyncStorage.multiRemove([
+        "auth_token",
+        "refresh_token",
+        "user_data",
+      ]);
+      try {
+        delete httpService.defaults.headers.common.Authorization;
+      } catch {}
 
       // Reset state
       setToken(null);

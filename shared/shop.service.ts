@@ -7,15 +7,20 @@ function toNumber(value: unknown, fallback = 0): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
- function normalizeShop(shop: any): ShopDisplay {
-  return {
-    id: shop.id,
-    shop_name: shop.shop_name,
-    description: shop.description,
-    logo_url: shop.logo_url,
-    is_active: shop.is_active,
-  };
-}
+function normalizeShop(shop: any): ShopDisplay {
+   return {
+     id: shop.id,
+     shop_name: shop.shop_name,
+     description: shop.description,
+     logo_url: shop.logo_url,
+     is_active: shop.is_active,
+     images: shop.images ?? [],
+     averageRating: toNumber(shop.averageRating ?? shop.avg_rating),
+     reviewCount: toNumber(shop.reviewCount ?? shop.review_count),
+     deliveryTime: shop.deliveryTime ?? shop.delivery_time,
+     location: shop.location,
+   };
+ }
 
 function normalizeProduct(raw: any): ProductDisplay {
   // Handle both nested product structure and flat structure
