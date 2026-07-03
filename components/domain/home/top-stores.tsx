@@ -1,5 +1,5 @@
 import type { ShopDisplay } from '@/lib/types';
-import { ScrollView, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { StoreCard } from '../store-card';
 
 interface TopStoresProps {
@@ -9,7 +9,14 @@ interface TopStoresProps {
 
 export function TopStores({ stores, onStorePress }: TopStoresProps) {
 
-  const topStores = stores.slice(0, 4);
+  const topStores = [...stores]
+    .sort((a, b) => {
+      if ((b.averageRating ?? 0) !== (a.averageRating ?? 0)) {
+        return (b.averageRating ?? 0) - (a.averageRating ?? 0);
+      }
+      return (b.reviewCount ?? 0) - (a.reviewCount ?? 0);
+    })
+    .slice(0, 4);
 
   return (
     <View className="bg-background py-4">

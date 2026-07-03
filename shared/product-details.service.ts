@@ -1,5 +1,5 @@
 import type { ProductDetail } from '@/lib/types';
-import { httpService } from './httpService';
+import httpService from './httpService';
 
 function toNumber(value: unknown, fallback = 0): number {
   const parsed = Number(value);

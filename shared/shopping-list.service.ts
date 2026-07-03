@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { httpService } from "./httpService";
+import httpService from "./httpService";
 
 export interface ShoppingListItem {
   product_id: number;
