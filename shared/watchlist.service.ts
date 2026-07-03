@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { CreateWatchlistPayload, WatchlistEntry } from '@/lib/types';
 import { productDetailsService } from './product-details.service';
-import { httpService } from './httpService';
+import httpService from './httpService';
 
 const WATCHLIST_STORAGE_KEY = 'watchlist_entries_v1';
 

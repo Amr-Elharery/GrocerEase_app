@@ -8,7 +8,7 @@ import type {
   SearchStore,
 } from '@/lib/types';
 import { MOCK_PRODUCTS, MOCK_STORES } from '@/lib/mock-data';
-import { httpService } from './httpService';
+import httpService from './httpService';
 
 function toNumber(value: unknown, fallback = 0): number {
   const parsed = Number(value);

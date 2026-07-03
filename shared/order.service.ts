@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { httpService } from "./httpService";
+import httpService from "./httpService";
 
 const AUTH_TOKEN_KEYS = ["auth_token", "token", "access_token"] as const;
 

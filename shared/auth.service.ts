@@ -4,7 +4,7 @@
  * Separated from components following Feature-Based Design Pattern
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { httpService } from "./httpService";
+import httpService from "./httpService";
 
 export interface LoginPayload {
   email: string;

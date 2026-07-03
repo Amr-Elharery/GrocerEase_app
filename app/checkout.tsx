@@ -13,7 +13,7 @@ import { useAddress } from "@/lib/context/addressContext";
 import { useCart } from "@/lib/context/cartContext";
 import { THEME } from "@/lib/theme";
 import { useTheme } from "@/lib/theme-context";
-import { httpService } from "@/shared/httpService";
+import httpService from "@/shared/httpService";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 

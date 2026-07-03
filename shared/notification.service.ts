@@ -1,4 +1,4 @@
- import { httpService } from "./httpService";
+import httpService from "./httpService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 export interface NotificationItem {
   id: string | number;

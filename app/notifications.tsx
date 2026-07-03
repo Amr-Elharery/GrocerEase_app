@@ -33,9 +33,7 @@ const loadNotifications = useCallback(async () => {
       console.error("Failed to load notifications", error);
       const status = error?.response?.status;
       if (status === 401) {
-        Alert.alert(
-            JSON.stringify(error)
-        );
+        Alert.alert("Session expired", "Please log in again.");
       } else {
         Alert.alert(
           "Notifications",

@@ -1,6 +1,6 @@
 import { MOCK_PRODUCTS } from '@/lib/mock-data';
 import type { ProductSearchFilters, ProductSearchItem, SearchCategory } from '@/lib/types';
-import { httpService } from './httpService';
+import httpService from './httpService';
 
 const DEFAULT_LIMIT = 20;
  

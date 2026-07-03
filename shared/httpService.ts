@@ -61,10 +61,7 @@ api.interceptors.request.use(
     console.log("Token:", token);
 
     if (token) {
-      config.headers = {
-  ...config.headers,
-  Authorization: `Bearer ${token}`,
-};
+      config.headers.set("Authorization", `Bearer ${token}`);
     }
 
     console.log("Headers:", config.headers);
@@ -127,10 +124,4 @@ api.interceptors.response.use(
   }
 );
 
-export const httpService = {
-  get: api.get,
-  post: api.post,
-  put: api.put,
-  patch: api.patch,
-  delete: api.delete,
-};
+export default api;

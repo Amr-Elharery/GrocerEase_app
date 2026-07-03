@@ -1,5 +1,5 @@
 import { authService } from "@/shared/auth.service";
-import { httpService } from "@/shared/httpService";
+import httpService from "@/shared/httpService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import * as React from "react";
