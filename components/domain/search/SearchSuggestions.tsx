@@ -55,9 +55,9 @@ export function SearchSuggestions({
         <FlatList
           scrollEnabled={false}
           data={[
-            ...suggestions.products.map((p) => ({ type: "product", value: p })),
+            ...suggestions.products.map((p) => ({ type: "product" as const, value: p })),
             ...suggestions.sub_categories.map((c) => ({
-              type: "category",
+              type: "category" as const,
               value: c,
             })),
           ]}

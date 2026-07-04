@@ -39,35 +39,78 @@ const formatMoney = (value?: number) => {
 
 export default function OrderTrackingScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string; preload?: string }>();
+  const params = useLocalSearchParams<{
+    id?: string;
+    preload?: string;
+    groupId?: string;
+    preloadGroup?: string;
+  }>();
   const orderId = params.id;
   const preload = params.preload;
-  const [order, setOrder] = useState<OrderSummary | null>(null);
+  const groupId = params.groupId;
+  const preloadGroup = params.preloadGroup;
+  const [orders, setOrders] = useState<OrderSummary[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
 
+  const isGroup = orders !== null && orders.length > 1;
+
+  const combinedStatus = orders?.[0]?.status ?? "";
   const currentStep = useMemo(() => {
-    if (!order) return 0;
-    const index = statusIndex(order.status);
+    const index = statusIndex(combinedStatus);
     return index >= 0 ? index : 0;
-  }, [order]);
+  }, [combinedStatus]);
+
+  // The delivery fee is one combined charge for the whole trip, not
+  // charged per shop, so only the first order's fee counts.
+  const combinedDeliveryFee = useMemo(
+    () => Number(orders?.[0]?.delivery_fee ?? 0),
+    [orders],
+  );
+  const combinedSubTotal = useMemo(
+    () => (orders ?? []).reduce((sum, o) => sum + Number(o.sub_total ?? 0), 0),
+    [orders],
+  );
+  const combinedTotal = useMemo(
+    () => combinedSubTotal + combinedDeliveryFee,
+    [combinedSubTotal, combinedDeliveryFee],
+  );
+  const combinedItems = useMemo(
+    () =>
+      (orders ?? []).flatMap((o) =>
+        (o.items ?? []).map((item) => ({
+          ...item,
+          shop_name: o.shop_name,
+        })),
+      ),
+    [orders],
+  );
 
   const loadOrder = useCallback(async () => {
-    if (!orderId && !preload) return;
+    if (!orderId && !preload && !groupId && !preloadGroup) return;
     try {
       setLoading(true);
 
+      if (preloadGroup) {
+        try {
+          const parsed = JSON.parse(preloadGroup);
+          setOrders(Array.isArray(parsed) ? parsed : [parsed]);
+          return;
+        } catch (e) {
+          console.warn("Invalid group preload data", e);
+        }
+      }
+
       if (orderId) {
         const data = await fetchOrderById(orderId);
-        setOrder(data);
+        setOrders([data]);
         return;
       }
 
-      // no id but preload available
       if (preload) {
         try {
           const parsed = JSON.parse(preload);
-          setOrder(parsed);
+          setOrders([parsed]);
           return;
         } catch (e) {
           console.warn("Invalid preload data", e);
@@ -76,11 +119,10 @@ export default function OrderTrackingScreen() {
     } catch (error: any) {
       console.error("Order load failed", error);
 
-      // If API failed (401 or network), try to use preload fallback
       if (preload) {
         try {
           const parsed = JSON.parse(preload);
-          setOrder(parsed);
+          setOrders([parsed]);
           return;
         } catch (e) {
           console.warn("Preload parse failed", e);
@@ -103,14 +145,15 @@ export default function OrderTrackingScreen() {
     } finally {
       setLoading(false);
     }
-  }, [orderId, preload]);
+  }, [orderId, preload, groupId, preloadGroup]);
 
   useEffect(() => {
     void loadOrder();
   }, [loadOrder]);
 
   const handleCancel = async () => {
-    if (!orderId || !order) return;
+    if (!orderId || !orders || orders.length !== 1) return;
+    const order = orders[0];
     Alert.alert("Cancel Order", "Are you sure you want to cancel this order?", [
       { text: "No", style: "cancel" },
       {
@@ -119,7 +162,7 @@ export default function OrderTrackingScreen() {
           try {
             setCancelling(true);
             await cancelOrder(orderId);
-            setOrder({ ...order, status: "Cancelled" });
+            setOrders([{ ...order, status: "Cancelled" }]);
             Alert.alert(
               "Order Canceled",
               "Your order has been canceled successfully.",
@@ -137,7 +180,14 @@ export default function OrderTrackingScreen() {
     ]);
   };
 
-  const showCancel = order?.status?.toLowerCase() === "pending";
+  const showCancel =
+    !isGroup && orders?.[0]?.status?.toLowerCase() === "pending";
+
+  const titleText = orders
+    ? isGroup
+      ? `Orders ${orders.map((o) => o.order_number || o.id).join(", ")}`
+      : orders[0]?.order_number || String(orders[0]?.id ?? "")
+    : "";
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
@@ -168,18 +218,25 @@ export default function OrderTrackingScreen() {
             <View className="items-center justify-center py-20">
               <ActivityIndicator size="large" color="#2563eb" />
             </View>
-          ) : order ? (
+          ) : orders && orders.length > 0 ? (
             <>
               <View className="mb-6 rounded-3xl border border-border bg-card p-4">
-                <Text className="text-sm text-muted-foreground">Order ID</Text>
-                <Text className="text-lg font-semibold text-foreground">
-                  {order.order_number || String(order.id)}
+                <Text className="text-sm text-muted-foreground">
+                  {isGroup ? "Orders" : "Order ID"}
                 </Text>
+                <Text className="text-lg font-semibold text-foreground">
+                  {titleText}
+                </Text>
+                {isGroup && (
+                  <Text className="mt-1 text-xs text-muted-foreground">
+                    Multi-shop delivery · {orders.length} shops
+                  </Text>
+                )}
                 <Text className="mt-2 text-sm text-muted-foreground">
                   Status
                 </Text>
                 <Text className="text-base font-semibold text-foreground">
-                  {order.status}
+                  {combinedStatus}
                 </Text>
               </View>
 
@@ -226,8 +283,7 @@ export default function OrderTrackingScreen() {
                       Delivery Address
                     </Text>
                     <Text className="text-sm text-muted-foreground">
-                      {order.address?.full_address ||
-                        `${order.address?.street || ""} ${order.address?.city || ""}`.trim()}
+                      {orders[0]?.address?.full_address || "Not available"}
                     </Text>
                   </View>
                   <Truck size={24} className="text-primary" />
@@ -235,7 +291,7 @@ export default function OrderTrackingScreen() {
                 <View className="flex-row items-center justify-between">
                   <Text className="text-sm text-muted-foreground">ETA</Text>
                   <Text className="text-sm font-semibold text-foreground">
-                    {order.eta || "TBD"}
+                    {orders[0]?.eta || "TBD"}
                   </Text>
                 </View>
               </View>
@@ -245,16 +301,19 @@ export default function OrderTrackingScreen() {
                   Items
                 </Text>
                 <FlatList
-                  data={order.items ?? []}
-                  keyExtractor={(item) => String(item.id)}
+                  data={combinedItems}
+                  keyExtractor={(item, index) => `${item.id}-${index}`}
                   renderItem={({ item }) => (
                     <View className="mb-3 flex-row items-center justify-between">
-                      <View>
+                      <View className="flex-1 pr-2">
                         <Text className="text-sm font-medium text-foreground">
                           {item.product_name || "Item"}
                         </Text>
                         <Text className="text-xs text-muted-foreground">
                           Qty {item.quantity ?? 1}
+                          {isGroup && item.shop_name
+                            ? ` · ${item.shop_name}`
+                            : ""}
                         </Text>
                       </View>
                       <Text className="text-sm font-semibold text-foreground">
@@ -278,7 +337,7 @@ export default function OrderTrackingScreen() {
                     Subtotal
                   </Text>
                   <Text className="text-sm text-foreground">
-                    {formatMoney(order.sub_total)}
+                    {formatMoney(combinedSubTotal)}
                   </Text>
                 </View>
                 <View className="flex-row justify-between mb-2">
@@ -286,7 +345,7 @@ export default function OrderTrackingScreen() {
                     Delivery
                   </Text>
                   <Text className="text-sm text-foreground">
-                    {formatMoney(order.delivery_fee)}
+                    {formatMoney(combinedDeliveryFee)}
                   </Text>
                 </View>
                 <View className="h-px bg-border my-3" />
@@ -295,7 +354,7 @@ export default function OrderTrackingScreen() {
                     Total
                   </Text>
                   <Text className="text-base font-semibold text-foreground">
-                    {formatMoney(order.total)}
+                    {formatMoney(combinedTotal)}
                   </Text>
                 </View>
               </View>

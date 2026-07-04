@@ -1,16 +1,17 @@
 import { useToast } from "@/lib/hooks/useToast";
+import { useAddress } from "@/lib/context/addressContext";
 import {
   getShoppingList,
-  optimizeShoppingList,
+  requestOptimizationPlan,
   removeFromShoppingList,
   updateShoppingListQuantity,
   type ShoppingListItem,
 } from "@/shared/shopping-list.service";
 
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { ChevronLeft, Trash2 } from "lucide-react-native";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import {
   ActivityIndicator,
@@ -26,10 +27,12 @@ import { ProtectedScreen } from "@/components/domain/ProtectedScreen";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const fallbackProductImage = require("../../assets/images/icon.png");
+const MAX_STORES = 3;
 
 export default function ShoppingListScreen() {
   const router = useRouter();
   const toast = useToast();
+  const { addresses, selectedAddressId } = useAddress();
 
   const [items, setItems] = useState<ShoppingListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,48 +57,11 @@ export default function ShoppingListScreen() {
     }
   }, [toast]);
 
-  useEffect(() => {
-    const mockData = [
-      {
-        product_id: 1,
-        product_name: "Fresh Milk",
-        brand: "Juhayna",
-        image_url:
-          "https://images.unsplash.com/photo-1563636619-e9143da7973b?q=80&w=500",
-        qty: 2,
-      },
-      {
-        product_id: 2,
-        product_name: "Potato Chips",
-        brand: "Lay's",
-        image_url:
-          "https://images.unsplash.com/photo-1585238342024-78d387f4a707?q=80&w=500",
-        qty: 1,
-      },
-      {
-        product_id: 3,
-        product_name: "Chocolate Cookies",
-        brand: "Oreo",
-        image_url:
-          "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=500",
-        qty: 4,
-      },
-      {
-        product_id: 4,
-        product_name: "Orange Juice",
-        brand: "Fresh",
-        image_url:
-          "https://images.unsplash.com/photo-1600271886742-f049cd5bba3f?q=80&w=500",
-        qty: 1,
-      },
-    ];
-
-    setItems(mockData);
-    setIsLoading(false);
-
-    // later switch back to:
-    // loadShoppingList();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadShoppingList();
+    }, [loadShoppingList]),
+  );
 
   // =========================
   // Update Quantity
@@ -147,35 +113,47 @@ export default function ShoppingListScreen() {
   const handleOptimize = useCallback(async () => {
     if (items.length === 0) {
       toast("Your list is empty", "warning");
+      return;
+    }
 
+    if (!selectedAddressId) {
+      toast("Please select a delivery address first", "warning");
+      router.push("/address-book");
       return;
     }
 
     try {
       setIsOptimizing(true);
 
-      // Send only product_id + qty
-      const payload = items.map((item) => ({
-        product_id: item.product_id,
-        qty: item.qty,
-      }));
-
-      const result = await optimizeShoppingList(payload);
+      const plan = await requestOptimizationPlan(
+        items,
+        selectedAddressId,
+        MAX_STORES,
+      );
 
       router.push({
         pathname: "/optimization",
         params: {
-          result: JSON.stringify(result),
+          plan: JSON.stringify(plan),
+          items: JSON.stringify(items),
+          customerAddressId: String(selectedAddressId),
         },
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Optimization error:", error);
 
-      toast("Failed to optimize list", "error");
+      if (error?.response?.status === 404) {
+        toast(
+          "No nearby shops carry all the items in your list. Try adjusting your list.",
+          "error",
+        );
+      } else {
+        toast("Failed to optimize list", "error");
+      }
     } finally {
       setIsOptimizing(false);
     }
-  }, [items, router, toast]);
+  }, [items, router, toast, selectedAddressId]);
 
   const isEmpty = items.length === 0;
 
@@ -228,7 +206,7 @@ export default function ShoppingListScreen() {
               </Text>
 
               <Pressable
-                onPress={() => router.push("/(tabs)")}
+                onPress={() => router.push("/(tabs)/search")}
                 className="bg-primary rounded-full px-6 py-3"
               >
                 <Text className="text-primary-foreground font-semibold">
@@ -349,6 +327,14 @@ export default function ShoppingListScreen() {
 
           {!isEmpty && !isLoading && (
             <View className="px-4 pb-6 pt-3 border-t border-border bg-background">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-muted-foreground text-sm">
+                  {selectedAddressId
+                    ? `Delivering to: ${addresses.find((a) => a.id === selectedAddressId)?.label || "Selected address"}`
+                    : "No delivery address selected"}
+                </Text>
+              </View>
+
               <Pressable
                 onPress={handleOptimize}
                 disabled={isOptimizing}

@@ -118,6 +118,26 @@ await AsyncStorage.setItem(
 },
 
   /**
+   * Sign up as a delivery driver
+   */
+  async registerDelivery(payload: SignUpPayload): Promise<AuthResponse> {
+    const apiPayload = {
+      full_name: payload.full_name,
+      email: payload.email,
+      phone: payload.phone,
+      password: payload.password,
+      confirmPassword: payload.confirmPassword,
+    };
+
+    const response = await httpService.post(
+      "/auth/delivery/register",
+      apiPayload,
+    );
+
+    return response.data;
+  },
+
+  /**
    * Request password reset
    */
   async forgotPassword(payload: ForgotPasswordPayload): Promise<AuthResponse> {

@@ -1,5 +1,7 @@
 import { authService } from "@/shared/auth.service";
 import httpService from "@/shared/httpService";
+import { useAddress } from "@/lib/context/addressContext";
+import { useToast } from "@/lib/hooks/useToast";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import * as React from "react";
@@ -12,6 +14,7 @@ export interface User {
   phone?: string;
   joinedDate?: string;
   avatar?: string;
+  role?: string;
 }
 
 export interface AuthContextType {
@@ -39,6 +42,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const { refreshAddresses, selectAddress } = useAddress();
+  const toast = useToast();
 
   // Initialize auth state from AsyncStorage
   useEffect(() => {
@@ -84,11 +89,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const refreshToken = rawRefresh == null ? null : String(rawRefresh);
       const userData = apiData?.user_data ?? apiData?.user;
 
+      const rawRoles: string[] = Array.isArray(userData?.roles)
+        ? userData.roles
+        : userData?.role
+          ? [userData.role]
+          : [];
+
       const user: User = {
         id: userData?.id,
         name: userData?.full_name ?? userData?.name,
         email: userData?.email,
         phone: userData?.phone,
+        role: rawRoles[0],
       };
 
       if (!token || !refreshToken) {
@@ -117,7 +129,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (refreshToken) setRefreshToken(refreshToken);
       if (user) setUser(user);
 
-      router.replace("/location-setup");
+      if (rawRoles.includes("delivery")) {
+        router.replace("/driver");
+      } else {
+        const addrs = await refreshAddresses();
+        if (addrs.length === 0) {
+          router.replace("/location-permission");
+        } else {
+          const preferred = addrs.find((a) => a.is_default) ?? addrs[0];
+          if (preferred?.id) selectAddress(preferred.id);
+          router.replace("/(tabs)");
+        }
+      }
     } catch (error: any) {
       console.log("Login error:", error);
 
@@ -157,16 +180,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         confirmPassword,
       });
       console.log("Signup response:", response);
+      toast(response.message || "Account created. Please log in.", "success");
       router.replace("/login");
-      // Show success message
-      const successMessage = response.message || "User registered successfully";
-
-      Alert.alert("Sign Up Successful", successMessage, [
-        {
-          text: "OK",
-          onPress: () => router.replace("/login"),
-        },
-      ]);
     } catch (error: any) {
       console.log("========== REGISTER ERROR ==========");
 

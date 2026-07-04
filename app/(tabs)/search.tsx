@@ -10,7 +10,7 @@
  * Features:
  * - Autocomplete search with 200ms debounce
  * - Filter panel: categories (2-level), price range, stores, stock toggle
- * - Search results with infinite scroll
+ * - Results with infinite scroll (default browse when there's no query)
  * - Empty, error, and category suggestion states
  */
 
@@ -31,11 +31,12 @@ import {
 } from "@/lib/hooks/useSearch";
 import { THEME } from "@/lib/theme";
 import { useTheme } from "@/lib/theme-context";
+import { useToast } from "@/lib/hooks/useToast";
 import type { ProductSearchFilters, ProductSearchItem } from "@/lib/types";
-import { searchService } from "@/shared/search.service";
+import { addToShoppingList } from "@/shared/shopping-list.service";
 import { useRouter } from "expo-router";
 import { Filter } from "lucide-react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -50,6 +51,7 @@ export default function SearchScreen() {
   const router = useRouter();
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const toast = useToast();
 
   // Search state
   const {
@@ -59,7 +61,8 @@ export default function SearchScreen() {
     isLoading: suggestionsLoading,
   } = useSearchAutoComplete();
 
-  // Results state
+  // Results state - always active, browsing with an empty query is just
+  // the unfiltered first page.
   const {
     filters,
     results,
@@ -75,40 +78,6 @@ export default function SearchScreen() {
   // Filter options state
   const { options: filterOptions, isLoading: optionsLoading } =
     useSearchFilterOptions();
-
-  // Sample products state
-  const [sampleProducts, setSampleProducts] = useState<ProductSearchItem[]>([]);
-  const [sampleLoading, setSampleLoading] = useState(false);
-  const [sampleError, setSampleError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isActive = true;
-    const loadSamples = async () => {
-      try {
-        setSampleLoading(true);
-        setSampleError(null);
-        const data = await searchService.fetchSampleProducts();
-        if (isActive) {
-          setSampleProducts(data.items);
-        }
-      } catch (err) {
-        if (isActive) {
-          setSampleError(
-            err instanceof Error ? err.message : "Failed to fetch products",
-          );
-        }
-      } finally {
-        if (isActive) {
-          setSampleLoading(false);
-        }
-      }
-    };
-
-    loadSamples();
-    return () => {
-      isActive = false;
-    };
-  }, []);
 
   // Category matching
   const { matchingCategory, findCategory } = useFindMatchingCategory();
@@ -179,11 +148,12 @@ export default function SearchScreen() {
     [updateFilters],
   );
 
-  // Handle clear search
+  // Handle clear search (X button)
   const handleClearSearch = useCallback(() => {
     setQuery("");
     setShowSuggestions(false);
-  }, [setQuery]);
+    clearFilters();
+  }, [setQuery, clearFilters]);
 
   // Handle retry on error
   const handleRetry = useCallback(() => {
@@ -192,11 +162,9 @@ export default function SearchScreen() {
 
   // Handle search all stores (clear filters)
   const handleSearchAllStores = useCallback(() => {
+    setQuery("");
     clearFilters();
-    if (query.trim().length > 0) {
-      updateFilters({ q: query.trim() });
-    }
-  }, [clearFilters, query, updateFilters]);
+  }, [clearFilters, setQuery]);
 
   // Handle browse category suggestion
   const handleBrowseCategory = useCallback(() => {
@@ -218,6 +186,24 @@ export default function SearchScreen() {
     [router],
   );
 
+  // Handle add to shopping list
+  const handleAddToList = useCallback(
+    async (product: ProductSearchItem) => {
+      try {
+        await addToShoppingList({
+          product_id: product.id,
+          product_name: product.product_name,
+          brand: product.brand,
+          qty: 1,
+        });
+        toast(`Added ${product.product_name} to your list`, "success");
+      } catch {
+        toast("Failed to add to shopping list", "error");
+      }
+    },
+    [toast],
+  );
+
   // Handle infinite scroll
   const handleEndReached = useCallback(() => {
     if (results.has_next_page && !resultsLoading) {
@@ -226,8 +212,6 @@ export default function SearchScreen() {
   }, [results.has_next_page, resultsLoading, loadMore]);
 
   const activeFilterCount = getActiveFilterCount();
-  const isSearching =
-    results.items.length > 0 || (query.trim().length > 0 && !showSuggestions);
 
   return (
     <SafeAreaView
@@ -285,95 +269,54 @@ export default function SearchScreen() {
         </View>
 
         {/* Content */}
-        {isSearching ? (
-          <>
-            {/* Results */}
-            {resultsError ? (
-              <ErrorSearchState error={resultsError} onRetry={handleRetry} />
-            ) : results.items.length === 0 && !resultsLoading ? (
-              <View className="flex-1">
-                <EmptySearchState
-                  query={query}
-                  onClearFilters={handleSearchAllStores}
-                  onSearchAllStores={handleSearchAllStores}
-                />
-              </View>
-            ) : (
-              <>
-                {/* Category Suggestion */}
-                {matchingCategory && results.items.length === 0 && (
-                  <CategorySuggestion
-                    categoryName={matchingCategory.category_name}
-                    onBrowse={handleBrowseCategory}
-                  />
-                )}
-
-                {/* Search Results Grid */}
-                <FlatList
-                  data={results.items}
-                  keyExtractor={(item) => `${item.id}`}
-                  numColumns={2}
-                  columnWrapperStyle={{ justifyContent: "space-between" }}
-                  renderItem={({ item }) => (
-                    <ProductCard product={item} onPress={handleProductPress} />
-                  )}
-                  onEndReached={handleEndReached}
-                  onEndReachedThreshold={0.5}
-                  ListFooterComponent={
-                    resultsLoading ? (
-                      <View className="py-4 items-center w-full">
-                        <ActivityIndicator
-                          size="large"
-                          color={tokens.primary}
-                        />
-                      </View>
-                    ) : null
-                  }
-                  ListEmptyComponent={
-                    !resultsLoading ? <View className="flex-1" /> : null
-                  }
-                  contentContainerStyle={{
-                    paddingHorizontal: 4,
-                    paddingVertical: 8,
-                  }}
-                />
-              </>
-            )}
-          </>
-        ) : (
-          /* Empty State */
+        {resultsError ? (
+          <ErrorSearchState error={resultsError} onRetry={handleRetry} />
+        ) : results.items.length === 0 && !resultsLoading ? (
           <View className="flex-1">
-            {sampleError ? (
-              <View className="flex-1 items-center justify-center px-4 gap-2">
-                <Text
-                  className="text-base text-center"
-                  style={{ color: tokens.foreground }}
-                ></Text>
-                <ErrorSearchState
-                  error={sampleError}
-                  onRetry={async () => {}}
-                />
-              </View>
-            ) : sampleLoading ? (
-              <View className="flex-1 items-center justify-center">
-                <ActivityIndicator size="large" color={tokens.primary} />
-              </View>
-            ) : (
-              <FlatList
-                data={sampleProducts}
-                keyExtractor={(item) => `sample-${item.id}`}
-                numColumns={2}
-                columnWrapperStyle={{ justifyContent: "space-between" }}
-                renderItem={({ item }) => (
-                  <ProductCard product={item} onPress={handleProductPress} />
-                )}
-                contentContainerStyle={{
-                  paddingHorizontal: 4,
-                  paddingVertical: 8,
-                }}
+            <EmptySearchState
+              query={query}
+              onClearFilters={handleSearchAllStores}
+              onSearchAllStores={handleSearchAllStores}
+            />
+          </View>
+        ) : (
+          <>
+            {/* Category Suggestion */}
+            {matchingCategory && results.items.length === 0 && (
+              <CategorySuggestion
+                categoryName={matchingCategory.category_name}
+                onBrowse={handleBrowseCategory}
               />
             )}
-          </View>
+
+            {/* Results Grid */}
+            <FlatList
+              data={results.items}
+              keyExtractor={(item) => `${item.id}`}
+              numColumns={2}
+              columnWrapperStyle={{ justifyContent: "space-between" }}
+              renderItem={({ item }) => (
+                <ProductCard
+                  product={item}
+                  onPress={handleProductPress}
+                  onAddToList={handleAddToList}
+                />
+              )}
+              onEndReached={handleEndReached}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={
+                resultsLoading ? (
+                  <View className="py-4 items-center w-full">
+                    <ActivityIndicator size="large" color={tokens.primary} />
+                  </View>
+                ) : null
+              }
+              contentContainerStyle={{
+                paddingHorizontal: 4,
+                paddingVertical: 8,
+              }}
+            />
+          </>
         )}
       </View>
 

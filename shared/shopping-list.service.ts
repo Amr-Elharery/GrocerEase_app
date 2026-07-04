@@ -9,15 +9,33 @@ export interface ShoppingListItem {
   qty: number;
 }
 
-export interface OptimizePayload {
-  product_id: number;
-  qty: number;
+export interface OptimizeItemAssignment {
+  store: string;
+  shop_id: number;
+  shop_product_id: number;
+  price: number;
 }
 
-export interface OptimizeResponse {
-  optimal_combination: any;
+export interface OptimizationPlan {
+  stores_to_visit: string[];
+  item_assignment: Record<string, OptimizeItemAssignment>;
+  item_cost: number;
+  delivery_cost: number;
   total_cost: number;
-  savings: number;
+  route: any[];
+}
+
+export interface OrderGroupOrderPayload {
+  shop_id: number;
+  customer_address_id: number;
+  payment_method: string;
+  items: { shop_product_id: number; quantity: number }[];
+}
+
+export interface OrderOptimizationPayload {
+  customer_address_id: number;
+  payment_method: string;
+  orders: OrderGroupOrderPayload[];
 }
 
 const SHOPPING_LIST_KEY = "shopping_list_v1";
@@ -120,21 +138,35 @@ export async function clearShoppingList(): Promise<void> {
 }
 
 /**
- * Send shopping list to optimization engine
+ * Ask the optimizer for the best shop split for the given shopping list.
+ * Read-only planning call — nothing is created in the database yet.
  */
-export async function optimizeShoppingList(
+export async function requestOptimizationPlan(
   items: ShoppingListItem[],
-): Promise<OptimizeResponse> {
-  try {
-    const payload = items.map((item) => ({
-      product_id: item.product_id,
-      qty: item.qty,
-    }));
-
-    const response = await httpService.post("/optimize", payload);
-    return response.data;
-  } catch (error) {
-    console.error("Error optimizing shopping list:", error);
-    throw error;
+  customerAddressId: number,
+  maxStores: number = 3,
+): Promise<OptimizationPlan> {
+  const shopping_list: Record<string, number> = {};
+  for (const item of items) {
+    shopping_list[String(item.product_id)] = item.qty;
   }
+
+  const response = await httpService.post("/optimization/optimize", {
+    shopping_list,
+    customer_address_id: customerAddressId,
+    max_stores: maxStores,
+  });
+
+  return response.data;
+}
+
+/**
+ * Submit the confirmed plan as a real order group.
+ * Only IDs and quantities are sent — the backend recomputes pricing.
+ */
+export async function submitOptimizedOrder(
+  payload: OrderOptimizationPayload,
+): Promise<any> {
+  const response = await httpService.post("/orders/optimization", payload);
+  return response.data;
 }

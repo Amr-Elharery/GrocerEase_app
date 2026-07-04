@@ -2,8 +2,16 @@ import type { ImageSourcePropType } from 'react-native';
 
 export interface Shop {
   id: number;
-  user_id: number;
+  owner_id: number;
   shop_name: string;
+  description?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  phone_number?: string;
+  area_id?: number;
+  logo_url?: string | null;
+  is_active?: boolean;
   created_at: string;
   updated_at: string;
 }

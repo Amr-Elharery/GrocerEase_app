@@ -15,17 +15,69 @@ const TABS = ["Ongoing", "Delivered", "Cancelled"] as const;
 
 type OrderTab = (typeof TABS)[number];
 
+type OrderOrGroup =
+  | { type: "single"; order: OrderSummary }
+  | { type: "group"; order_group_id: string | number; orders: OrderSummary[] };
+
+const combineIntoGroups = (orders: OrderSummary[]): OrderOrGroup[] => {
+  const seenGroups = new Map<string, OrderSummary[]>();
+  const result: OrderOrGroup[] = [];
+
+  for (const order of orders) {
+    if (order.order_group_id) {
+      const key = String(order.order_group_id);
+      if (!seenGroups.has(key)) {
+        seenGroups.set(key, []);
+      }
+      seenGroups.get(key)!.push(order);
+    }
+  }
+
+  const handledGroups = new Set<string>();
+  for (const order of orders) {
+    if (order.order_group_id) {
+      const key = String(order.order_group_id);
+      if (handledGroups.has(key)) continue;
+      handledGroups.add(key);
+      result.push({
+        type: "group",
+        order_group_id: order.order_group_id,
+        orders: seenGroups.get(key)!,
+      });
+    } else {
+      result.push({ type: "single", order });
+    }
+  }
+
+  return result;
+};
+
+const groupStatus = (group: OrderSummary[]) =>
+  group[0]?.status?.toLowerCase() || "";
+
 const groupOrders = (orders: OrderSummary[]) => {
-  const ongoing = orders.filter((order) => {
-    const status = order.status?.toLowerCase() || "";
+  const items = combineIntoGroups(orders);
+  const ongoing = items.filter((item) => {
+    const status =
+      item.type === "group"
+        ? groupStatus(item.orders)
+        : item.order.status?.toLowerCase() || "";
     return status !== "delivered" && status !== "cancelled";
   });
-  const delivered = orders.filter(
-    (order) => order.status?.toLowerCase() === "delivered",
-  );
-  const cancelled = orders.filter(
-    (order) => order.status?.toLowerCase() === "cancelled",
-  );
+  const delivered = items.filter((item) => {
+    const status =
+      item.type === "group"
+        ? groupStatus(item.orders)
+        : item.order.status?.toLowerCase() || "";
+    return status === "delivered";
+  });
+  const cancelled = items.filter((item) => {
+    const status =
+      item.type === "group"
+        ? groupStatus(item.orders)
+        : item.order.status?.toLowerCase() || "";
+    return status === "cancelled";
+  });
   return { ongoing, delivered, cancelled };
 };
 
@@ -104,41 +156,98 @@ export default function ProfileOrdersScreen() {
             </Text>
           </View>
         ) : (
-          visibleOrders.map((order) => (
-            <Pressable
-              key={String(order.id)}
-              onPress={() => {
-                if (activeTab === "Ongoing") {
-                  // Pass a serialized preload of the order so tracking can show details
-                  router.push({
-                    pathname: "/order-tracking",
-                    params: {
-                      id: String(order.id),
-                      preload: JSON.stringify(order),
-                    },
-                  });
-                }
-              }}
-              className="mb-4 rounded-3xl border border-border bg-card px-4 py-4"
-              style={{ opacity: activeTab === "Ongoing" ? 1 : 0.9 }}
-            >
-              <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-base font-semibold text-foreground">
-                  Order {order.order_number || order.id}
+          visibleOrders.map((item) => {
+            if (item.type === "group") {
+              const orders = item.orders;
+              // Delivery fee is one combined charge for the trip, not
+              // per-shop, so only the first order's fee counts.
+              const combinedSubTotal = orders.reduce(
+                (sum, o) => sum + Number(o.sub_total ?? 0),
+                0,
+              );
+              const combinedDeliveryFee = Number(orders[0]?.delivery_fee ?? 0);
+              const combinedTotal = combinedSubTotal + combinedDeliveryFee;
+              const combinedItemCount = orders.reduce(
+                (sum, o) => sum + (o.items?.length ?? 0),
+                0,
+              );
+              const orderNumbers = orders
+                .map((o) => o.order_number || o.id)
+                .join(", ");
+
+              return (
+                <Pressable
+                  key={`group-${item.order_group_id}`}
+                  onPress={() => {
+                    if (activeTab === "Ongoing") {
+                      router.push({
+                        pathname: "/order-tracking",
+                        params: {
+                          groupId: String(item.order_group_id),
+                          preloadGroup: JSON.stringify(orders),
+                        },
+                      });
+                    }
+                  }}
+                  className="mb-4 rounded-3xl border border-border bg-card px-4 py-4"
+                  style={{ opacity: activeTab === "Ongoing" ? 1 : 0.9 }}
+                >
+                  <View className="flex-row items-center justify-between mb-3">
+                    <Text className="text-base font-semibold text-foreground">
+                      Order {orderNumbers} · {orders.length} shops
+                    </Text>
+                    <Text className="text-sm font-semibold text-primary">
+                      {orders[0]?.status}
+                    </Text>
+                  </View>
+                  <Text className="text-sm text-muted-foreground">
+                    {combinedItemCount} items •{" "}
+                    {orders[0]?.eta || "ETA unavailable"}
+                  </Text>
+                  <Text className="mt-3 text-sm text-foreground">
+                    Total: EGP {combinedTotal.toFixed(2)}
+                  </Text>
+                </Pressable>
+              );
+            }
+
+            const order = item.order;
+            return (
+              <Pressable
+                key={String(order.id)}
+                onPress={() => {
+                  if (activeTab === "Ongoing") {
+                    // Pass a serialized preload of the order so tracking can show details
+                    router.push({
+                      pathname: "/order-tracking",
+                      params: {
+                        id: String(order.id),
+                        preload: JSON.stringify(order),
+                      },
+                    });
+                  }
+                }}
+                className="mb-4 rounded-3xl border border-border bg-card px-4 py-4"
+                style={{ opacity: activeTab === "Ongoing" ? 1 : 0.9 }}
+              >
+                <View className="flex-row items-center justify-between mb-3">
+                  <Text className="text-base font-semibold text-foreground">
+                    Order {order.order_number || order.id}
+                  </Text>
+                  <Text className="text-sm font-semibold text-primary">
+                    {order.status}
+                  </Text>
+                </View>
+                <Text className="text-sm text-muted-foreground">
+                  {order.items?.length ?? 0} items •{" "}
+                  {order.eta || "ETA unavailable"}
                 </Text>
-                <Text className="text-sm font-semibold text-primary">
-                  {order.status}
+                <Text className="mt-3 text-sm text-foreground">
+                  Total: EGP {Number(order.total ?? 0).toFixed(2)}
                 </Text>
-              </View>
-              <Text className="text-sm text-muted-foreground">
-                {order.items?.length ?? 0} items •{" "}
-                {order.eta || "ETA unavailable"}
-              </Text>
-              <Text className="mt-3 text-sm text-foreground">
-                Total: EGP {Number(order.sub_total ?? 0).toFixed(2)}
-              </Text>
-            </Pressable>
-          ))
+              </Pressable>
+            );
+          })
         )}
       </ScrollView>
     </SafeAreaView>

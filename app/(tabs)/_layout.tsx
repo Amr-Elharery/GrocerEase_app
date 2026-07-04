@@ -5,7 +5,6 @@ import { Tabs } from 'expo-router';
 
 import {
   ShoppingCart,
-  Bell,
   ClipboardList,
   Home,
   ShoppingBag,
@@ -78,16 +77,6 @@ export default function TabsLayout() {
           title: "Cart",
           tabBarIcon: ({ color, size }) => (
             <ShoppingCart size={size} color={color} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="wishlist"
-        options={{
-          title: 'Watchlist',
-          tabBarIcon: ({ color, size }) => (
-            <Bell size={size} color={color} />
           ),
         }}
       />

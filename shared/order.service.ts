@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import httpService from "./httpService";
+import { addressService, formatAddress } from "./address.service";
 
 const AUTH_TOKEN_KEYS = ["auth_token", "token", "access_token"] as const;
 
@@ -52,42 +53,59 @@ export interface OrderSummary {
   delivery_fee?: number;
   eta?: string;
   address?: OrderAddress;
+  customer_address_id?: number;
+  order_group_id?: string | number;
+  shop_name?: string;
   items?: OrderItem[];
   order_number?: string;
   created_at?: string;
   updated_at?: string;
 }
 
-const normalizeOrder = (payload: any): OrderSummary => ({
-  id: payload?.id ?? payload?.order_id ?? payload?._id ?? payload?.orderId,
-  status: payload?.status || payload?.order_status || "Pending",
-  total: payload?.total ?? payload?.amount ?? 0,
-  sub_total: payload?.sub_total ?? payload?.subtotal ?? payload?.subTotal ?? 0,
-  delivery_fee:
+const normalizeOrder = (payload: any): OrderSummary => {
+  const rawAddress =
+    payload?.address ??
+    payload?.delivery_address ??
+    payload?.shipping_address ??
+    payload?.customer_address;
+
+  const subTotal =
+    payload?.sub_total ?? payload?.subtotal ?? payload?.subTotal ?? 0;
+  const deliveryFee =
     payload?.delivery_fee ??
     payload?.deliveryFee ??
     payload?.delivery_cost ??
-    0,
-  eta: payload?.eta || payload?.estimated_time || payload?.delivery_eta || "",
-  address: payload?.address ||
-    payload?.delivery_address ||
-    payload?.shipping_address || {
-      full_address: "",
+    0;
+  const rawTotal = payload?.total ?? payload?.amount;
+
+  return {
+    id: payload?.id ?? payload?.order_id ?? payload?._id ?? payload?.orderId,
+    status: payload?.status || payload?.order_status || "Pending",
+    total: rawTotal || Number(subTotal) + Number(deliveryFee),
+    sub_total: subTotal,
+    delivery_fee: deliveryFee,
+    eta: payload?.eta || payload?.estimated_time || payload?.delivery_eta || "",
+    address: {
+      full_address: formatAddress(rawAddress),
     },
-  items: Array.isArray(payload?.items)
-    ? payload.items
-    : Array.isArray(payload?.order_items)
-      ? payload.order_items.map((item: any) => ({
-          id: item.id,
-          shop_product_id: item.shop_product_id,
-          quantity: item.quantity,
-          subtotal: item.total ?? item.subtotal ?? item.price,
-        }))
-      : [],
-  order_number: payload?.order_number || payload?.invoice_number || "",
-  created_at: payload?.created_at || payload?.createdAt || "",
-  updated_at: payload?.updated_at || payload?.updatedAt || "",
-});
+    customer_address_id: payload?.customer_address_id,
+    order_group_id: payload?.order_group_id,
+    shop_name: payload?.shop_name ?? payload?.shop?.shop_name,
+    items: Array.isArray(payload?.items)
+      ? payload.items
+      : Array.isArray(payload?.order_items)
+        ? payload.order_items.map((item: any) => ({
+            id: item.id,
+            shop_product_id: item.shop_product_id,
+            quantity: item.quantity,
+            subtotal: item.total ?? item.subtotal ?? item.price,
+          }))
+        : [],
+    order_number: payload?.order_number || payload?.invoice_number || "",
+    created_at: payload?.created_at || payload?.createdAt || "",
+    updated_at: payload?.updated_at || payload?.updatedAt || "",
+  };
+};
 
 const normalizeOrderList = (payload: any): OrderSummary[] => {
   if (!payload) return [];
@@ -129,7 +147,18 @@ export async function fetchOrderById(
 ): Promise<OrderSummary> {
   const config = await getAuthConfig();
   const response = await httpService.get(`/orders/${orderId}`, config);
-  return normalizeOrder(response?.data ?? response);
+  const order = normalizeOrder(response?.data ?? response);
+
+  if (!order.address?.full_address && order.customer_address_id) {
+    try {
+      const fullAddress = await addressService.getAddress(
+        order.customer_address_id,
+      );
+      order.address = { full_address: formatAddress(fullAddress) };
+    } catch {}
+  }
+
+  return order;
 }
 
 export async function cancelOrder(orderId: string | number): Promise<any> {

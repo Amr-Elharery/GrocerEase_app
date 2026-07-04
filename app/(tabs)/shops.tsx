@@ -2,6 +2,7 @@ import { ProtectedScreen } from "@/components/domain/ProtectedScreen";
 import { StoreCard } from "@/components/domain/store-card";
 import { THEME } from "@/lib/theme";
 import { useTheme } from "@/lib/theme-context";
+import { useAddress } from "@/lib/context/addressContext";
 import type { ShopDisplay } from "@/lib/types";
 import { shopService } from "@/shared/shop.service";
 import { useRouter } from "expo-router";
@@ -9,29 +10,53 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const PAGE_SIZE = 20;
+
 export default function ShopListScreen() {
   const router = useRouter();
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { addresses, selectedAddressId } = useAddress();
+  const areaId = addresses.find((a) => a.id === selectedAddressId)?.area_id;
 
   const [stores, setStores] = useState<ShopDisplay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   const loadShops = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await shopService.getShops();
+      const data = await shopService.getShops(areaId, PAGE_SIZE, 0);
       setStores(data);
+      setOffset(data.length);
+      setHasMore(data.length === PAGE_SIZE);
     } catch (error) {
       console.log(error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [areaId]);
 
   useEffect(() => {
     loadShops();
   }, [loadShops]);
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore || isLoading) return;
+    setIsLoadingMore(true);
+    try {
+      const data = await shopService.getShops(areaId, PAGE_SIZE, offset);
+      setStores((prev) => [...prev, ...data]);
+      setOffset((prev) => prev + data.length);
+      setHasMore(data.length === PAGE_SIZE);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasMore, isLoading, offset, areaId]);
 
   const handleStorePress = (store: ShopDisplay) => {
     router.push({
@@ -70,6 +95,16 @@ export default function ShopListScreen() {
                   <StoreCard store={item} onPress={handleStorePress} />
                 </View>
               )}
+              onEndReached={loadMore}
+              onEndReachedThreshold={0.4}
+              ListFooterComponent={
+                isLoadingMore ? (
+                  <ActivityIndicator
+                    style={{ marginVertical: 12 }}
+                    color={tokens.primary}
+                  />
+                ) : null
+              }
               ListEmptyComponent={
                 <View className="flex-1 items-center justify-center py-20">
                   <Text className="text-muted-foreground">No shops found</Text>

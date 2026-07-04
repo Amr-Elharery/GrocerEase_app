@@ -8,6 +8,12 @@ export interface Product {
   price: number;
   created_at: string;
   updated_at: string;
+  brand?: string;
+  unit?: string;
+  // The real catalog product id. On ProductDisplay, `id` is actually the
+  // shop_product join row id (needed for cart/checkout), so this field is
+  // the one to use when navigating to /product-details?id=.
+  product_id?: number;
 }
 
 export interface ShopProduct {
@@ -71,6 +77,6 @@ export interface ProductDisplay extends Product {
   shop_price: number;
   stock: number;
   images: ProductImage[];
-  primaryImage?: ImageSourcePropType;
+  primaryImage?: string;
   category?: Category;
 }

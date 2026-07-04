@@ -1,23 +1,26 @@
 import { CartConflictModal } from "@/components/domain/CartConflictModal";
 import { ProductCard } from "@/components/domain/product-card";
-import { Button } from "@/components/ui/button";
 import { THEME } from "@/lib/theme";
 import { useCart } from "@/lib/context/cartContext";
 import { useTheme } from "@/lib/theme-context";
 import type { ProductDisplay, ShopDisplay } from "@/lib/types";
 import { shopService } from "@/shared/shop.service";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { ShoppingCart, Store } from "lucide-react-native";
+import { Search, ShoppingCart, Store, X } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Pressable,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const PAGE_SIZE = 20;
 
 export default function ShopProductsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,6 +35,10 @@ export default function ShopProductsScreen() {
   const [shop, setShop] = useState<ShopDisplay | null>(null);
   const [productsByShop, setProductsByShop] = useState<ProductDisplay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const loadShopData = async () => {
@@ -43,8 +50,14 @@ export default function ShopProductsScreen() {
         );
         setShop(shopResult ?? null);
 
-        const { products } = await shopService.getShopProducts(shopIdNum);
+        const { products } = await shopService.getShopProducts(
+          shopIdNum,
+          PAGE_SIZE,
+          0,
+        );
         setProductsByShop(products);
+        setOffset(products.length);
+        setHasMore(products.length === PAGE_SIZE);
       } catch (error) {
         console.log(error);
       } finally {
@@ -54,28 +67,48 @@ export default function ShopProductsScreen() {
     loadShopData();
   }, [id]);
 
-  const categories = useMemo(() => {
-    const cats: { category_name: string; products: ProductDisplay[] }[] = [];
-    const seen = new Set<string>();
-
-    for (const product of productsByShop) {
-      const catName = product.category?.category_name || "Uncategorized";
-      if (!seen.has(catName)) {
-        seen.add(catName);
-        cats.push({ category_name: catName, products: [] });
-      }
-      const group = cats.find((c) => c.category_name === catName);
-      if (group) {
-        group.products.push(product);
-      }
+  const loadMoreProducts = useCallback(async () => {
+    if (isLoadingMore || !hasMore || isLoading) return;
+    setIsLoadingMore(true);
+    try {
+      const shopIdNum = parseInt(id);
+      const { products } = await shopService.getShopProducts(
+        shopIdNum,
+        PAGE_SIZE,
+        offset,
+      );
+      setProductsByShop((prev) => [...prev, ...products]);
+      setOffset((prev) => prev + products.length);
+      setHasMore(products.length === PAGE_SIZE);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoadingMore(false);
     }
-    return cats;
-  }, [productsByShop]);
+  }, [id, isLoadingMore, hasMore, isLoading, offset]);
 
   const cartShop = useMemo(() => {
     if (!shopId) return null;
     return shop;
   }, [shopId, shop]);
+
+  const filteredProducts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return productsByShop;
+    return productsByShop.filter((product) =>
+      product.product_name.toLowerCase().includes(q),
+    );
+  }, [productsByShop, searchQuery]);
+
+  const handleProductPress = useCallback(
+    (product: ProductDisplay) => {
+      router.push({
+        pathname: "/shop-product/[id]",
+        params: { id: String(product.id), product: JSON.stringify(product) },
+      });
+    },
+    [router],
+  );
 
   const handleAddToCart = useCallback(
     (product: ProductDisplay) => {
@@ -184,40 +217,57 @@ export default function ShopProductsScreen() {
           style={{ backgroundColor: tokens.background }}
         >
           <View className="flex-1 px-4 pt-4">
+            <View
+              className="flex-row items-center border rounded-xl px-3 mb-4"
+              style={{ borderColor: tokens.border, backgroundColor: tokens.input }}
+            >
+              <Search size={18} color={tokens.mutedForeground} />
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Search products in this shop"
+                placeholderTextColor={tokens.mutedForeground}
+                className="flex-1 px-2 py-3"
+                style={{ color: tokens.foreground }}
+              />
+              {searchQuery.length > 0 && (
+                <Pressable onPress={() => setSearchQuery("")}>
+                  <X size={18} color={tokens.mutedForeground} />
+                </Pressable>
+              )}
+            </View>
+
             <FlatList
-              data={categories}
-              keyExtractor={(item) => item.category_name}
+              data={filteredProducts}
+              keyExtractor={(item) => String(item.id)}
+              numColumns={2}
+              columnWrapperStyle={{ justifyContent: "space-between" }}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 20 }}
               renderItem={({ item }) => (
-                <View className="mb-6">
-                  <Text className="text-foreground text-xl font-bold mb-3">
-                    {item.category_name}
-                  </Text>
-
-                  {item.products.map((product) => (
-                    <View key={product.id} className="mb-3">
-                      <ProductCard
-                        product={product}
-                      
-                      />
-
-                      <Button
-                        onPress={() => handleAddToCart(product)}
-                        className="mt-2"
-                        disabled={product.stock === 0}
-                      >
-                        <Text className="text-primary-foreground font-bold">
-                          {product.stock === 0 ? "Out of stock" : "Add to Cart"}
-                        </Text>
-                      </Button>
-                    </View>
-                  ))}
-                </View>
+                <ProductCard
+                  product={item}
+                  onPress={handleProductPress}
+                  onAddToCart={handleAddToCart}
+                />
               )}
+              onEndReached={loadMoreProducts}
+              onEndReachedThreshold={0.4}
+              ListFooterComponent={
+                isLoadingMore ? (
+                  <ActivityIndicator
+                    style={{ marginVertical: 12 }}
+                    color={tokens.primary}
+                  />
+                ) : null
+              }
               ListEmptyComponent={
                 <View className="flex-1 items-center justify-center py-20">
-                  <Text className="text-muted-foreground">No products found</Text>
+                  <Text className="text-muted-foreground">
+                    {searchQuery
+                      ? "No products match your search"
+                      : "No products found"}
+                  </Text>
                 </View>
               }
             />

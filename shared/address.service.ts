@@ -28,6 +28,29 @@ async function getAuthConfig() {
   } as const;
 }
 
+export const formatAddress = (value: any): string => {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value !== "object") return String(value);
+
+  const areaName =
+    typeof value.area === "string"
+      ? value.area
+      : (value.area?.area_name ?? value.area?.name);
+
+  const parts = [
+    value.street,
+    value.building ? `Bldg ${value.building}` : undefined,
+    value.floor ? `Floor ${value.floor}` : undefined,
+    value.apt_number ? `Apt ${value.apt_number}` : undefined,
+    areaName,
+    value.city,
+    value.additional_directions,
+  ].filter(Boolean);
+
+  return parts.length > 0 ? parts.join(", ") : (value.label ?? "");
+};
+
 export const addressService = {
   async getAddresses(): Promise<Address[]> {
     try {
@@ -68,6 +91,16 @@ export const addressService = {
   async deleteAddress(id: number): Promise<void> {
     const config = await getAuthConfig();
     await httpService.delete(`/addresses/${id}`, config);
+  },
+
+  async setDefaultAddress(id: number): Promise<Address> {
+    const config = await getAuthConfig();
+    const response = await httpService.patch(
+      `/addresses/${id}/default`,
+      null,
+      config,
+    );
+    return response.data;
   },
 
   async getAreas(): Promise<
