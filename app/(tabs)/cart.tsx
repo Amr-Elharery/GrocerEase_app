@@ -1,9 +1,14 @@
 import { ProtectedScreen } from "@/features/auth/components/ProtectedScreen";
 import { useRTL } from "@/lib/i18n/RTLContext";
+import { useToast } from "@/lib/toast/useToast";
 import { THEME, useTheme } from "@/lib/theme";
 import { useCart } from "@/features/cart/hooks/cartContext";
+import { recommendationsService } from "@/features/recommendations/services/recommendations.service";
+import { RecommendationSection } from "@/features/recommendations/components/RecommendationSection";
+import type { FBTRecommendation } from "@/features/recommendations/types";
+import type { ProductDisplay } from "@/features/products/types";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -11,13 +16,69 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const fallbackProductImage = require("../../assets/images/icon.png");
 
 export default function CartScreen() {
-  const { cart, shopId, removeItem, updateQty, subtotal } = useCart();
+  const { cart, shopId, addItem, removeItem, updateQty, subtotal } = useCart();
   const { theme } = useTheme();
   const tokens = THEME[theme];
   const { isRTL } = useRTL();
   const { t } = useTranslation();
+  const toast = useToast();
 
   const cartShopName = shopId ? cart[0]?.shop_name : null;
+
+  const [recommendations, setRecommendations] = useState<FBTRecommendation[]>([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!shopId || cart.length === 0) {
+      setRecommendations([]);
+      return;
+    }
+    const productIds = cart
+      .map((item) => item.product_id)
+      .filter((id): id is number => typeof id === "number");
+    if (productIds.length === 0) {
+      setRecommendations([]);
+      return;
+    }
+
+    let isActive = true;
+    setRecommendationsLoading(true);
+    recommendationsService
+      .getCartCompletion(shopId, productIds)
+      .then((data) => {
+        if (isActive) setRecommendations(data);
+      })
+      .finally(() => {
+        if (isActive) setRecommendationsLoading(false);
+      });
+    return () => {
+      isActive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shopId, cart.map((item) => `${item.product_id}:${item.quantity}`).join(",")]);
+
+  const handleAddRecommendation = (item: FBTRecommendation) => {
+    if (!item.shop_product_id || !shopId) return;
+    const recommendedProduct: ProductDisplay = {
+      id: item.shop_product_id,
+      product_id: item.product_id,
+      category_id: 0,
+      product_name: item.name,
+      description: "",
+      price: item.price ?? 0,
+      created_at: "",
+      updated_at: "",
+      brand: item.brand ?? undefined,
+      shop_id: shopId,
+      shop_name: cartShopName ?? "",
+      shop_price: item.price ?? 0,
+      stock: item.available_stock ?? 0,
+      images: [],
+      primaryImage: item.image_url ?? undefined,
+    };
+    addItem(recommendedProduct);
+    toast(t("stores.shopScreen.addedToCart"), "success");
+  };
 
   const increaseQty = (id: number) => {
     const item = cart.find((i) => i.id === id);
@@ -121,6 +182,13 @@ export default function CartScreen() {
                     </View>
                   </View>
                 )}
+              />
+
+              <RecommendationSection
+                title={t("cart.youMightAlsoNeed")}
+                items={recommendations}
+                isLoading={recommendationsLoading}
+                onAddPress={handleAddRecommendation}
               />
 
               <View className="bg-card border border-border p-5 rounded-2xl">

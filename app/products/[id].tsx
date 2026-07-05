@@ -1,6 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { addToShoppingList } from '@/features/shopping-list/services/shopping-list.service';
 import { productDetailsService, type ProductImageItem, type ProductStoreOffer } from '@/features/products/services/product-details.service';
+import { recommendationsService } from '@/features/recommendations/services/recommendations.service';
+import { RecommendationSection } from '@/features/recommendations/components/RecommendationSection';
+import type { FBTRecommendation } from '@/features/recommendations/types';
 import { useAuth } from '@/features/auth/hooks/auth-context';
 import { useRTL } from '@/lib/i18n/RTLContext';
 import { useToast } from '@/lib/toast/useToast';
@@ -49,6 +52,8 @@ export default function ProductDetailsScreen() {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [selectedOfferId, setSelectedOfferId] = useState<number | null>(null);
+  const [recommendations, setRecommendations] = useState<FBTRecommendation[]>([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
 
   const sortedOffers = useMemo(
     () =>
@@ -100,6 +105,33 @@ export default function ProductDetailsScreen() {
   useEffect(() => {
     loadDetails();
   }, [loadDetails]);
+
+  useEffect(() => {
+    if (!productId) return;
+    let isActive = true;
+    setRecommendationsLoading(true);
+    recommendationsService
+      .getGlobalFrequentlyBoughtTogether(productId)
+      .then((data) => {
+        if (isActive) setRecommendations(data);
+      })
+      .finally(() => {
+        if (isActive) setRecommendationsLoading(false);
+      });
+    return () => {
+      isActive = false;
+    };
+  }, [productId]);
+
+  const handleRecommendationPress = useCallback(
+    (item: FBTRecommendation) => {
+      router.push({
+        pathname: '/products/[id]',
+        params: { id: String(item.product_id) },
+      });
+    },
+    [router],
+  );
 
   useEffect(() => {
     if (select_cheapest === '1' && cheapestOffer?.id) {
@@ -298,6 +330,17 @@ export default function ProductDetailsScreen() {
                 {isLoggedIn ? t('products.detail.addToShoppingList') : t('products.detail.loginToAddShort')}
               </Text>
             </Button>
+
+            <View className="mt-6">
+              <RecommendationSection
+                title={t('products.detail.frequentlyBoughtTogether')}
+                items={recommendations}
+                isLoading={recommendationsLoading}
+                onItemPress={(item) =>
+                  handleRecommendationPress(item as FBTRecommendation)
+                }
+              />
+            </View>
           </View>
         )}
       </ScrollView>

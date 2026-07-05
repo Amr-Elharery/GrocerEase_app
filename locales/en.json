@@ -161,6 +161,7 @@
     "noShopsFound": "No shops found in your area yet.",
     "topProducts": "Top Products",
     "topStores": "Top Stores",
+    "timeToReorder": "Time to Reorder",
     "hero": {
       "title": "You choose the products. We find the best stores.",
       "subtitle": "Save more by shopping across stores with the lowest prices, or go local and get everything from the nearest store for ultra-fast delivery."
@@ -188,7 +189,8 @@
     "empty": "Your cart is empty",
     "emptyHint": "Add products to see them here",
     "subtotal": "Subtotal",
-    "checkout": "Proceed To Checkout"
+    "checkout": "Proceed To Checkout",
+    "youMightAlsoNeed": "You Might Also Need"
   },
   "shoppingList": {
     "title": "Shopping List",
@@ -484,7 +486,7 @@
       "onlyLeft_other": "Only {{count}} left!",
       "description": "Description",
       "youMightAlsoLike": "You Might Also Like",
-      "recommendationsComingSoon": "Recommendations coming soon",
+      "frequentlyBoughtTogether": "Frequently Bought Together",
       "outOfStockButton": "Out of Stock",
       "addToCart": "Add to Cart",
       "invalidId": "Invalid product id",
