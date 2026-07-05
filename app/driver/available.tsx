@@ -9,19 +9,23 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
-import { ChevronLeft, MapPin, Store } from "lucide-react-native";
+import { MapPin, Store } from "lucide-react-native";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useTranslation } from "react-i18next";
 
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
-import { useToast } from "@/lib/hooks/useToast";
-import { fetchAvailableJobs } from "@/shared/delivery.service";
-import { AvailableJob } from "@/lib/types/delivery";
+import { useRTL } from "@/lib/i18n/RTLContext";
+import { THEME, useTheme } from "@/lib/theme";
+import { useToast } from "@/lib/toast/useToast";
+import { fetchAvailableJobs } from "@/features/driver/services/delivery.service";
+import { AvailableJob } from "@/features/driver/types";
 
 const PAGE_SIZE = 10;
 
 export default function AvailableJobsScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const showToast = useToast();
 
   const [jobs, setJobs] = useState<AvailableJob[]>([]);
@@ -39,10 +43,10 @@ export default function AvailableJobsScreen() {
         setJobs((prev) => (replace ? data : [...prev, ...data]));
         setOffset(nextOffset);
       } catch {
-        showToast("Could not load available jobs", "error");
+        showToast(t("driver.available.couldNotLoadJobs"), "error");
       }
     },
-    [showToast],
+    [showToast, t],
   );
 
   useFocusEffect(
@@ -91,10 +95,10 @@ export default function AvailableJobsScreen() {
           <View className="flex-row items-center mb-2">
             <Store size={18} color={tokens.primary} />
             <Text
-              className="ml-2 font-bold text-base"
+              className={isRTL ? "mr-2 font-bold text-base" : "ml-2 font-bold text-base"}
               style={{ color: tokens.foreground }}
             >
-              Multi-stop delivery ({item.orders.length} shops)
+              {t("driver.available.multiStopDelivery", { count: item.orders.length })}
             </Text>
           </View>
           <Text style={{ color: tokens.mutedForeground }}>
@@ -103,18 +107,18 @@ export default function AvailableJobsScreen() {
           <View className="flex-row items-center mt-2">
             <MapPin size={14} color={tokens.mutedForeground} />
             <Text
-              className="ml-1"
+              className={isRTL ? "mr-1" : "ml-1"}
               style={{ color: tokens.mutedForeground }}
               numberOfLines={1}
             >
-              {item.orders[0]?.customer_address ?? "Customer address"}
+              {item.orders[0]?.customer_address ?? t("driver.available.customerAddress")}
             </Text>
           </View>
           <Text
             className="mt-2 font-semibold"
             style={{ color: tokens.foreground }}
           >
-            Total: {total}
+            {t("driver.available.total", { total })}
           </Text>
         </TouchableOpacity>
       );
@@ -130,10 +134,10 @@ export default function AvailableJobsScreen() {
         <View className="flex-row items-center mb-2">
           <Store size={18} color={tokens.primary} />
           <Text
-            className="ml-2 font-bold text-base"
+            className={isRTL ? "mr-2 font-bold text-base" : "ml-2 font-bold text-base"}
             style={{ color: tokens.foreground }}
           >
-            {order.shop_name ?? "Shop"}
+            {order.shop_name ?? t("driver.available.shop")}
           </Text>
         </View>
         <Text style={{ color: tokens.mutedForeground }} numberOfLines={1}>
@@ -142,7 +146,7 @@ export default function AvailableJobsScreen() {
         <View className="flex-row items-center mt-2">
           <MapPin size={14} color={tokens.mutedForeground} />
           <Text
-            className="ml-1"
+            className={isRTL ? "mr-1" : "ml-1"}
             style={{ color: tokens.mutedForeground }}
             numberOfLines={1}
           >
@@ -151,13 +155,13 @@ export default function AvailableJobsScreen() {
         </View>
         <View className="flex-row justify-between mt-2">
           <Text style={{ color: tokens.mutedForeground }}>
-            {order.item_count ?? order.items?.length ?? 0} items
+            {t("driver.available.itemsCount", { count: order.item_count ?? order.items?.length ?? 0 })}
           </Text>
           <Text
             className="font-semibold"
             style={{ color: tokens.foreground }}
           >
-            Subtotal {order.subtotal ?? 0} + Fee {order.delivery_fee ?? 0}
+            {t("driver.available.subtotalFee", { subtotal: order.subtotal ?? 0, fee: order.delivery_fee ?? 0 })}
           </Text>
         </View>
       </TouchableOpacity>
@@ -174,14 +178,14 @@ export default function AvailableJobsScreen() {
         className="flex-row items-center px-4 py-4 border-b"
         style={{ borderColor: tokens.border }}
       >
-        <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <ChevronLeft size={24} color={tokens.foreground} />
+        <TouchableOpacity onPress={() => router.back()} className={isRTL ? "ml-3" : "mr-3"}>
+          <BackIcon variant="chevron" size={24} color={tokens.foreground} />
         </TouchableOpacity>
         <Text
           className="text-xl font-bold"
           style={{ color: tokens.foreground }}
         >
-          Available Jobs
+          {t("driver.available.title")}
         </Text>
       </View>
 
@@ -217,7 +221,7 @@ export default function AvailableJobsScreen() {
               className="text-center mt-8"
               style={{ color: tokens.mutedForeground }}
             >
-              No available jobs right now
+              {t("driver.available.noJobsFound")}
             </Text>
           }
         />

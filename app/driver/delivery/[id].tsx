@@ -8,33 +8,38 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronLeft, MapPin, Store } from "lucide-react-native";
+import { MapPin, Store } from "lucide-react-native";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
-import { useToast } from "@/lib/hooks/useToast";
+import { useRTL } from "@/lib/i18n/RTLContext";
+import { THEME, useTheme } from "@/lib/theme";
+import { useToast } from "@/lib/toast/useToast";
 import {
   updateGroupDeliveryStatus,
   updateOrderDeliveryStatus,
-} from "@/shared/delivery.service";
-import { Assignment, DeliveryStatus } from "@/lib/types/delivery";
+} from "@/features/driver/services/delivery.service";
+import { Assignment, DeliveryStatus } from "@/features/driver/types";
 
-const statusLabel = (status?: string) => {
+const statusLabel = (t: TFunction, status?: string) => {
   switch (status) {
     case "out_for_delivery":
-      return "Out for Delivery";
+      return t("driver.status.outForDelivery");
     case "on_the_way":
-      return "On the Way";
+      return t("driver.status.onTheWay");
     case "delivered":
-      return "Delivered";
+      return t("driver.status.delivered");
     default:
-      return status ?? "Pending";
+      return status ?? t("driver.status.pending");
   }
 };
 
 export default function DeliveryDetailScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const showToast = useToast();
   const params = useLocalSearchParams<{ id: string; assignment: string }>();
 
@@ -57,7 +62,7 @@ export default function DeliveryDetailScreen() {
         className="flex-1 items-center justify-center"
         style={{ backgroundColor: tokens.background }}
       >
-        <Text style={{ color: tokens.mutedForeground }}>Delivery not found</Text>
+        <Text style={{ color: tokens.mutedForeground }}>{t("driver.delivery.notFound")}</Text>
       </SafeAreaView>
     );
   }
@@ -101,16 +106,16 @@ export default function DeliveryDetailScreen() {
         await updateOrderDeliveryStatus(assignment.order.id, nextStatus);
       }
       applyStatusLocally(nextStatus);
-      showToast(`Marked as ${statusLabel(nextStatus)}`, "success");
+      showToast(t("driver.delivery.markedAs", { status: statusLabel(t, nextStatus) }), "success");
     } catch (error: any) {
       const code = error?.response?.status;
       if (code === 400) {
-        showToast("Please follow the delivery status order", "error");
+        showToast(t("driver.delivery.followOrder"), "error");
       } else if (code === 403) {
-        showToast("This delivery is not assigned to you", "error");
+        showToast(t("driver.delivery.notAssigned"), "error");
         router.back();
       } else {
-        showToast("Could not update status", "error");
+        showToast(t("driver.delivery.updateFailed"), "error");
       }
     } finally {
       setUpdating(false);
@@ -127,11 +132,11 @@ export default function DeliveryDetailScreen() {
         className="flex-row items-center px-4 py-4 border-b"
         style={{ borderColor: tokens.border }}
       >
-        <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <ChevronLeft size={24} color={tokens.foreground} />
+        <TouchableOpacity onPress={() => router.back()} className={isRTL ? "ml-3" : "mr-3"}>
+          <BackIcon variant="chevron" size={24} color={tokens.foreground} />
         </TouchableOpacity>
         <Text className="text-xl font-bold" style={{ color: tokens.foreground }}>
-          {assignment.type === "group" ? "Trip Detail" : "Delivery Detail"}
+          {assignment.type === "group" ? t("driver.delivery.tripDetail") : t("driver.delivery.deliveryDetail")}
         </Text>
       </View>
 
@@ -141,10 +146,10 @@ export default function DeliveryDetailScreen() {
           style={{ borderColor: tokens.border, backgroundColor: tokens.card }}
         >
           <Text className="text-sm mb-1" style={{ color: tokens.mutedForeground }}>
-            Current Status
+            {t("driver.delivery.currentStatus")}
           </Text>
           <Text className="text-lg font-bold" style={{ color: tokens.primary }}>
-            {statusLabel(currentStatus)}
+            {statusLabel(t, currentStatus)}
           </Text>
         </View>
 
@@ -152,7 +157,7 @@ export default function DeliveryDetailScreen() {
           className="mb-2 font-semibold"
           style={{ color: tokens.foreground }}
         >
-          {assignment.type === "group" ? "Pickup Stops" : "Pickup"}
+          {assignment.type === "group" ? t("driver.delivery.pickupStops") : t("driver.delivery.pickup")}
         </Text>
         {stops.map((order, index) => (
           <View
@@ -163,11 +168,11 @@ export default function DeliveryDetailScreen() {
             <View className="flex-row items-center mb-1">
               <Store size={16} color={tokens.primary} />
               <Text
-                className="ml-2 font-semibold"
+                className={isRTL ? "mr-2 font-semibold" : "ml-2 font-semibold"}
                 style={{ color: tokens.foreground }}
               >
-                {assignment.type === "group" ? `Stop ${index + 1}: ` : ""}
-                {order.shop_name ?? "Shop"}
+                {assignment.type === "group" ? t("driver.delivery.stopNumber", { number: index + 1 }) : ""}
+                {order.shop_name ?? t("driver.available.shop")}
               </Text>
             </View>
             <Text style={{ color: tokens.mutedForeground }}>
@@ -180,7 +185,7 @@ export default function DeliveryDetailScreen() {
           className="mb-2 font-semibold"
           style={{ color: tokens.foreground }}
         >
-          Drop-off
+          {t("driver.delivery.dropoff")}
         </Text>
         <View
           className="rounded-2xl border p-4"
@@ -189,10 +194,10 @@ export default function DeliveryDetailScreen() {
           <View className="flex-row items-center">
             <MapPin size={16} color={tokens.primary} />
             <Text
-              className="ml-2 font-semibold"
+              className={isRTL ? "mr-2 font-semibold" : "ml-2 font-semibold"}
               style={{ color: tokens.foreground }}
             >
-              Customer Address
+              {t("driver.delivery.customerAddress")}
             </Text>
           </View>
           <Text style={{ color: tokens.mutedForeground }} className="mt-1">
@@ -219,7 +224,7 @@ export default function DeliveryDetailScreen() {
                 className="text-center text-lg font-bold"
                 style={{ color: tokens.primaryForeground }}
               >
-                Mark as {statusLabel(nextStatus)}
+                {t("driver.delivery.markAs", { status: statusLabel(t, nextStatus) })}
               </Text>
             )}
           </TouchableOpacity>

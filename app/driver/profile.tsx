@@ -1,29 +1,32 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ChevronLeft } from "lucide-react-native";
 import { router } from "expo-router";
 import { TouchableOpacity } from "react-native";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useTranslation } from "react-i18next";
 
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
-import { useToast } from "@/lib/hooks/useToast";
-import { fetchMyDeliveryProfile } from "@/shared/delivery.service";
-import { DeliveryProfile } from "@/lib/types/delivery";
+import { useRTL } from "@/lib/i18n/RTLContext";
+import { THEME, useTheme } from "@/lib/theme";
+import { useToast } from "@/lib/toast/useToast";
+import { fetchMyDeliveryProfile } from "@/features/driver/services/delivery.service";
+import { DeliveryProfile } from "@/features/driver/types";
 
-const FIELDS: { label: string; key: keyof DeliveryProfile }[] = [
-  { label: "Full Name", key: "full_name" },
-  { label: "Phone Number", key: "phone_number" },
-  { label: "Vehicle Type", key: "vehicle_type" },
-  { label: "Vehicle Plate Number", key: "vehicle_plate_number" },
-  { label: "National ID", key: "national_id" },
-  { label: "City", key: "city" },
-  { label: "Address", key: "address" },
+const FIELD_KEYS: { labelKey: string; key: keyof DeliveryProfile }[] = [
+  { labelKey: "driver.createProfile.fullName", key: "full_name" },
+  { labelKey: "driver.createProfile.phoneNumber", key: "phone_number" },
+  { labelKey: "driver.createProfile.vehicleType", key: "vehicle_type" },
+  { labelKey: "driver.createProfile.vehiclePlateNumber", key: "vehicle_plate_number" },
+  { labelKey: "driver.createProfile.nationalId", key: "national_id" },
+  { labelKey: "driver.createProfile.city", key: "city" },
+  { labelKey: "driver.createProfile.address", key: "address" },
 ];
 
 export default function DriverProfileScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const showToast = useToast();
 
   const [profile, setProfile] = useState<DeliveryProfile | null>(null);
@@ -32,9 +35,9 @@ export default function DriverProfileScreen() {
   useEffect(() => {
     fetchMyDeliveryProfile()
       .then(setProfile)
-      .catch(() => showToast("Could not load profile", "error"))
+      .catch(() => showToast(t("driver.profile.loadFailed"), "error"))
       .finally(() => setLoading(false));
-  }, [showToast]);
+  }, [showToast, t]);
 
   return (
     <SafeAreaView
@@ -46,14 +49,14 @@ export default function DriverProfileScreen() {
         className="flex-row items-center px-4 py-4 border-b"
         style={{ borderColor: tokens.border }}
       >
-        <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <ChevronLeft size={24} color={tokens.foreground} />
+        <TouchableOpacity onPress={() => router.back()} className={isRTL ? "ml-3" : "mr-3"}>
+          <BackIcon variant="chevron" size={24} color={tokens.foreground} />
         </TouchableOpacity>
         <Text
           className="text-xl font-bold"
           style={{ color: tokens.foreground }}
         >
-          My Profile
+          {t("driver.profile.title")}
         </Text>
       </View>
 
@@ -74,7 +77,7 @@ export default function DriverProfileScreen() {
               >
                 {profile?.rating ?? "—"}
               </Text>
-              <Text style={{ color: tokens.mutedForeground }}>Rating</Text>
+              <Text style={{ color: tokens.mutedForeground }}>{t("driver.profile.rating")}</Text>
             </View>
             <View className="items-center">
               <Text
@@ -83,11 +86,11 @@ export default function DriverProfileScreen() {
               >
                 {profile?.total_deliveries ?? 0}
               </Text>
-              <Text style={{ color: tokens.mutedForeground }}>Deliveries</Text>
+              <Text style={{ color: tokens.mutedForeground }}>{t("driver.profile.deliveries")}</Text>
             </View>
           </View>
 
-          {FIELDS.map((field) => (
+          {FIELD_KEYS.map((field) => (
             <View
               key={field.key}
               className="py-3 border-b"
@@ -97,7 +100,7 @@ export default function DriverProfileScreen() {
                 className="text-sm mb-1"
                 style={{ color: tokens.mutedForeground }}
               >
-                {field.label}
+                {t(field.labelKey)}
               </Text>
               <Text
                 className="text-base capitalize"

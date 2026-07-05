@@ -1,11 +1,11 @@
-import { ProtectedScreen } from "@/components/domain/ProtectedScreen";
-import { StoreCard } from "@/components/domain/store-card";
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
-import { useAddress } from "@/lib/context/addressContext";
-import type { ShopDisplay } from "@/lib/types";
-import { shopService } from "@/shared/shop.service";
+import { ProtectedScreen } from "@/features/auth/components/ProtectedScreen";
+import { StoreCard } from "@/features/stores/components/StoreCard";
+import { THEME, useTheme } from "@/lib/theme";
+import { useAddress } from "@/features/addresses/hooks/addressContext";
+import type { ShopDisplay } from "@/features/stores/types";
+import { shopService } from "@/features/stores/services/shop.service";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,6 +16,7 @@ export default function ShopListScreen() {
   const router = useRouter();
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { t } = useTranslation();
   const { addresses, selectedAddressId } = useAddress();
   const areaId = addresses.find((a) => a.id === selectedAddressId)?.area_id;
 
@@ -74,9 +75,9 @@ export default function ShopListScreen() {
       >
         <View className="flex-1 px-4 pt-4">
           <View className="mb-6">
-            <Text className="text-foreground text-3xl font-bold">Shops</Text>
+            <Text className="text-foreground text-3xl font-bold">{t("tabs.shops")}</Text>
             <Text className="text-muted-foreground mt-1">
-              Browse shops in your area
+              {t("shops.browseInArea")}
             </Text>
           </View>
 
@@ -107,7 +108,7 @@ export default function ShopListScreen() {
               }
               ListEmptyComponent={
                 <View className="flex-1 items-center justify-center py-20">
-                  <Text className="text-muted-foreground">No shops found</Text>
+                  <Text className="text-muted-foreground">{t("shops.noneFound")}</Text>
                 </View>
               }
             />

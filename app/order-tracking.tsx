@@ -2,9 +2,11 @@ import {
   cancelOrder,
   fetchOrderById,
   type OrderSummary,
-} from "@/shared/order.service";
+} from "@/features/orders/services/order.service";
+import { useRTL } from "@/lib/i18n/RTLContext";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { CheckCircle2, Truck, XCircle } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -24,6 +26,8 @@ const STATUS_STEPS = [
   "Delivered",
 ] as const;
 
+const STATUS_STEP_KEYS = ["pending", "outForDelivery", "onTheWay", "delivered"] as const;
+
 const statusIndex = (status: string) => {
   const normalized = status.toLowerCase();
   return STATUS_STEPS.findIndex(
@@ -33,12 +37,11 @@ const statusIndex = (status: string) => {
   );
 };
 
-const formatMoney = (value?: number) => {
-  return `EGP ${Number(value ?? 0).toFixed(2)}`;
-};
-
 export default function OrderTrackingScreen() {
   const router = useRouter();
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
+  const formatMoney = (value?: number) => `${t("common.egp")} ${Number(value ?? 0).toFixed(2)}`;
   const params = useLocalSearchParams<{
     id?: string;
     preload?: string;
@@ -132,20 +135,20 @@ export default function OrderTrackingScreen() {
       const status = error?.response?.status;
       if (status === 401) {
         Alert.alert(
-          "Session Expired",
-          "Please log in again to view this order.",
+          t("orderTracking.sessionExpiredTitle"),
+          t("orderTracking.sessionExpiredMessage"),
         );
         return;
       }
 
       Alert.alert(
-        "Order Tracking",
-        error?.message || "Unable to load order details.",
+        t("orderTracking.title"),
+        error?.message || t("orderTracking.loadFailed"),
       );
     } finally {
       setLoading(false);
     }
-  }, [orderId, preload, groupId, preloadGroup]);
+  }, [orderId, preload, groupId, preloadGroup, t]);
 
   useEffect(() => {
     void loadOrder();
@@ -154,23 +157,23 @@ export default function OrderTrackingScreen() {
   const handleCancel = async () => {
     if (!orderId || !orders || orders.length !== 1) return;
     const order = orders[0];
-    Alert.alert("Cancel Order", "Are you sure you want to cancel this order?", [
-      { text: "No", style: "cancel" },
+    Alert.alert(t("orderTracking.cancelTitle"), t("orderTracking.cancelConfirm"), [
+      { text: t("orderTracking.no"), style: "cancel" },
       {
-        text: "Yes",
+        text: t("orderTracking.yes"),
         onPress: async () => {
           try {
             setCancelling(true);
             await cancelOrder(orderId);
             setOrders([{ ...order, status: "Cancelled" }]);
             Alert.alert(
-              "Order Canceled",
-              "Your order has been canceled successfully.",
+              t("orderTracking.canceledTitle"),
+              t("orderTracking.canceledMessage"),
             );
           } catch (error: any) {
             Alert.alert(
-              "Cancel Order",
-              error?.message || "Unable to cancel the order.",
+              t("orderTracking.cancelTitle"),
+              error?.message || t("orderTracking.cancelFailed"),
             );
           } finally {
             setCancelling(false);
@@ -185,7 +188,7 @@ export default function OrderTrackingScreen() {
 
   const titleText = orders
     ? isGroup
-      ? `Orders ${orders.map((o) => o.order_number || o.id).join(", ")}`
+      ? t("orderTracking.ordersTitle", { numbers: orders.map((o) => o.order_number || o.id).join(", ") })
       : orders[0]?.order_number || String(orders[0]?.id ?? "")
     : "";
 
@@ -209,7 +212,7 @@ export default function OrderTrackingScreen() {
               <XCircle size={24} className="text-foreground" />
             </Pressable>
             <Text className="flex-1 text-xl font-semibold text-foreground text-center">
-              Order Tracking
+              {t("orderTracking.title")}
             </Text>
             <View className="w-10" />
           </View>
@@ -222,18 +225,18 @@ export default function OrderTrackingScreen() {
             <>
               <View className="mb-6 rounded-3xl border border-border bg-card p-4">
                 <Text className="text-sm text-muted-foreground">
-                  {isGroup ? "Orders" : "Order ID"}
+                  {isGroup ? t("orderTracking.orders") : t("orderTracking.orderId")}
                 </Text>
                 <Text className="text-lg font-semibold text-foreground">
                   {titleText}
                 </Text>
                 {isGroup && (
                   <Text className="mt-1 text-xs text-muted-foreground">
-                    Multi-shop delivery · {orders.length} shops
+                    {t("orderTracking.multiShopDelivery", { count: orders.length })}
                   </Text>
                 )}
                 <Text className="mt-2 text-sm text-muted-foreground">
-                  Status
+                  {t("orderTracking.status")}
                 </Text>
                 <Text className="text-base font-semibold text-foreground">
                   {combinedStatus}
@@ -243,6 +246,7 @@ export default function OrderTrackingScreen() {
               <View className="mb-6">
                 {STATUS_STEPS.map((step, index) => {
                   const complete = index <= currentStep;
+                  const stepKey = STATUS_STEP_KEYS[index];
                   return (
                     <View key={step} className="flex-row items-center mb-4">
                       <View className="w-8 items-center">
@@ -259,16 +263,16 @@ export default function OrderTrackingScreen() {
                           )}
                         </View>
                       </View>
-                      <View className="ml-3 flex-1">
+                      <View className={isRTL ? "mr-3 flex-1" : "ml-3 flex-1"}>
                         <Text className="text-base font-semibold text-foreground">
-                          {step}
+                          {t(`driver.status.${stepKey}`)}
                         </Text>
                         <Text className="text-sm text-muted-foreground">
                           {index === currentStep
-                            ? "Current stage"
+                            ? t("orderTracking.currentStage")
                             : index < currentStep
-                              ? "Completed"
-                              : "Upcoming"}
+                              ? t("orderTracking.completed")
+                              : t("orderTracking.upcoming")}
                         </Text>
                       </View>
                     </View>
@@ -280,37 +284,37 @@ export default function OrderTrackingScreen() {
                 <View className="flex-row items-center justify-between mb-3">
                   <View>
                     <Text className="text-base font-semibold text-foreground">
-                      Delivery Address
+                      {t("checkout.deliveryAddress")}
                     </Text>
                     <Text className="text-sm text-muted-foreground">
-                      {orders[0]?.address?.full_address || "Not available"}
+                      {orders[0]?.address?.full_address || t("orderTracking.notAvailable")}
                     </Text>
                   </View>
                   <Truck size={24} className="text-primary" />
                 </View>
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-sm text-muted-foreground">ETA</Text>
+                  <Text className="text-sm text-muted-foreground">{t("orderTracking.eta")}</Text>
                   <Text className="text-sm font-semibold text-foreground">
-                    {orders[0]?.eta || "TBD"}
+                    {orders[0]?.eta || t("orderTracking.tbd")}
                   </Text>
                 </View>
               </View>
 
               <View className="mb-6 rounded-3xl border border-border bg-card p-4">
                 <Text className="mb-3 text-base font-semibold text-foreground">
-                  Items
+                  {t("driver.job.items")}
                 </Text>
                 <FlatList
                   data={combinedItems}
                   keyExtractor={(item, index) => `${item.id}-${index}`}
                   renderItem={({ item }) => (
                     <View className="mb-3 flex-row items-center justify-between">
-                      <View className="flex-1 pr-2">
+                      <View className={isRTL ? "flex-1 pl-2" : "flex-1 pr-2"}>
                         <Text className="text-sm font-medium text-foreground">
-                          {item.product_name || "Item"}
+                          {item.product_name || t("driver.job.item")}
                         </Text>
                         <Text className="text-xs text-muted-foreground">
-                          Qty {item.quantity ?? 1}
+                          {t("orderTracking.qty", { count: item.quantity ?? 1 })}
                           {isGroup && item.shop_name
                             ? ` · ${item.shop_name}`
                             : ""}
@@ -330,11 +334,11 @@ export default function OrderTrackingScreen() {
 
               <View className="rounded-3xl border border-border bg-card p-4">
                 <Text className="text-base font-semibold text-foreground mb-3">
-                  Order Summary
+                  {t("checkout.orderSummary")}
                 </Text>
                 <View className="flex-row justify-between mb-2">
                   <Text className="text-sm text-muted-foreground">
-                    Subtotal
+                    {t("cart.subtotal")}
                   </Text>
                   <Text className="text-sm text-foreground">
                     {formatMoney(combinedSubTotal)}
@@ -342,7 +346,7 @@ export default function OrderTrackingScreen() {
                 </View>
                 <View className="flex-row justify-between mb-2">
                   <Text className="text-sm text-muted-foreground">
-                    Delivery
+                    {t("checkout.deliveryFee")}
                   </Text>
                   <Text className="text-sm text-foreground">
                     {formatMoney(combinedDeliveryFee)}
@@ -351,7 +355,7 @@ export default function OrderTrackingScreen() {
                 <View className="h-px bg-border my-3" />
                 <View className="flex-row justify-between">
                   <Text className="text-base font-semibold text-foreground">
-                    Total
+                    {t("checkout.total")}
                   </Text>
                   <Text className="text-base font-semibold text-foreground">
                     {formatMoney(combinedTotal)}
@@ -370,7 +374,7 @@ export default function OrderTrackingScreen() {
                     <ActivityIndicator size="small" color="white" />
                   ) : (
                     <Text className="text-base font-semibold text-white">
-                      Cancel Order
+                      {t("orderTracking.cancelOrder")}
                     </Text>
                   )}
                 </Pressable>
@@ -379,7 +383,7 @@ export default function OrderTrackingScreen() {
           ) : (
             <View className="items-center justify-center py-20">
               <Text className="text-base text-muted-foreground">
-                Order not found.
+                {t("orderTracking.notFound")}
               </Text>
             </View>
           )}

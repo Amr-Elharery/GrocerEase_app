@@ -1,9 +1,10 @@
-import { AuthProvider } from "@/lib/auth-context";
-import { AddressProvider } from "@/lib/context/addressContext";
-import { CartProvider } from "@/lib/context/cartContext";
+import { AuthProvider } from "@/features/auth/hooks/auth-context";
+import { AddressProvider } from "@/features/addresses/hooks/addressContext";
+import { CartProvider } from "@/features/cart/hooks/cartContext";
 import i18n, { initI18n } from "@/lib/i18n";
-import { ToastProvider } from "@/lib/hooks/useToast";
-import { ThemeProvider } from "@/lib/theme-context";
+import { RTLProvider } from "@/lib/i18n/RTLContext";
+import { ToastProvider } from "@/lib/toast/useToast";
+import { ThemeProvider } from "@/lib/theme";
 import { PortalHost } from "@rn-primitives/portal";
 import * as Linking from "expo-linking";
 import { Stack, useRouter } from "expo-router";
@@ -34,7 +35,7 @@ export default function RootLayout() {
           : undefined;
       if (!productId) return;
       router.push({
-        pathname: "/product-details",
+        pathname: "/products/[id]",
         params: {
           id: productId,
           select_cheapest: "1",
@@ -58,6 +59,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <I18nextProvider i18n={i18n}>
+        <RTLProvider>
         <ThemeProvider defaultTheme="system">
           <AddressProvider>
             <AuthProvider>
@@ -90,7 +92,7 @@ export default function RootLayout() {
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen
-                    name="product-details"
+                    name="products"
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen
@@ -101,15 +103,7 @@ export default function RootLayout() {
                     name="order-tracking"
                     options={{ headerShown: false }}
                   />
-                  <Stack.Screen name="login" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="sign-up"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="forgot-password"
-                    options={{ headerShown: false }}
-                  />
+                  <Stack.Screen name="auth" options={{ headerShown: false }} />
                   <Stack.Screen
                     name="checkout"
                     options={{ headerShown: false }}
@@ -124,18 +118,6 @@ export default function RootLayout() {
                   />
                   <Stack.Screen
                     name="addresses"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="verification-code"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="reset-password"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="change-password"
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen
@@ -160,6 +142,7 @@ export default function RootLayout() {
             </AuthProvider>
           </AddressProvider>
         </ThemeProvider>
+        </RTLProvider>
       </I18nextProvider>
     </GestureHandlerRootView>
   );

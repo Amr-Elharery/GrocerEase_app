@@ -10,20 +10,21 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { ChevronLeft } from "lucide-react-native";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useTranslation } from "react-i18next";
 
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
-import { useToast } from "@/lib/hooks/useToast";
-import { addressService } from "@/shared/address.service";
-import { createDeliveryProfile } from "@/shared/delivery.service";
-import { VehicleType } from "@/lib/types/delivery";
+import { THEME, useTheme } from "@/lib/theme";
+import { useToast } from "@/lib/toast/useToast";
+import { addressService } from "@/features/addresses/services/address.service";
+import { createDeliveryProfile } from "@/features/driver/services/delivery.service";
+import { VehicleType } from "@/features/driver/types";
 
 const VEHICLE_TYPES: VehicleType[] = ["bike", "motorcycle", "car", "truck"];
 
 export default function CreateDeliveryProfileScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { t } = useTranslation();
   const showToast = useToast();
 
   const [fullName, setFullName] = useState("");
@@ -51,7 +52,7 @@ export default function CreateDeliveryProfileScreen() {
       !address ||
       !areaId
     ) {
-      showToast("Please fill in all fields", "error");
+      showToast(t("driver.createProfile.fillAllFields"), "error");
       return;
     }
 
@@ -69,7 +70,7 @@ export default function CreateDeliveryProfileScreen() {
       });
       router.replace("/driver");
     } catch {
-      showToast("Could not create your driver profile", "error");
+      showToast(t("driver.createProfile.createFailed"), "error");
     } finally {
       setSubmitting(false);
     }
@@ -96,38 +97,38 @@ export default function CreateDeliveryProfileScreen() {
           className="h-10 w-10 items-center justify-center rounded-full mb-4"
           style={{ backgroundColor: tokens.muted }}
         >
-          <ChevronLeft size={22} color={tokens.foreground} />
+          <BackIcon variant="chevron" size={22} color={tokens.foreground} />
         </TouchableOpacity>
 
         <Text
           className="text-3xl font-bold mb-1"
           style={{ color: tokens.foreground }}
         >
-          Create Delivery Profile
+          {t("driver.createProfile.title")}
         </Text>
         <Text className="mb-6" style={{ color: tokens.mutedForeground }}>
-          Tell us about you and your vehicle
+          {t("driver.createProfile.subtitle")}
         </Text>
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          Full Name
+          {t("driver.createProfile.fullName")}
         </Text>
         <TextInput
           value={fullName}
           onChangeText={setFullName}
-          placeholder="Full name"
+          placeholder={t("driver.createProfile.fullName")}
           placeholderTextColor={tokens.mutedForeground}
           className="border rounded-xl px-4 py-4 mb-4"
           style={inputStyle}
         />
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          Phone Number
+          {t("driver.createProfile.phoneNumber")}
         </Text>
         <TextInput
           value={phoneNumber}
           onChangeText={setPhoneNumber}
-          placeholder="Phone number"
+          placeholder={t("driver.createProfile.phoneNumber")}
           placeholderTextColor={tokens.mutedForeground}
           keyboardType="phone-pad"
           className="border rounded-xl px-4 py-4 mb-4"
@@ -135,7 +136,7 @@ export default function CreateDeliveryProfileScreen() {
         />
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          Vehicle Type
+          {t("driver.createProfile.vehicleType")}
         </Text>
         <View className="flex-row mb-4">
           {VEHICLE_TYPES.map((type) => {
@@ -156,7 +157,7 @@ export default function CreateDeliveryProfileScreen() {
                     color: isSelected ? tokens.primaryForeground : tokens.foreground,
                   }}
                 >
-                  {type}
+                  {t(`driver.createProfile.vehicleTypes.${type}`)}
                 </Text>
               </TouchableOpacity>
             );
@@ -164,24 +165,24 @@ export default function CreateDeliveryProfileScreen() {
         </View>
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          Vehicle Plate Number
+          {t("driver.createProfile.vehiclePlateNumber")}
         </Text>
         <TextInput
           value={vehiclePlateNumber}
           onChangeText={setVehiclePlateNumber}
-          placeholder="Plate number"
+          placeholder={t("driver.createProfile.vehiclePlateNumber")}
           placeholderTextColor={tokens.mutedForeground}
           className="border rounded-xl px-4 py-4 mb-4"
           style={inputStyle}
         />
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          National ID
+          {t("driver.createProfile.nationalId")}
         </Text>
         <TextInput
           value={nationalId}
           onChangeText={setNationalId}
-          placeholder="National ID"
+          placeholder={t("driver.createProfile.nationalId")}
           placeholderTextColor={tokens.mutedForeground}
           keyboardType="number-pad"
           className="border rounded-xl px-4 py-4 mb-4"
@@ -189,31 +190,31 @@ export default function CreateDeliveryProfileScreen() {
         />
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          City
+          {t("driver.createProfile.city")}
         </Text>
         <TextInput
           value={city}
           onChangeText={setCity}
-          placeholder="City"
+          placeholder={t("driver.createProfile.city")}
           placeholderTextColor={tokens.mutedForeground}
           className="border rounded-xl px-4 py-4 mb-4"
           style={inputStyle}
         />
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          Address
+          {t("driver.createProfile.address")}
         </Text>
         <TextInput
           value={address}
           onChangeText={setAddress}
-          placeholder="Address"
+          placeholder={t("driver.createProfile.address")}
           placeholderTextColor={tokens.mutedForeground}
           className="border rounded-xl px-4 py-4 mb-4"
           style={inputStyle}
         />
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          Area
+          {t("driver.createProfile.area")}
         </Text>
         <FlatList
           data={areas}
@@ -258,7 +259,7 @@ export default function CreateDeliveryProfileScreen() {
               className="text-center text-lg font-bold"
               style={{ color: tokens.primaryForeground }}
             >
-              Create Profile
+              {t("driver.createProfile.createButton")}
             </Text>
           )}
         </TouchableOpacity>

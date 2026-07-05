@@ -1,14 +1,17 @@
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Truck } from "lucide-react-native";
 
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
+import { useRTL } from "@/lib/i18n/RTLContext";
+import { THEME, useTheme } from "@/lib/theme";
 
 export default function WelcomeScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView
@@ -20,17 +23,17 @@ export default function WelcomeScreen() {
           className="text-5xl font-extrabold text-center mb-3"
           style={{ color: tokens.primary }}
         >
-          Zad
+          {t("welcome.appName")}
         </Text>
         <Text
           className="text-center mb-16"
           style={{ color: tokens.mutedForeground }}
         >
-          Groceries from your favorite shops, delivered to your door
+          {t("welcome.tagline")}
         </Text>
 
         <TouchableOpacity
-          onPress={() => router.push("/login")}
+          onPress={() => router.push("/auth/login")}
           className="py-4 rounded-2xl mb-3"
           style={{ backgroundColor: tokens.primary }}
         >
@@ -38,12 +41,12 @@ export default function WelcomeScreen() {
             className="text-center text-lg font-bold"
             style={{ color: tokens.primaryForeground }}
           >
-            Login
+            {t("auth.login.title")}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push("/sign-up")}
+          onPress={() => router.push("/auth/sign-up")}
           className="py-4 rounded-2xl border mb-10"
           style={{ borderColor: tokens.border }}
         >
@@ -51,7 +54,7 @@ export default function WelcomeScreen() {
             className="text-center text-lg font-bold"
             style={{ color: tokens.foreground }}
           >
-            Sign Up
+            {t("auth.signUp.title")}
           </Text>
         </TouchableOpacity>
 
@@ -61,10 +64,10 @@ export default function WelcomeScreen() {
         >
           <Truck size={16} color={tokens.mutedForeground} />
           <Text
-            className="ml-2 text-sm"
+            className={isRTL ? "mr-2 text-sm" : "ml-2 text-sm"}
             style={{ color: tokens.mutedForeground }}
           >
-            Register as a Delivery Driver
+            {t("welcome.registerAsDriver")}
           </Text>
         </TouchableOpacity>
       </View>

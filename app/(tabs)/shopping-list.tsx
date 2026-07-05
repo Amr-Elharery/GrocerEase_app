@@ -1,15 +1,17 @@
-import { useToast } from "@/lib/hooks/useToast";
-import { useAddress } from "@/lib/context/addressContext";
+import { useToast } from "@/lib/toast/useToast";
+import { useAddress } from "@/features/addresses/hooks/addressContext";
 import {
   getShoppingList,
   requestOptimizationPlan,
   removeFromShoppingList,
   updateShoppingListQuantity,
   type ShoppingListItem,
-} from "@/shared/shopping-list.service";
+} from "@/features/shopping-list/services/shopping-list.service";
 
 import { useFocusEffect, useRouter } from "expo-router";
-import { ChevronLeft, Trash2 } from "lucide-react-native";
+import { Trash2 } from "lucide-react-native";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useTranslation } from "react-i18next";
 
 import { useCallback, useState } from "react";
 
@@ -23,9 +25,9 @@ import {
   View,
 } from "react-native";
 
-import { ProtectedScreen } from "@/components/domain/ProtectedScreen";
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
+import { ProtectedScreen } from "@/features/auth/components/ProtectedScreen";
+import { useRTL } from "@/lib/i18n/RTLContext";
+import { THEME, useTheme } from "@/lib/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const fallbackProductImage = require("../../assets/images/icon.png");
@@ -36,6 +38,8 @@ export default function ShoppingListScreen() {
   const toast = useToast();
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const { addresses, selectedAddressId } = useAddress();
 
   const [items, setItems] = useState<ShoppingListItem[]>([]);
@@ -55,11 +59,11 @@ export default function ShoppingListScreen() {
     } catch (error) {
       console.error("Error loading shopping list:", error);
 
-      toast("Failed to load shopping list", "error");
+      toast(t("shoppingList.loadFailed"), "error");
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -85,10 +89,10 @@ export default function ShoppingListScreen() {
       } catch (error) {
         console.error("Error updating quantity:", error);
 
-        toast("Failed to update quantity", "error");
+        toast(t("shoppingList.updateQtyFailed"), "error");
       }
     },
-    [items, toast],
+    [items, toast, t],
   );
 
   // =========================
@@ -101,14 +105,14 @@ export default function ShoppingListScreen() {
 
         setItems(updated);
 
-        toast("Removed from list", "success");
+        toast(t("shoppingList.removedFromList"), "success");
       } catch (error) {
         console.error("Error removing item:", error);
 
-        toast("Failed to remove item", "error");
+        toast(t("shoppingList.removeFailed"), "error");
       }
     },
-    [toast],
+    [toast, t],
   );
 
   // =========================
@@ -116,12 +120,12 @@ export default function ShoppingListScreen() {
   // =========================
   const handleOptimize = useCallback(async () => {
     if (items.length === 0) {
-      toast("Your list is empty", "warning");
+      toast(t("shoppingList.empty"), "warning");
       return;
     }
 
     if (!selectedAddressId) {
-      toast("Please select a delivery address first", "warning");
+      toast(t("shoppingList.selectAddressFirst"), "warning");
       router.push("/address-book");
       return;
     }
@@ -148,21 +152,21 @@ export default function ShoppingListScreen() {
 
       if (error?.response?.status === 404) {
         toast(
-          "No nearby shops carry all the items in your list. Try adjusting your list.",
+          t("shoppingList.noShopsCarryItems"),
           "error",
         );
       } else {
-        toast("Failed to optimize list", "error");
+        toast(t("shoppingList.optimizeFailed"), "error");
       }
     } finally {
       setIsOptimizing(false);
     }
-  }, [items, router, toast, selectedAddressId]);
+  }, [items, router, toast, selectedAddressId, t]);
 
   const isEmpty = items.length === 0;
 
   return (
-    <ProtectedScreen screenName="Shopping Lists">
+    <ProtectedScreen screenName={t("shoppingList.title")}>
       <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
         <View className="flex-1">
           {/* ================= HEADER ================= */}
@@ -171,18 +175,17 @@ export default function ShoppingListScreen() {
               onPress={() => router.back()}
               className="h-10 w-10 items-center justify-center rounded-full bg-muted"
             >
-              <ChevronLeft size={22} className="text-foreground" />
+              <BackIcon variant="chevron" size={22} className="text-foreground" />
             </Pressable>
 
             <View className="flex-1">
               <Text className="text-foreground text-2xl font-bold">
-                Shopping List
+                {t("shoppingList.title")}
               </Text>
 
               {!isEmpty && (
                 <Text className="text-muted-foreground text-xs mt-1">
-                  {items.length} item
-                  {items.length !== 1 ? "s" : ""}
+                  {t("shoppingList.itemCount", { count: items.length })}
                 </Text>
               )}
             </View>
@@ -210,7 +213,7 @@ export default function ShoppingListScreen() {
                   textAlign: "center",
                 }}
               >
-                Your list is empty
+                {t("shoppingList.empty")}
               </Text>
 
               <Text
@@ -220,7 +223,7 @@ export default function ShoppingListScreen() {
                   marginBottom: 24,
                 }}
               >
-                Add products from the browse screen.
+                {t("shoppingList.emptyHint")}
               </Text>
 
               <Pressable
@@ -228,7 +231,7 @@ export default function ShoppingListScreen() {
                 className="bg-primary rounded-full px-6 py-3"
               >
                 <Text className="text-primary-foreground font-semibold">
-                  Browse Products
+                  {t("shoppingList.browseProducts")}
                 </Text>
               </Pressable>
             </View>
@@ -250,7 +253,7 @@ export default function ShoppingListScreen() {
                 return (
                   <View
                     key={item.product_id}
-                    className="flex-row gap-3 bg-card border border-border rounded-2xl p-3 mb-3"
+                    className={isRTL ? "flex-row-reverse gap-3 bg-card border border-border rounded-2xl p-3 mb-3" : "flex-row gap-3 bg-card border border-border rounded-2xl p-3 mb-3"}
                   >
                     {/* Product Image */}
                     <Image
@@ -261,8 +264,8 @@ export default function ShoppingListScreen() {
 
                     {/* Product Info */}
                     <View className="flex-1">
-                      <View className="flex-row justify-between items-start">
-                        <View className="flex-1 pr-2">
+                      <View className={isRTL ? "flex-row-reverse justify-between items-start" : "flex-row justify-between items-start"}>
+                        <View className={isRTL ? "flex-1 pl-2" : "flex-1 pr-2"}>
                           <Text
                             className="text-foreground font-semibold text-base"
                             numberOfLines={1}
@@ -281,15 +284,15 @@ export default function ShoppingListScreen() {
                         <Pressable
                           onPress={() =>
                             Alert.alert(
-                              "Remove Item",
-                              `Remove ${item.product_name} from list?`,
+                              t("shoppingList.removeItemTitle"),
+                              t("shoppingList.removeItemMessage", { name: item.product_name }),
                               [
                                 {
-                                  text: "Cancel",
+                                  text: t("common.cancel"),
                                   style: "cancel",
                                 },
                                 {
-                                  text: "Remove",
+                                  text: t("common.remove"),
                                   style: "destructive",
                                   onPress: () => deleteItem(item.product_id),
                                 },
@@ -305,7 +308,7 @@ export default function ShoppingListScreen() {
                       {/* Quantity Stepper */}
                       <View className="flex-row items-center justify-between mt-4">
                         <Text className="text-muted-foreground text-xs">
-                          Qty
+                          {t("shoppingList.qty")}
                         </Text>
 
                         <View className="flex-row items-center gap-2">
@@ -348,8 +351,10 @@ export default function ShoppingListScreen() {
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-muted-foreground text-sm">
                   {selectedAddressId
-                    ? `Delivering to: ${addresses.find((a) => a.id === selectedAddressId)?.label || "Selected address"}`
-                    : "No delivery address selected"}
+                    ? t("shoppingList.deliveringTo", {
+                        address: addresses.find((a) => a.id === selectedAddressId)?.label || t("shoppingList.selectedAddress"),
+                      })
+                    : t("shoppingList.noAddressSelected")}
                 </Text>
               </View>
 
@@ -363,12 +368,12 @@ export default function ShoppingListScreen() {
                     <ActivityIndicator size="small" color="#ffffff" />
 
                     <Text className="text-primary-foreground font-semibold text-base">
-                      Finding the best deal...
+                      {t("shoppingList.findingBestDeal")}
                     </Text>
                   </View>
                 ) : (
                   <Text className="text-primary-foreground font-semibold text-base">
-                    Optimize
+                    {t("shoppingList.optimize")}
                   </Text>
                 )}
               </Pressable>

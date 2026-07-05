@@ -1,17 +1,20 @@
-import { Header } from '@/components/domain/home/header';
-import { HeroSection } from '@/components/domain/home/hero-section';
-import { TopProducts } from '@/components/domain/home/top-products';
-import { TopStores } from '@/components/domain/home/top-stores';
-import { useAddress } from '@/lib/context/addressContext';
-import type { ProductDisplay, ShopDisplay } from '@/lib/types';
-import { shopService } from '@/shared/shop.service';
+import { Header } from '@/features/home/components/header';
+import { HeroSection } from '@/features/home/components/hero-section';
+import { TopProducts } from '@/features/home/components/top-products';
+import { TopStores } from '@/features/home/components/top-stores';
+import { useAddress } from '@/features/addresses/hooks/addressContext';
+import type { ProductDisplay } from '@/features/products/types';
+import type { ShopDisplay } from '@/features/stores/types';
+import { shopService } from '@/features/stores/services/shop.service';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { addresses, selectedAddressId } = useAddress();
   const areaId = addresses.find((a) => a.id === selectedAddressId)?.area_id;
 
@@ -57,7 +60,10 @@ export default function HomeScreen() {
   };
 
   const handleProductPress = (product: ProductDisplay) => {
-    router.push(`/product-details?id=${product.product_id ?? product.id}`);
+    router.push({
+      pathname: "/products/[id]",
+      params: { id: String(product.product_id ?? product.id) },
+    });
   };
 
   return (
@@ -74,7 +80,7 @@ export default function HomeScreen() {
         ) : stores.length === 0 ? (
           <View className="items-center justify-center px-4 py-16">
             <Text className="text-muted-foreground text-center">
-              No shops found in your area yet.
+              {t("home.noShopsFound")}
             </Text>
           </View>
         ) : (

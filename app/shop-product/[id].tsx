@@ -9,19 +9,23 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronLeft, Store } from "lucide-react-native";
+import { Store } from "lucide-react-native";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useTranslation } from "react-i18next";
 
-import { CartConflictModal } from "@/components/domain/CartConflictModal";
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
-import { useCart } from "@/lib/context/cartContext";
-import type { ProductDisplay } from "@/lib/types";
+import { CartConflictModal } from "@/features/cart/components/CartConflictModal";
+import { useRTL } from "@/lib/i18n/RTLContext";
+import { THEME, useTheme } from "@/lib/theme";
+import { useCart } from "@/features/cart/hooks/cartContext";
+import type { ProductDisplay } from "@/features/products/types";
 
 const fallbackProductImage = require("../../assets/images/icon.png");
 
 export default function ShopProductDetailScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ id: string; product: string }>();
   const { cart, shopId, addItem, clearCart, conflictAddItem } = useCart();
 
@@ -42,7 +46,7 @@ export default function ShopProductDetailScreen() {
         className="flex-1 items-center justify-center"
         style={{ backgroundColor: tokens.background }}
       >
-        <Text style={{ color: tokens.mutedForeground }}>Product not found</Text>
+        <Text style={{ color: tokens.mutedForeground }}>{t("products.detail.notFound")}</Text>
       </SafeAreaView>
     );
   }
@@ -61,7 +65,7 @@ export default function ShopProductDetailScreen() {
     for (let i = 0; i < quantity; i++) {
       addItem(product);
     }
-    Alert.alert("Success", "Added to cart successfully");
+    Alert.alert(t("common.success"), t("stores.shopScreen.addedToCart"));
   };
 
   const handleConfirmConflict = () => {
@@ -69,7 +73,7 @@ export default function ShopProductDetailScreen() {
     for (let i = 0; i < quantity; i++) {
       conflictAddItem(product);
     }
-    Alert.alert("Success", "Added to cart successfully");
+    Alert.alert(t("common.success"), t("stores.shopScreen.addedToCart"));
     setShowConflictModal(false);
   };
 
@@ -80,18 +84,18 @@ export default function ShopProductDetailScreen() {
       style={{ backgroundColor: tokens.background }}
     >
       <View
-        className="flex-row items-center px-4 py-4 border-b"
+        className={isRTL ? "flex-row-reverse items-center px-4 py-4 border-b" : "flex-row items-center px-4 py-4 border-b"}
         style={{ borderColor: tokens.border }}
       >
-        <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <ChevronLeft size={24} color={tokens.foreground} />
+        <TouchableOpacity onPress={() => router.back()} className={isRTL ? "ml-3" : "mr-3"}>
+          <BackIcon variant="chevron" size={24} color={tokens.foreground} />
         </TouchableOpacity>
         <Text
           className="text-xl font-bold flex-1"
           numberOfLines={1}
           style={{ color: tokens.foreground }}
         >
-          Product Details
+          {t("products.detail.title")}
         </Text>
       </View>
 
@@ -135,7 +139,7 @@ export default function ShopProductDetailScreen() {
             >
               <Store size={14} color={tokens.mutedForeground} />
               <Text
-                className="ml-1 text-xs"
+                className={isRTL ? "mr-1 text-xs" : "ml-1 text-xs"}
                 style={{ color: tokens.mutedForeground }}
               >
                 {product.shop_name}
@@ -144,11 +148,11 @@ export default function ShopProductDetailScreen() {
 
             {outOfStock ? (
               <Text className="text-xs font-semibold text-destructive">
-                Out of stock
+                {t("products.detail.outOfStock")}
               </Text>
             ) : product.stock < 10 ? (
               <Text className="text-xs font-semibold" style={{ color: "#f59e0b" }}>
-                Only {product.stock} left
+                {t("products.detail.onlyLeft", { count: product.stock })}
               </Text>
             ) : null}
           </View>
@@ -158,7 +162,7 @@ export default function ShopProductDetailScreen() {
               className="text-3xl font-bold mb-4"
               style={{ color: tokens.primary }}
             >
-              {product.shop_price.toFixed(2)} EGP
+              {product.shop_price.toFixed(2)} {t("common.egp")}
             </Text>
           )}
 
@@ -168,7 +172,7 @@ export default function ShopProductDetailScreen() {
                 className="text-base font-semibold mb-1"
                 style={{ color: tokens.foreground }}
               >
-                Description
+                {t("products.detail.description")}
               </Text>
               <Text
                 className="text-sm mb-6"
@@ -188,13 +192,13 @@ export default function ShopProductDetailScreen() {
               className="text-base font-semibold mb-1"
               style={{ color: tokens.foreground }}
             >
-              You Might Also Like
+              {t("products.detail.youMightAlsoLike")}
             </Text>
             <Text
               className="text-sm"
               style={{ color: tokens.mutedForeground }}
             >
-              Recommendations coming soon
+              {t("products.detail.recommendationsComingSoon")}
             </Text>
           </View>
         </View>
@@ -250,7 +254,7 @@ export default function ShopProductDetailScreen() {
               color: outOfStock ? tokens.mutedForeground : tokens.primaryForeground,
             }}
           >
-            {outOfStock ? "Out of Stock" : "Add to Cart"}
+            {outOfStock ? t("products.detail.outOfStockButton") : t("products.detail.addToCart")}
           </Text>
         </TouchableOpacity>
       </View>
