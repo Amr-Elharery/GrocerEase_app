@@ -6,6 +6,9 @@ import { useAddress } from '@/features/addresses/hooks/addressContext';
 import type { ProductDisplay } from '@/features/products/types';
 import type { ShopDisplay } from '@/features/stores/types';
 import { shopService } from '@/features/stores/services/shop.service';
+import { recommendationsService } from '@/features/recommendations/services/recommendations.service';
+import { RecommendationSection } from '@/features/recommendations/components/RecommendationSection';
+import type { ReplenishmentRecommendation } from '@/features/recommendations/types';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useCallback, useState } from 'react';
@@ -21,6 +24,8 @@ export default function HomeScreen() {
   const [stores, setStores] = useState<ShopDisplay[]>([]);
   const [products, setProducts] = useState<ProductDisplay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [replenishment, setReplenishment] = useState<ReplenishmentRecommendation[]>([]);
+  const [replenishmentLoading, setReplenishmentLoading] = useState(false);
 
   const loadHomeData = useCallback(async () => {
     setIsLoading(true);
@@ -46,6 +51,34 @@ export default function HomeScreen() {
     useCallback(() => {
       loadHomeData();
     }, [loadHomeData]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      setReplenishmentLoading(true);
+      recommendationsService
+        .getReplenishment()
+        .then((data) => {
+          if (isActive) setReplenishment(data);
+        })
+        .finally(() => {
+          if (isActive) setReplenishmentLoading(false);
+        });
+      return () => {
+        isActive = false;
+      };
+    }, []),
+  );
+
+  const handleReplenishmentPress = useCallback(
+    (item: ReplenishmentRecommendation) => {
+      router.push({
+        pathname: '/products/[id]',
+        params: { id: String(item.product_id) },
+      });
+    },
+    [router],
   );
 
   const handleSearch = (_query: string, mode: 'product' | 'store') => {
@@ -91,6 +124,19 @@ export default function HomeScreen() {
               onProductPress={handleProductPress}
             />
           </>
+        )}
+
+        {(replenishmentLoading || replenishment.length > 0) && (
+          <View className="px-4 py-2">
+            <RecommendationSection
+              title={t('home.timeToReorder')}
+              items={replenishment}
+              isLoading={replenishmentLoading}
+              onItemPress={(item) =>
+                handleReplenishmentPress(item as ReplenishmentRecommendation)
+              }
+            />
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>

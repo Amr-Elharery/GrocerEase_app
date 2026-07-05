@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -18,6 +18,9 @@ import { useToast } from "@/lib/toast/useToast";
 import { THEME, useTheme } from "@/lib/theme";
 import { useCart } from "@/features/cart/hooks/cartContext";
 import type { ProductDisplay } from "@/features/products/types";
+import { recommendationsService } from "@/features/recommendations/services/recommendations.service";
+import { RecommendationSection } from "@/features/recommendations/components/RecommendationSection";
+import type { FBTRecommendation } from "@/features/recommendations/types";
 
 const fallbackProductImage = require("../../assets/images/icon.png");
 
@@ -32,6 +35,8 @@ export default function ShopProductDetailScreen() {
 
   const [quantity, setQuantity] = useState(1);
   const [showConflictModal, setShowConflictModal] = useState(false);
+  const [recommendations, setRecommendations] = useState<FBTRecommendation[]>([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
 
   const product: ProductDisplay | null = useMemo(() => {
     try {
@@ -40,6 +45,23 @@ export default function ShopProductDetailScreen() {
       return null;
     }
   }, [params.product]);
+
+  useEffect(() => {
+    if (!product?.shop_id || !product?.product_id) return;
+    let isActive = true;
+    setRecommendationsLoading(true);
+    recommendationsService
+      .getShopFrequentlyBoughtTogether(product.shop_id, product.product_id)
+      .then((data) => {
+        if (isActive) setRecommendations(data);
+      })
+      .finally(() => {
+        if (isActive) setRecommendationsLoading(false);
+      });
+    return () => {
+      isActive = false;
+    };
+  }, [product?.shop_id, product?.product_id]);
 
   if (!product) {
     return (
@@ -76,6 +98,29 @@ export default function ShopProductDetailScreen() {
     }
     toast(t("stores.shopScreen.addedToCart"), "success");
     setShowConflictModal(false);
+  };
+
+  const handleAddRecommendation = (item: FBTRecommendation) => {
+    if (!item.shop_product_id) return;
+    const recommendedProduct: ProductDisplay = {
+      id: item.shop_product_id,
+      product_id: item.product_id,
+      category_id: 0,
+      product_name: item.name,
+      description: "",
+      price: item.price ?? 0,
+      created_at: "",
+      updated_at: "",
+      brand: item.brand ?? undefined,
+      shop_id: product.shop_id,
+      shop_name: product.shop_name,
+      shop_price: item.price ?? 0,
+      stock: item.available_stock ?? 0,
+      images: [],
+      primaryImage: item.image_url ?? undefined,
+    };
+    addItem(recommendedProduct);
+    toast(t("stores.shopScreen.addedToCart"), "success");
   };
 
   return (
@@ -184,24 +229,12 @@ export default function ShopProductDetailScreen() {
             </>
           )}
 
-          {/* Recommendations placeholder - not wired up yet */}
-          <View
-            className="rounded-2xl border p-4 mb-4"
-            style={{ borderColor: tokens.border, backgroundColor: tokens.card }}
-          >
-            <Text
-              className="text-base font-semibold mb-1"
-              style={{ color: tokens.foreground }}
-            >
-              {t("products.detail.youMightAlsoLike")}
-            </Text>
-            <Text
-              className="text-sm"
-              style={{ color: tokens.mutedForeground }}
-            >
-              {t("products.detail.recommendationsComingSoon")}
-            </Text>
-          </View>
+          <RecommendationSection
+            title={t("products.detail.youMightAlsoLike")}
+            items={recommendations}
+            isLoading={recommendationsLoading}
+            onAddPress={handleAddRecommendation}
+          />
         </View>
       </ScrollView>
 

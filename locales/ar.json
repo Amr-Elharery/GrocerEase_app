@@ -161,6 +161,7 @@
     "noShopsFound": "لم يتم العثور على متاجر في منطقتك بعد.",
     "topProducts": "أفضل المنتجات",
     "topStores": "أفضل المتاجر",
+    "timeToReorder": "حان وقت إعادة الطلب",
     "hero": {
       "title": "أنت تختار المنتجات. ونحن نجد أفضل المتاجر.",
       "subtitle": "وفّر أكثر بالتسوق عبر متاجر بأقل الأسعار، أو تسوّق محليًا واحصل على كل شيء من أقرب متجر بتوصيل فائق السرعة."
@@ -188,7 +189,8 @@
     "empty": "سلتك فارغة",
     "emptyHint": "أضف منتجات لتراها هنا",
     "subtotal": "الإجمالي الفرعي",
-    "checkout": "المتابعة إلى الدفع"
+    "checkout": "المتابعة إلى الدفع",
+    "youMightAlsoNeed": "قد تحتاج أيضًا إلى"
   },
   "shoppingList": {
     "title": "قائمة التسوق",
@@ -484,7 +486,7 @@
       "onlyLeft_other": "تبقى {{count}} فقط!",
       "description": "الوصف",
       "youMightAlsoLike": "قد يعجبك أيضًا",
-      "recommendationsComingSoon": "التوصيات قادمة قريبًا",
+      "frequentlyBoughtTogether": "يُشترى معًا غالبًا",
       "outOfStockButton": "غير متوفر",
       "addToCart": "أضف إلى السلة",
       "invalidId": "معرّف منتج غير صالح",
