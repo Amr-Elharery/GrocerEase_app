@@ -9,6 +9,7 @@ export interface Address {
   longitude: number;
   label: string;
   additional_directions: string;
+  is_default?: boolean;
 }
 
 export interface AddressPayload {

@@ -70,28 +70,26 @@ function normalizeProductDetail(raw: any): ProductDetail {
   };
 }
 
-function normalizeProductImages(raw: any): ProductImageItem[] {
-  const payload = raw?.data ?? raw ?? [];
-  const rows = Array.isArray(payload) ? payload : payload.images ?? [];
-  return rows.map((img: any) => ({
-    id: toNumber(img?.id),
-    detail_url: String(img?.detail_url ?? img?.image_url ?? ''),
-    thumbnail_url: String(img?.thumbnail_url ?? img?.image_url ?? ''),
+// GET /products/{id} embeds both product_images[] and shops[] directly -
+// there is no separate /images or /shops sub-endpoint on the real backend.
+function productImagesFromDetail(product: ProductDetail): ProductImageItem[] {
+  return product.product_images.map((img) => ({
+    id: img.id,
+    detail_url: String(img.image_url ?? ''),
+    thumbnail_url: String(img.image_url ?? ''),
   }));
 }
 
-function normalizeProductShops(raw: any): ProductStoreOffer[] {
-  const payload = raw?.shops ?? raw ?? [];
-  const rows = Array.isArray(payload) ? payload : [];
-  return rows.map((shop: any) => ({
-    id: toNumber(shop?.id),
-    shop_id: toNumber(shop?.shop_id ?? shop?.shop?.id),
-    store_name: String(shop?.shop?.shop_name ?? shop?.shop_name ?? ''),
-    price: toNumber(shop?.price),
-    delivery_cost: toNumber(shop?.delivery_cost ?? shop?.deliveryPrice ?? 0),
-    available_stock: toNumber(shop?.available_stock ?? shop?.stock ?? 0),
-    low_stock_threshold: toNumber(shop?.low_stock_threshold ?? 5),
-    is_active: Boolean(shop?.is_active),
+function storeOffersFromDetail(product: ProductDetail): ProductStoreOffer[] {
+  return product.shops.map((shop) => ({
+    id: shop.id,
+    shop_id: shop.shop_id,
+    store_name: shop.shop?.shop_name ?? '',
+    price: shop.price,
+    delivery_cost: 0,
+    available_stock: shop.available_stock,
+    low_stock_threshold: 5,
+    is_active: shop.is_active,
   }));
 }
 
@@ -107,23 +105,11 @@ export const productDetailsService = {
     }
   },
 
-  async getProductImages(productId: number): Promise<ProductImageItem[]> {
-    try {
-      const response = await httpService.get(`/products/${productId}/images`);
-      return normalizeProductImages(response.data);
-    } catch (error) {
-      console.error('Failed to fetch product images:', error);
-      return [];
-    }
+  getProductImages(product: ProductDetail): ProductImageItem[] {
+    return productImagesFromDetail(product);
   },
 
-  async getStoreOffers(productId: number): Promise<ProductStoreOffer[]> {
-    try {
-      const response = await httpService.get(`/products/${productId}/shops`);
-      return normalizeProductShops(response.data);
-    } catch (error) {
-      console.error('Failed to fetch store offers:', error);
-      return [];
-    }
+  getStoreOffers(product: ProductDetail): ProductStoreOffer[] {
+    return storeOffersFromDetail(product);
   },
 };

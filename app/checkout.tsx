@@ -15,6 +15,7 @@ import { THEME } from "@/lib/theme";
 import { useTheme } from "@/lib/theme-context";
 import httpService from "@/shared/httpService";
 import { router } from "expo-router";
+import { ChevronLeft } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const API_URL = "/orders";
@@ -107,12 +108,10 @@ export default function CheckoutScreen() {
     return (
       <TouchableOpacity
         onPress={() => selectAddress(item.id)}
-        className={`bg-card border rounded-2xl p-4 mb-3 ${
-          isSelected ? "border-green-500" : "border-border"
-        }`}
+        className="bg-card border rounded-2xl p-4 mb-3"
         style={{
           backgroundColor: tokens.card,
-          borderColor: isSelected ? "#22c55e" : tokens.border,
+          borderColor: isSelected ? tokens.primary : tokens.border,
         }}
       >
         <View className="flex-row items-start justify-between">
@@ -140,7 +139,10 @@ export default function CheckoutScreen() {
             </Text>
           </View>
           {isSelected && (
-            <View className="w-5 h-5 rounded-full bg-green-500 items-center justify-center">
+            <View
+              className="w-5 h-5 rounded-full items-center justify-center"
+              style={{ backgroundColor: tokens.primary }}
+            >
               <Text className="text-white text-xs font-bold">✓</Text>
             </View>
           )}
@@ -165,6 +167,14 @@ export default function CheckoutScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="h-10 w-10 items-center justify-center rounded-full mb-4"
+            style={{ backgroundColor: tokens.muted }}
+          >
+            <ChevronLeft size={22} color={tokens.foreground} />
+          </TouchableOpacity>
+
           <View className="mb-6">
             <Text
               className="text-foreground text-3xl font-bold"
@@ -264,16 +274,12 @@ export default function CheckoutScreen() {
 
             <TouchableOpacity
               onPress={() => setPaymentMethod("cash_on_delivery")}
-              className={`bg-background border rounded-xl p-4 ${
-                paymentMethod === "cash_on_delivery"
-                  ? "border-green-500"
-                  : "border-border"
-              }`}
+              className="bg-background border rounded-xl p-4"
               style={{
                 backgroundColor: tokens.background,
                 borderColor:
                   paymentMethod === "cash_on_delivery"
-                    ? "#22c55e"
+                    ? tokens.primary
                     : tokens.border,
               }}
             >
@@ -295,7 +301,10 @@ export default function CheckoutScreen() {
                 </View>
 
                 {paymentMethod === "cash_on_delivery" && (
-                  <View className="w-5 h-5 rounded-full bg-green-500 items-center justify-center">
+                  <View
+                    className="w-5 h-5 rounded-full items-center justify-center"
+                    style={{ backgroundColor: tokens.primary }}
+                  >
                     <Text className="text-white text-xs font-bold">✓</Text>
                   </View>
                 )}
@@ -371,7 +380,7 @@ export default function CheckoutScreen() {
             onPress={handlePlaceOrder}
             disabled={loading}
             className={`py-4 rounded-2xl ${
-              loading ? "bg-gray-400" : "bg-green-600"
+              loading ? "bg-gray-400" : "bg-primary"
             }`}
           >
             <Text className="text-white text-center text-lg font-bold">

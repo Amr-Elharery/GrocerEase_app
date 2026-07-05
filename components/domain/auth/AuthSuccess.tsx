@@ -19,7 +19,7 @@ export function AuthSuccess({ title, message }: AuthSuccessProps) {
 
   return (
     <View className="items-center justify-center py-8">
-      <CheckCircle size={64} color="#22c55e" className="mb-4" />
+      <CheckCircle size={64} color={tokens.primary} className="mb-4" />
       <Text
         className="text-xl font-bold text-center mb-2"
         style={{ color: tokens.foreground }}

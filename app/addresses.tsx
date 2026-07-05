@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import * as Location from "expo-location";
-import { MapPin } from "lucide-react-native";
+import { ChevronLeft, MapPin } from "lucide-react-native";
 import { THEME } from "@/lib/theme";
 import { useTheme } from "@/lib/theme-context";
 import { useAddress } from "@/lib/context/addressContext";
@@ -180,6 +180,14 @@ export default function AddressFormScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="h-10 w-10 items-center justify-center rounded-full mb-4"
+          style={{ backgroundColor: tokens.muted }}
+        >
+          <ChevronLeft size={22} color={tokens.foreground} />
+        </TouchableOpacity>
+
         <View className="mb-6">
           <Text className="text-foreground text-3xl font-bold" style={{ color: tokens.foreground }}>
             Add New Address
@@ -353,7 +361,7 @@ export default function AddressFormScreen() {
         <TouchableOpacity
           onPress={handleSave}
           disabled={loading}
-          className={`py-4 rounded-2xl ${loading ? "bg-gray-400" : "bg-green-600"}`}
+          className={`py-4 rounded-2xl ${loading ? "bg-gray-400" : "bg-primary"}`}
         >
           <Text className="text-white text-center text-lg font-bold">
             {loading ? "Saving..." : "Save Address"}

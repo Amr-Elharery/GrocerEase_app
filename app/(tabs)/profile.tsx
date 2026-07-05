@@ -57,7 +57,7 @@ export default function ProfileScreen() {
             <View className="flex-row items-center justify-between mb-4">
               <View className="flex-row items-center flex-1">
                 <View
-                  className="w-16 h-16 rounded-full flex-center justify-center"
+                  className="w-16 h-16 rounded-full items-center justify-center"
                   style={{ backgroundColor: tokens.primary }}
                 >
                   <User size={32} color={tokens.primaryForeground} />

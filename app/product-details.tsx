@@ -1,12 +1,12 @@
 import { Button } from '@/components/ui/button';
-import { watchlistService } from '@/shared/watchlist.service';
-import { shoppingListService } from '@/shared/shopping-list.service';
+import { addToShoppingList } from '@/shared/shopping-list.service';
 import { productDetailsService, type ProductImageItem, type ProductStoreOffer } from '@/shared/product-details.service';
 import { useAuth } from '@/lib/auth-context';
+import { useToast } from '@/lib/hooks/useToast';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Bell, BellRing, ChevronLeft, TriangleAlert, LogIn } from 'lucide-react-native';
+import { ChevronLeft, TriangleAlert, LogIn } from 'lucide-react-native';
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { Alert, Image, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, Image, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const fallbackProductImage = require('../assets/images/icon.png');
@@ -34,6 +34,7 @@ export default function ProductDetailsScreen() {
     select_cheapest?: string;
   }>();
   const { isLoggedIn } = useAuth();
+  const toast = useToast();
   const productId = Number(id ?? product_id ?? 0);
   const [product, setProduct] = useState<any>(null);
   const [images, setImages] = useState<ProductImageItem[]>([]);
@@ -42,11 +43,7 @@ export default function ProductDetailsScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [selectedOfferId, setSelectedOfferId] = useState<number | null>(null);
-  const [watchModalOpen, setWatchModalOpen] = useState(false);
-  const [watchTargetInput, setWatchTargetInput] = useState('');
-  const [watchEntryId, setWatchEntryId] = useState<number | null>(null);
 
   const sortedOffers = useMemo(
     () =>
@@ -67,11 +64,6 @@ export default function ProductDetailsScreen() {
   }, [images]);
 
   const cheapestOffer = sortedOffers[0];
-  const suggestedTarget = useMemo(() => {
-    const base = cheapestOffer?.price ?? 0;
-    if (!base) return 0;
-    return Number((base * 0.9).toFixed(2));
-  }, [cheapestOffer?.price]);
 
   const loadDetails = useCallback(async () => {
     if (!productId) {
@@ -85,26 +77,12 @@ export default function ProductDetailsScreen() {
     try {
       const productResponse = await productDetailsService.getProduct(productId);
       setProduct(productResponse);
-      
-      const imageResponse = await productDetailsService.getProductImages(productId);
-      setImages(imageResponse);
-      
-      // Get all shops from the product endpoint
-      const allShops = productResponse?.shops ?? [];
-      setOffers(allShops.map((shop: any) => ({
-        id: shop.id,
-        shop_id: shop.shop_id ?? shop.shop?.id,
-        store_name: shop.shop?.shop_name ?? shop.shop_name ?? '',
-        price: shop.price ?? 0,
-        delivery_cost: 0,
-        available_stock: shop.available_stock ?? 0,
-        low_stock_threshold: 5,
-        is_active: shop.is_active ?? true,
-      })));
-      
-      const watches = await watchlistService.getWatchlist();
-      const existing = watches.find((item) => item.product_id === productId);
-      setWatchEntryId(existing?.id ?? null);
+
+      if (productResponse) {
+        setImages(productDetailsService.getProductImages(productResponse));
+        setOffers(productDetailsService.getStoreOffers(productResponse));
+      }
+
       setActiveImageIndex(0);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to load product details.';
@@ -133,36 +111,6 @@ export default function ProductDetailsScreen() {
       ? { uri: activeImage.detail_url }
       : getPlaceholderByCategory(breadcrumbSubCategory || breadcrumbCategory);
 
-  const onOpenWatchModal = () => {
-    if (!isLoggedIn) {
-      Alert.alert('Login Required', 'Please login to add products to your watchlist');
-      router.push('/login');
-      return;
-    }
-    const initial = suggestedTarget || cheapestOffer?.price || 0;
-    setWatchTargetInput(initial ? String(initial) : '');
-    setWatchModalOpen(true);
-  };
-
-  const onConfirmWatch = async () => {
-    const targetPrice = Number(watchTargetInput);
-    if (!Number.isFinite(targetPrice) || targetPrice <= 0) {
-      setStatusMessage('Enter a valid target price');
-      return;
-    }
-    try {
-      const entry = await watchlistService.create({
-        product_id: productId,
-        target_price: targetPrice,
-      });
-      setWatchEntryId(entry.id);
-      setWatchModalOpen(false);
-      setStatusMessage('Added to watchlist');
-    } catch {
-      setStatusMessage('Failed to add to watchlist');
-    }
-  };
-
   const onAddToShoppingList = async () => {
     if (!isLoggedIn) {
       Alert.alert('Login Required', 'Please login to add items to your shopping list');
@@ -172,16 +120,15 @@ export default function ProductDetailsScreen() {
     
     try {
       // Use the first (cheapest) offer by default
-      await shoppingListService.addToShoppingList({
+      await addToShoppingList({
         product_id: productId,
         product_name: product?.product_name ?? '',
         brand: product?.brand,
         qty: 1,
       });
-      setStatusMessage(`Added to shopping list`);
-      setTimeout(() => setStatusMessage(null), 2000);
+      toast(`Added ${product?.product_name ?? 'item'} to your shopping list`, 'success');
     } catch {
-      setStatusMessage('Failed to add to shopping list');
+      toast('Failed to add to shopping list', 'error');
     }
   };
 
@@ -191,7 +138,7 @@ export default function ProductDetailsScreen() {
         <View className="bg-primary/10 px-4 py-2 flex-row items-center justify-center gap-2">
           <LogIn size={16} className="text-primary" />
           <Pressable onPress={() => router.push('/login')}>
-            <Text className="text-primary font-semibold">Login to add to shopping list or watchlist</Text>
+            <Text className="text-primary font-semibold">Login to add to your shopping list</Text>
           </Pressable>
         </View>
       )}
@@ -236,18 +183,6 @@ export default function ProductDetailsScreen() {
               {product?.brand ?? 'Unknown brand'} | {product?.unit ?? '1 unit'}
             </Text>
           </View>
-          <Pressable
-            onPress={onOpenWatchModal}
-            className={`h-11 w-11 rounded-full border items-center justify-center ${
-              watchEntryId ? 'bg-primary border-primary' : 'bg-card border-border'
-            }`}
-          >
-            {watchEntryId ? (
-              <BellRing size={20} className="text-primary-foreground" />
-            ) : (
-              <Bell size={20} className="text-foreground" />
-            )}
-          </Pressable>
         </View>
 
         {errorMessage ? (
@@ -326,7 +261,7 @@ export default function ProductDetailsScreen() {
               </View>
               {sortedOffers.map((offer, index) => (
                 <Pressable
-                  key={offer.id}
+                  key={`${offer.shop_id ?? offer.id ?? "offer"}-${index}`}
                   onPress={() => setSelectedOfferId(offer.id)}
                   className={`flex-row items-center px-3 py-2 border-t border-border ${
                     selectedOfferId === offer.id ? 'bg-primary/10' : ''
@@ -352,20 +287,11 @@ export default function ProductDetailsScreen() {
               ))}
             </View>
 
-            <View className="flex-row gap-2">
-              <Button className="flex-1" variant="outline" onPress={onOpenWatchModal}>
-                <Text className="text-foreground">{watchEntryId ? 'In Watchlist' : 'Add to Watchlist'}</Text>
-              </Button>
-              <Button 
-                className="flex-1" 
-                onPress={onAddToShoppingList}
-              >
-                <Text className="text-primary-foreground font-semibold">
-                  {isLoggedIn ? 'Add to Shopping List' : 'Login to Add'}
-                </Text>
-              </Button>
-            </View>
-            {statusMessage && <Text className="text-muted-foreground text-xs mt-3">{statusMessage}</Text>}
+            <Button onPress={onAddToShoppingList}>
+              <Text className="text-primary-foreground font-semibold">
+                {isLoggedIn ? 'Add to Shopping List' : 'Login to Add'}
+              </Text>
+            </Button>
           </View>
         )}
       </ScrollView>
@@ -373,47 +299,6 @@ export default function ProductDetailsScreen() {
       <Modal visible={lightboxOpen} transparent animationType="fade" onRequestClose={() => setLightboxOpen(false)}>
         <Pressable className="flex-1 bg-black/90 items-center justify-center px-4" onPress={() => setLightboxOpen(false)}>
           <Image source={activeImageSource} className="w-full h-[70%]" resizeMode="contain" />
-        </Pressable>
-      </Modal>
-
-      <Modal visible={watchModalOpen} transparent animationType="slide" onRequestClose={() => setWatchModalOpen(false)}>
-        <Pressable className="flex-1 bg-black/40" onPress={() => setWatchModalOpen(false)}>
-          <Pressable className="mt-auto bg-background rounded-t-3xl p-4" onPress={() => undefined}>
-            <View className="w-12 h-1.5 bg-border rounded-full self-center mb-4" />
-            <Text className="text-foreground text-lg font-semibold mb-3">Add to Watchlist</Text>
-            <View className="bg-card border border-border rounded-xl p-3 mb-3">
-              <Text className="text-muted-foreground text-xs">Current lowest price</Text>
-              <Text className="text-foreground font-semibold text-base mt-1">
-                {(cheapestOffer?.price ?? 0).toFixed(2)} EGP
-              </Text>
-              <Text className="text-muted-foreground text-xs mt-2">
-                Suggested target (10% below): {suggestedTarget.toFixed(2)} EGP
-              </Text>
-            </View>
-            <Text className="text-foreground font-semibold mb-2">Target price</Text>
-            <TextInput
-              keyboardType="decimal-pad"
-              value={watchTargetInput}
-              onChangeText={setWatchTargetInput}
-              placeholder="Enter target price"
-              placeholderTextColor="rgb(115 115 115)"
-              className="border border-border rounded-lg px-3 py-2 text-foreground mb-3"
-            />
-            <View className="flex-row gap-2">
-              <Pressable
-                className="flex-1 rounded-lg border border-border bg-card py-3 items-center"
-                onPress={() => setWatchModalOpen(false)}
-              >
-                <Text className="text-foreground">Cancel</Text>
-              </Pressable>
-              <Pressable
-                className="flex-1 rounded-lg border border-primary bg-primary py-3 items-center"
-                onPress={onConfirmWatch}
-              >
-                <Text className="text-primary-foreground font-semibold">Confirm</Text>
-              </Pressable>
-            </View>
-          </Pressable>
         </Pressable>
       </Modal>
     </SafeAreaView>

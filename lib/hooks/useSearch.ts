@@ -97,7 +97,21 @@ export function useSearchResults(initialFilters?: ProductSearchFilters) {
       setError(null);
       try {
         const result = await searchService.searchProducts(searchFilters);
-        setResults(result);
+        setResults((prev) => {
+          if ((searchFilters.page ?? 1) <= 1) return result;
+
+          const seenIds = new Set(prev.items.map((item) => item.id));
+          const newItems = result.items.filter((item) => !seenIds.has(item.id));
+
+          return {
+            ...result,
+            items: [...prev.items, ...newItems],
+            // If the "next page" came back with nothing genuinely new,
+            // treat it as the end (guards against a backend that ignores
+            // offset and just repeats page 1).
+            has_next_page: newItems.length > 0 && result.has_next_page,
+          };
+        });
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch search results",
@@ -110,9 +124,7 @@ export function useSearchResults(initialFilters?: ProductSearchFilters) {
   );
 
   useEffect(() => {
-    if (filters.q || filters.category_id || filters.sub_category_id) {
-      fetchResults();
-    }
+    fetchResults();
   }, [filters, fetchResults]);
 
   const updateFilters = useCallback(
@@ -137,13 +149,6 @@ export function useSearchResults(initialFilters?: ProductSearchFilters) {
 
   const clearFilters = useCallback(() => {
     setFilters({ q: "", page: 1, limit: 20 });
-    setResults({
-      items: [],
-      page: 1,
-      limit: 20,
-      total: 0,
-      has_next_page: false,
-    });
   }, []);
 
   const getActiveFilterCount = useCallback(() => {

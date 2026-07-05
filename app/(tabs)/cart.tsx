@@ -2,7 +2,6 @@ import { ProtectedScreen } from "@/components/domain/ProtectedScreen";
 import { THEME } from "@/lib/theme";
 import { useCart } from "@/lib/context/cartContext";
 import { useTheme } from "@/lib/theme-context";
-import { MOCK_STORES } from "@/lib/mock-data";
 import { router } from "expo-router";
 import React from "react";
 import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
@@ -13,9 +12,7 @@ export default function CartScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
 
-  const cartShop = shopId
-    ? MOCK_STORES.find((s) => s.id === shopId)
-    : null;
+  const cartShopName = shopId ? cart[0]?.shop_name : null;
 
   const increaseQty = (id: number) => {
     const item = cart.find((i) => i.id === id);
@@ -41,9 +38,9 @@ export default function CartScreen() {
         <View className="flex-1 px-4 pt-4">
           <View className="mb-6">
             <Text className="text-foreground text-3xl font-bold">My Cart</Text>
-            {cartShop && (
+            {cartShopName && (
               <Text className="text-muted-foreground mt-1">
-                From {cartShop.shop_name}
+                From {cartShopName}
               </Text>
             )}
           </View>
@@ -107,7 +104,7 @@ export default function CartScreen() {
 
                         <TouchableOpacity
                           onPress={() => removeItem(item.id)}
-                          className="bg-red-500 px-4 py-2 rounded-xl"
+                          className="bg-destructive px-4 py-2 rounded-xl"
                         >
                           <Text className="text-white font-bold">Remove</Text>
                         </TouchableOpacity>
@@ -130,7 +127,7 @@ export default function CartScreen() {
 
                 <TouchableOpacity
                   onPress={() => router.push("/checkout")}
-                  className="bg-green-600 py-4 rounded-2xl mt-5"
+                  className="bg-primary py-4 rounded-2xl mt-5"
                 >
                   <Text className="text-white text-center text-lg font-bold">
                     Proceed To Checkout

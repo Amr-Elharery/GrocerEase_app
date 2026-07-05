@@ -13,7 +13,7 @@ import { THEME } from "@/lib/theme";
 import { useTheme } from "@/lib/theme-context";
 import { useAddress } from "@/lib/context/addressContext";
 import { addressService } from "@/shared/address.service";
-import { Trash2 } from "lucide-react-native";
+import { ChevronLeft, Trash2 } from "lucide-react-native";
 
 export default function AddressBookScreen() {
   const { theme } = useTheme();
@@ -56,12 +56,10 @@ export default function AddressBookScreen() {
     return (
       <TouchableOpacity
         onPress={() => handleSelect(item.id)}
-        className={`bg-card border rounded-2xl p-4 mb-3 ${
-          isSelected ? "border-green-500" : "border-border"
-        }`}
+        className="bg-card border rounded-2xl p-4 mb-3"
         style={{
           backgroundColor: tokens.card,
-          borderColor: isSelected ? "#22c55e" : tokens.border,
+          borderColor: isSelected ? tokens.primary : tokens.border,
         }}
       >
         <View className="flex-row items-start justify-between">
@@ -100,16 +98,20 @@ export default function AddressBookScreen() {
 
           <View className="flex-row items-center gap-3">
             {isSelected && (
-              <View className="w-5 h-5 rounded-full bg-green-500 items-center justify-center">
+              <View
+                className="w-5 h-5 rounded-full items-center justify-center"
+                style={{ backgroundColor: tokens.primary }}
+              >
                 <Text className="text-white text-xs font-bold">✓</Text>
               </View>
             )}
 
             <TouchableOpacity
               onPress={() => handleDelete(item)}
-              className="p-2 rounded-full bg-red-50"
+              className="p-2 rounded-full"
+              style={{ backgroundColor: tokens.destructive + "1A" }}
             >
-              <Trash2 size={18} color="#ef4444" />
+              <Trash2 size={18} color={tokens.destructive} />
             </TouchableOpacity>
           </View>
         </View>
@@ -124,6 +126,14 @@ export default function AddressBookScreen() {
       style={{ backgroundColor: tokens.background }}
     >
       <View className="px-4 pt-4">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="h-10 w-10 items-center justify-center rounded-full mb-4"
+          style={{ backgroundColor: tokens.muted }}
+        >
+          <ChevronLeft size={22} color={tokens.foreground} />
+        </TouchableOpacity>
+
         <View className="flex-row items-center justify-between mb-6">
           <Text
             className="text-foreground text-3xl font-bold"

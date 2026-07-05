@@ -1,50 +1,26 @@
 import { useAuth } from "@/lib/auth-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAddress } from "@/lib/context/addressContext";
 import { useRouter } from "expo-router";
 import { Bell, ChevronDown, LogIn, MapPin, Plus } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SearchBar } from "../search-bar";
 
 type SearchMode = "product" | "store";
 
 interface HeaderProps {
-  zone?: string;
-  onZonePress?: () => void;
   onSearch?: (query: string, mode: SearchMode) => void;
 }
 
-export function Header({
-  zone: initialZone,
-  onZonePress,
-  onSearch,
-}: HeaderProps) {
+export function Header({ onSearch }: HeaderProps) {
   const [searchMode, setSearchMode] = useState<SearchMode>("product");
-  const [zone, setZone] = useState<string | null>(initialZone || null);
-  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
   const router = useRouter();
   const { isLoggedIn } = useAuth();
+  const { addresses, selectedAddressId, isLoading: addressesLoading } =
+    useAddress();
 
-  // Load location from AsyncStorage when component mounts
-  useEffect(() => {
-    const loadLocation = async () => {
-      try {
-        const savedLocation = await AsyncStorage.getItem("user_location");
-        if (savedLocation) {
-          setZone(savedLocation);
-        } else {
-          setZone(null);
-        }
-      } catch (error) {
-        console.error("Error loading location:", error);
-        setZone(null);
-      } finally {
-        setIsLoadingLocation(false);
-      }
-    };
-
-    loadLocation();
-  }, []);
+  const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
+  const zone = selectedAddress?.label || selectedAddress?.street || null;
 
   const handleSearch = (query: string) => {
     onSearch?.(query, searchMode);
@@ -59,12 +35,12 @@ export function Header({
   };
 
   const handleSetLocation = () => {
-    router.push("/location-setup");
+    router.push("/location-permission");
   };
 
   const handleZonePress = () => {
-    if (isLoggedIn && zone) {
-      onZonePress?.();
+    if (isLoggedIn) {
+      router.push("/address-book");
     }
   };
 
@@ -81,7 +57,7 @@ export function Header({
                 Login to see locations
               </Text>
             </View>
-          ) : isLoadingLocation ? (
+          ) : addressesLoading ? (
             // Loading location
             <View className="flex-row items-center">
               <Text className="text-muted-foreground text-sm">Loading...</Text>
@@ -92,7 +68,7 @@ export function Header({
               onPress={handleZonePress}
               className="flex-row items-center min-w-0"
             >
-              <MapPin size={20} className="text-primary mr-1" />
+              <MapPin size={20} className="text-primary" style={{ marginRight: 8 }} />
               <Text
                 className="text-foreground font-semibold text-base flex-shrink"
                 numberOfLines={1}
@@ -108,7 +84,7 @@ export function Header({
               onPress={handleSetLocation}
               className="flex-row items-center min-w-0"
             >
-              <MapPin size={20} className="text-primary mr-1" />
+              <MapPin size={20} className="text-primary" style={{ marginRight: 8 }} />
               <Text
                 className="text-foreground font-semibold text-base flex-shrink"
                 numberOfLines={1}

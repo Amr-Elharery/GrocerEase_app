@@ -78,9 +78,8 @@ const loadNotifications = useCallback(async () => {
 
   const renderItem = ({ item }: { item: NotificationItem }) => {
     const isRead = item.read || item.is_read;
-    const title = item.title || item.message || item.body || "Notification";
-    const message =
-      item.message || item.body || item.description || "You have a new update.";
+    const title = item.title || "Notification";
+    const message = item.body || "";
 
     return (
       <View className="mb-3 rounded-2xl border border-border bg-card p-4">
@@ -89,12 +88,14 @@ const loadNotifications = useCallback(async () => {
             <Text className="text-base font-semibold text-foreground">
               {title}
             </Text>
-            <Text className="mt-1 text-sm text-muted-foreground">
-              {message}
-            </Text>
+            {!!message && (
+              <Text className="mt-1 text-sm text-muted-foreground">
+                {message}
+              </Text>
+            )}
           </View>
           {isRead ? (
-            <CheckCircle2 size={18} className="text-green-600" />
+            <CheckCircle2 size={18} className="text-primary" />
           ) : (
             <Bell size={18} className="text-primary" />
           )}

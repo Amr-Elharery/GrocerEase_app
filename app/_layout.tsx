@@ -2,6 +2,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { AddressProvider } from "@/lib/context/addressContext";
 import { CartProvider } from "@/lib/context/cartContext";
 import i18n, { initI18n } from "@/lib/i18n";
+import { ToastProvider } from "@/lib/hooks/useToast";
 import { ThemeProvider } from "@/lib/theme-context";
 import { PortalHost } from "@rn-primitives/portal";
 import * as Linking from "expo-linking";
@@ -58,11 +59,28 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <I18nextProvider i18n={i18n}>
         <ThemeProvider defaultTheme="system">
-          <AuthProvider>
-            <AddressProvider>
+          <AddressProvider>
+            <AuthProvider>
               <CartProvider>
+              <ToastProvider>
                 <Stack>
                   <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="welcome"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="location-permission"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="location-picker"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="address-details-form"
+                    options={{ headerShown: false }}
+                  />
                   <Stack.Screen
                     name="(tabs)"
                     options={{ headerShown: false }}
@@ -101,6 +119,10 @@ export default function RootLayout() {
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen
+                    name="profile-orders"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
                     name="addresses"
                     options={{ headerShown: false }}
                   />
@@ -121,13 +143,22 @@ export default function RootLayout() {
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen name="shop" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="shop-product"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="driver"
+                    options={{ headerShown: false }}
+                  />
                 </Stack>
 
                 <StatusBar style="auto" />
                 <PortalHost />
+              </ToastProvider>
               </CartProvider>
-            </AddressProvider>
-          </AuthProvider>
+            </AuthProvider>
+          </AddressProvider>
         </ThemeProvider>
       </I18nextProvider>
     </GestureHandlerRootView>
