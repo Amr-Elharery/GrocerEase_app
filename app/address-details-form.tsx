@@ -10,16 +10,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronLeft } from "lucide-react-native";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useTranslation } from "react-i18next";
 
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
-import { useAddress } from "@/lib/context/addressContext";
-import { addressService } from "@/shared/address.service";
+import { THEME, useTheme } from "@/lib/theme";
+import { useAddress } from "@/features/addresses/hooks/addressContext";
+import { addressService } from "@/features/addresses/services/address.service";
 
 export default function AddressDetailsFormScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { t } = useTranslation();
   const { addresses, addAddress, selectAddress, setDefaultAddress } =
     useAddress();
   const params = useLocalSearchParams<{
@@ -50,7 +51,7 @@ export default function AddressDetailsFormScreen() {
 
   const handleSubmit = async () => {
     if (!areaId || !street) {
-      alert("Please select an area and enter a street.");
+      alert(t("addresses.detailsForm.selectAreaAndStreet"));
       return;
     }
 
@@ -86,7 +87,7 @@ export default function AddressDetailsFormScreen() {
 
       router.replace("/(tabs)");
     } catch {
-      alert("Could not save your address. Please try again.");
+      alert(t("addresses.detailsForm.saveFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -107,21 +108,21 @@ export default function AddressDetailsFormScreen() {
           className="h-10 w-10 items-center justify-center rounded-full mb-4"
           style={{ backgroundColor: tokens.muted }}
         >
-          <ChevronLeft size={22} color={tokens.foreground} />
+          <BackIcon variant="chevron" size={22} color={tokens.foreground} />
         </TouchableOpacity>
 
         <Text
           className="text-3xl font-bold mb-1"
           style={{ color: tokens.foreground }}
         >
-          Address Details
+          {t("addresses.detailsForm.title")}
         </Text>
         <Text className="mb-6" style={{ color: tokens.mutedForeground }}>
-          Just a few more details for accurate delivery
+          {t("addresses.detailsForm.subtitle")}
         </Text>
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          Area
+          {t("driver.createProfile.area")}
         </Text>
         <FlatList
           data={areas}
@@ -154,72 +155,72 @@ export default function AddressDetailsFormScreen() {
         />
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          Street
+          {t("addresses.newAddressForm.street")}
         </Text>
         <TextInput
           value={street}
           onChangeText={setStreet}
-          placeholder="Street address"
+          placeholder={t("addresses.newAddressForm.streetPlaceholder")}
           placeholderTextColor={tokens.mutedForeground}
           className="border rounded-xl px-4 py-4 mb-4"
           style={inputStyle}
         />
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          Building
+          {t("addresses.newAddressForm.building")}
         </Text>
         <TextInput
           value={building}
           onChangeText={setBuilding}
-          placeholder="Building name/number"
+          placeholder={t("addresses.newAddressForm.buildingPlaceholder")}
           placeholderTextColor={tokens.mutedForeground}
           className="border rounded-xl px-4 py-4 mb-4"
           style={inputStyle}
         />
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          Floor
+          {t("addresses.newAddressForm.floor")}
         </Text>
         <TextInput
           value={floor}
           onChangeText={setFloor}
-          placeholder="Floor"
+          placeholder={t("addresses.newAddressForm.floor")}
           placeholderTextColor={tokens.mutedForeground}
           className="border rounded-xl px-4 py-4 mb-4"
           style={inputStyle}
         />
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          Apartment Number
+          {t("addresses.newAddressForm.aptNumber")}
         </Text>
         <TextInput
           value={aptNumber}
           onChangeText={setAptNumber}
-          placeholder="Apartment number"
+          placeholder={t("addresses.newAddressForm.aptNumberPlaceholder")}
           placeholderTextColor={tokens.mutedForeground}
           className="border rounded-xl px-4 py-4 mb-4"
           style={inputStyle}
         />
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          Label
+          {t("addresses.newAddressForm.label")}
         </Text>
         <TextInput
           value={label}
           onChangeText={setLabel}
-          placeholder="e.g., Home, Work"
+          placeholder={t("addresses.newAddressForm.labelPlaceholder")}
           placeholderTextColor={tokens.mutedForeground}
           className="border rounded-xl px-4 py-4 mb-4"
           style={inputStyle}
         />
 
         <Text className="mb-2" style={{ color: tokens.mutedForeground }}>
-          Additional Directions
+          {t("addresses.newAddressForm.additionalDirections")}
         </Text>
         <TextInput
           value={additionalDirections}
           onChangeText={setAdditionalDirections}
-          placeholder="Optional directions"
+          placeholder={t("addresses.newAddressForm.additionalDirectionsPlaceholder")}
           placeholderTextColor={tokens.mutedForeground}
           multiline
           numberOfLines={4}
@@ -241,7 +242,7 @@ export default function AddressDetailsFormScreen() {
               className="text-lg font-bold"
               style={{ color: tokens.primaryForeground }}
             >
-              Save & Continue
+              {t("addresses.detailsForm.saveAndContinue")}
             </Text>
           )}
         </TouchableOpacity>

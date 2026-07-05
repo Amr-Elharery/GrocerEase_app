@@ -9,30 +9,35 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
-import { ChevronLeft, MapPin, Store } from "lucide-react-native";
+import { MapPin, Store } from "lucide-react-native";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
-import { useToast } from "@/lib/hooks/useToast";
-import { fetchMyAssignments } from "@/shared/delivery.service";
-import { Assignment } from "@/lib/types/delivery";
+import { useRTL } from "@/lib/i18n/RTLContext";
+import { THEME, useTheme } from "@/lib/theme";
+import { useToast } from "@/lib/toast/useToast";
+import { fetchMyAssignments } from "@/features/driver/services/delivery.service";
+import { Assignment } from "@/features/driver/types";
 
-const statusLabel = (status?: string) => {
+const statusLabel = (t: TFunction, status?: string) => {
   switch (status) {
     case "out_for_delivery":
-      return "Out for Delivery";
+      return t("driver.status.outForDelivery");
     case "on_the_way":
-      return "On the Way";
+      return t("driver.status.onTheWay");
     case "delivered":
-      return "Delivered";
+      return t("driver.status.delivered");
     default:
-      return status ?? "Pending";
+      return status ?? t("driver.status.pending");
   }
 };
 
 export default function MyDeliveriesScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const showToast = useToast();
 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -44,9 +49,9 @@ export default function MyDeliveriesScreen() {
       const data = await fetchMyAssignments();
       setAssignments(data);
     } catch {
-      showToast("Could not load your deliveries", "error");
+      showToast(t("driver.myDeliveries.loadFailed"), "error");
     }
-  }, [showToast]);
+  }, [showToast, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -85,14 +90,14 @@ export default function MyDeliveriesScreen() {
             <View className="flex-row items-center">
               <Store size={18} color={tokens.primary} />
               <Text
-                className="ml-2 font-bold text-base"
+                className={isRTL ? "mr-2 font-bold text-base" : "ml-2 font-bold text-base"}
                 style={{ color: tokens.foreground }}
               >
-                Trip · {item.orders.length} stops
+                {t("driver.myDeliveries.tripStops", { count: item.orders.length })}
               </Text>
             </View>
             <Text style={{ color: tokens.primary }} className="font-semibold">
-              {statusLabel(status)}
+              {statusLabel(t, status)}
             </Text>
           </View>
           {item.orders.map((order) => (
@@ -107,7 +112,7 @@ export default function MyDeliveriesScreen() {
           <View className="flex-row items-center mt-2">
             <MapPin size={14} color={tokens.mutedForeground} />
             <Text
-              className="ml-1"
+              className={isRTL ? "mr-1" : "ml-1"}
               style={{ color: tokens.mutedForeground }}
               numberOfLines={1}
             >
@@ -129,20 +134,20 @@ export default function MyDeliveriesScreen() {
           <View className="flex-row items-center">
             <Store size={18} color={tokens.primary} />
             <Text
-              className="ml-2 font-bold text-base"
+              className={isRTL ? "mr-2 font-bold text-base" : "ml-2 font-bold text-base"}
               style={{ color: tokens.foreground }}
             >
-              {order.shop_name ?? "Shop"}
+              {order.shop_name ?? t("driver.available.shop")}
             </Text>
           </View>
           <Text style={{ color: tokens.primary }} className="font-semibold">
-            {statusLabel(order.status)}
+            {statusLabel(t, order.status)}
           </Text>
         </View>
         <View className="flex-row items-center">
           <MapPin size={14} color={tokens.mutedForeground} />
           <Text
-            className="ml-1"
+            className={isRTL ? "mr-1" : "ml-1"}
             style={{ color: tokens.mutedForeground }}
             numberOfLines={1}
           >
@@ -163,11 +168,11 @@ export default function MyDeliveriesScreen() {
         className="flex-row items-center px-4 py-4 border-b"
         style={{ borderColor: tokens.border }}
       >
-        <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <ChevronLeft size={24} color={tokens.foreground} />
+        <TouchableOpacity onPress={() => router.back()} className={isRTL ? "ml-3" : "mr-3"}>
+          <BackIcon variant="chevron" size={24} color={tokens.foreground} />
         </TouchableOpacity>
         <Text className="text-xl font-bold" style={{ color: tokens.foreground }}>
-          My Deliveries
+          {t("driver.home.myDeliveries")}
         </Text>
       </View>
 
@@ -193,7 +198,7 @@ export default function MyDeliveriesScreen() {
               className="text-center mt-8"
               style={{ color: tokens.mutedForeground }}
             >
-              No active deliveries
+              {t("driver.myDeliveries.noActive")}
             </Text>
           }
         />

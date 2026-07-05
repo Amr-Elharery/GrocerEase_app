@@ -1,7 +1,7 @@
-import { THEME } from '@/lib/theme';
-import { useTheme } from '@/lib/theme-context';
+import { THEME, useTheme } from '@/lib/theme';
 
 import { Tabs } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import {
   ShoppingCart,
@@ -15,6 +15,7 @@ import {
 export default function TabsLayout() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { t } = useTranslation();
 
   const iconColor = tokens.foreground;
   const inactiveColor = tokens.mutedForeground;
@@ -34,7 +35,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('tabs.home'),
           tabBarIcon: ({ color, size }) => (
             <Home size={size} color={color} />
           ),
@@ -44,7 +45,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="shops"
         options={{
-          title: 'Shops',
+          title: t('tabs.shops'),
           tabBarIcon: ({ color, size }) => (
             <Store size={size} color={color} />
           ),
@@ -54,7 +55,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="search"
         options={{
-          title: 'Products',
+          title: t('tabs.products'),
           tabBarIcon: ({ color, size }) => (
             <ShoppingBag size={size} color={color} />
           ),
@@ -64,7 +65,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="shopping-list"
         options={{
-          title: 'Lists',
+          title: t('tabs.lists'),
           tabBarIcon: ({ color, size }) => (
             <ClipboardList size={size} color={color} />
           ),
@@ -74,7 +75,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="cart"
         options={{
-          title: "Cart",
+          title: t('tabs.cart'),
           tabBarIcon: ({ color, size }) => (
             <ShoppingCart size={size} color={color} />
           ),
@@ -84,7 +85,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('tabs.profile'),
           tabBarIcon: ({ color, size }) => (
             <User size={size} color={color} />
           ),

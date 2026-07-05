@@ -11,14 +11,18 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import * as Location from "expo-location";
-import { ChevronLeft, MapPin } from "lucide-react-native";
+import { MapPin } from "lucide-react-native";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useTranslation } from "react-i18next";
 
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
+import { useRTL } from "@/lib/i18n/RTLContext";
+import { THEME, useTheme } from "@/lib/theme";
 
 export default function LocationPickerScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
@@ -62,7 +66,7 @@ export default function LocationPickerScreen() {
       setLoading(true);
       const permission = await Location.requestForegroundPermissionsAsync();
       if (permission.status !== "granted") {
-        alert("Location permission is required.");
+        alert(t("addresses.locationPicker.permissionRequired"));
         return;
       }
       const location = await Location.getCurrentPositionAsync({
@@ -84,7 +88,7 @@ export default function LocationPickerScreen() {
 
       setCoords({ latitude, longitude });
     } catch {
-      alert("Could not get your current location.");
+      alert(t("addresses.locationPicker.locationFailed"));
     } finally {
       setLoading(false);
     }
@@ -114,23 +118,23 @@ export default function LocationPickerScreen() {
           className="h-10 w-10 items-center justify-center rounded-full mb-4"
           style={{ backgroundColor: tokens.muted }}
         >
-          <ChevronLeft size={22} color={tokens.foreground} />
+          <BackIcon variant="chevron" size={22} color={tokens.foreground} />
         </TouchableOpacity>
 
         <Text
           className="text-3xl font-bold mb-2"
           style={{ color: tokens.foreground }}
         >
-          Delivery Location
+          {t("addresses.locationPicker.title")}
         </Text>
         <Text className="mb-5" style={{ color: tokens.mutedForeground }}>
-          Search your area or use your current location
+          {t("addresses.locationPicker.subtitle")}
         </Text>
 
         <TextInput
           value={query}
           onChangeText={searchAddress}
-          placeholder="Search address"
+          placeholder={t("addresses.newAddressForm.searchPlaceholder")}
           placeholderTextColor={tokens.mutedForeground}
           className="border rounded-xl px-4 py-3"
           style={{
@@ -145,7 +149,7 @@ export default function LocationPickerScreen() {
             className="text-sm mt-1"
             style={{ color: tokens.mutedForeground }}
           >
-            Searching...
+            {t("addresses.newAddressForm.searching")}
           </Text>
         )}
 
@@ -179,8 +183,8 @@ export default function LocationPickerScreen() {
           ) : (
             <>
               <MapPin size={20} color={tokens.primary} />
-              <Text className="ml-2 font-semibold" style={{ color: tokens.primary }}>
-                Use Current Location
+              <Text className={isRTL ? "mr-2 font-semibold" : "ml-2 font-semibold"} style={{ color: tokens.primary }}>
+                {t("addresses.locationPicker.useCurrentLocation")}
               </Text>
             </>
           )}
@@ -191,7 +195,7 @@ export default function LocationPickerScreen() {
             className="text-sm mt-4"
             style={{ color: tokens.mutedForeground }}
           >
-            Selected: {display || `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`}
+            {t("addresses.locationPicker.selected", { location: display || `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}` })}
           </Text>
         )}
 
@@ -211,7 +215,7 @@ export default function LocationPickerScreen() {
               color: coords ? tokens.primaryForeground : tokens.mutedForeground,
             }}
           >
-            Continue
+            {t("common.continue")}
           </Text>
         </TouchableOpacity>
       </View>

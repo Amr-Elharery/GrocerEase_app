@@ -1,6 +1,7 @@
-import { fetchOrders, type OrderSummary } from "@/shared/order.service";
+import { fetchOrders, type OrderSummary } from "@/features/orders/services/order.service";
+import { BackIcon } from "@/components/ui/back-icon";
 import { useFocusEffect, useRouter } from "expo-router";
-import { ChevronLeft } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 import * as React from "react";
 import { useCallback, useState } from "react";
 import {
@@ -13,6 +14,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const TABS = ["Ongoing", "Delivered", "Cancelled"] as const;
+const TAB_KEYS: Record<(typeof TABS)[number], string> = {
+  Ongoing: "ongoing",
+  Delivered: "delivered",
+  Cancelled: "cancelled",
+};
 
 type OrderTab = (typeof TABS)[number];
 
@@ -86,6 +92,7 @@ const groupOrders = (orders: OrderSummary[]) => {
 
 export default function ProfileOrdersScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [activeTab, setActiveTab] = useState<OrderTab>("Ongoing");
   const [loading, setLoading] = useState(true);
@@ -125,12 +132,12 @@ export default function ProfileOrdersScreen() {
           onPress={() => router.back()}
           className="mt-4 h-10 w-10 items-center justify-center rounded-full bg-muted"
         >
-          <ChevronLeft size={22} className="text-foreground" />
+          <BackIcon variant="chevron" size={22} className="text-foreground" />
         </Pressable>
 
         <View className="mt-4 mb-4 flex-row items-center justify-between">
           <Text className="text-xl font-semibold text-foreground">
-            My Orders
+            {t("profile.myOrders")}
           </Text>
         </View>
 
@@ -144,7 +151,7 @@ export default function ProfileOrdersScreen() {
               <Text
                 className={`${activeTab === tab ? "text-primary-foreground" : "text-foreground"} font-semibold`}
               >
-                {tab}
+                {t(`orderTracking.tabs.${TAB_KEYS[tab]}`)}
               </Text>
             </Pressable>
           ))}
@@ -157,10 +164,10 @@ export default function ProfileOrdersScreen() {
         ) : visibleOrders.length === 0 ? (
           <View className="items-center justify-center rounded-3xl border border-dashed border-border bg-card p-8">
             <Text className="text-base font-semibold text-foreground">
-              No {activeTab.toLowerCase()} orders yet
+              {t("orderTracking.noOrdersYet", { tab: t(`orderTracking.tabs.${TAB_KEYS[activeTab]}`) })}
             </Text>
             <Text className="mt-2 text-sm text-muted-foreground">
-              Your {activeTab.toLowerCase()} orders will appear here.
+              {t("orderTracking.ordersWillAppear", { tab: t(`orderTracking.tabs.${TAB_KEYS[activeTab]}`) })}
             </Text>
           </View>
         ) : (
@@ -202,18 +209,17 @@ export default function ProfileOrdersScreen() {
                 >
                   <View className="flex-row items-center justify-between mb-3">
                     <Text className="text-base font-semibold text-foreground">
-                      Order {orderNumbers} · {orders.length} shops
+                      {t("orderTracking.orderShops", { numbers: orderNumbers, count: orders.length })}
                     </Text>
                     <Text className="text-sm font-semibold text-primary">
                       {orders[0]?.status}
                     </Text>
                   </View>
                   <Text className="text-sm text-muted-foreground">
-                    {combinedItemCount} items •{" "}
-                    {orders[0]?.eta || "ETA unavailable"}
+                    {t("orderTracking.itemsEta", { count: combinedItemCount, eta: orders[0]?.eta || t("orderTracking.etaUnavailable") })}
                   </Text>
                   <Text className="mt-3 text-sm text-foreground">
-                    Total: EGP {combinedTotal.toFixed(2)}
+                    {t("orderTracking.totalAmount", { amount: combinedTotal.toFixed(2), currency: t("common.egp") })}
                   </Text>
                 </Pressable>
               );
@@ -240,18 +246,17 @@ export default function ProfileOrdersScreen() {
               >
                 <View className="flex-row items-center justify-between mb-3">
                   <Text className="text-base font-semibold text-foreground">
-                    Order {order.order_number || order.id}
+                    {t("orderTracking.order", { number: order.order_number || order.id })}
                   </Text>
                   <Text className="text-sm font-semibold text-primary">
                     {order.status}
                   </Text>
                 </View>
                 <Text className="text-sm text-muted-foreground">
-                  {order.items?.length ?? 0} items •{" "}
-                  {order.eta || "ETA unavailable"}
+                  {t("orderTracking.itemsEta", { count: order.items?.length ?? 0, eta: order.eta || t("orderTracking.etaUnavailable") })}
                 </Text>
                 <Text className="mt-3 text-sm text-foreground">
-                  Total: EGP {Number(order.total ?? 0).toFixed(2)}
+                  {t("orderTracking.totalAmount", { amount: Number(order.total ?? 0).toFixed(2), currency: t("common.egp") })}
                 </Text>
               </Pressable>
             );

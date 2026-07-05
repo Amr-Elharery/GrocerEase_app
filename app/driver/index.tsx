@@ -10,19 +10,22 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { ClipboardList, ListChecks, LogOut, User as UserIcon } from "lucide-react-native";
 
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
-import { useToast } from "@/lib/hooks/useToast";
-import { useAuth } from "@/lib/auth-context";
+import { useRTL } from "@/lib/i18n/RTLContext";
+import { THEME, useTheme } from "@/lib/theme";
+import { useToast } from "@/lib/toast/useToast";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "@/features/auth/hooks/auth-context";
 import {
   fetchMyDeliveryProfile,
   updateAvailability,
-} from "@/shared/delivery.service";
-import { DeliveryProfile } from "@/lib/types/delivery";
+} from "@/features/driver/services/delivery.service";
+import { DeliveryProfile } from "@/features/driver/types";
 
 export default function DriverHomeScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const showToast = useToast();
   const { logout } = useAuth();
 
@@ -40,11 +43,11 @@ export default function DriverHomeScreen() {
         router.replace("/driver/create-profile");
         return;
       }
-      showToast("Could not load your driver profile", "error");
+      showToast(t("driver.home.couldNotLoadProfile"), "error");
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, [showToast, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -61,7 +64,7 @@ export default function DriverHomeScreen() {
       setProfile(updated);
     } catch {
       setProfile({ ...profile, is_available: !value });
-      showToast("Could not update availability", "error");
+      showToast(t("driver.home.couldNotUpdateAvailability"), "error");
     } finally {
       setTogglingAvailability(false);
     }
@@ -93,20 +96,20 @@ export default function DriverHomeScreen() {
             className="text-2xl font-bold"
             style={{ color: tokens.foreground }}
           >
-            {profile?.full_name ?? "Driver"}
+            {profile?.full_name ?? t("driver.home.defaultName")}
           </Text>
           <Text style={{ color: tokens.mutedForeground }}>
-            {profile?.is_available ? "Online" : "Offline"}
+            {profile?.is_available ? t("driver.home.online") : t("driver.home.offline")}
           </Text>
         </View>
         <View className="flex-row items-center">
           <Text
-            className="mr-2 font-medium"
+            className={isRTL ? "ml-2 font-medium" : "mr-2 font-medium"}
             style={{
               color: profile?.is_available ? tokens.primary : tokens.mutedForeground,
             }}
           >
-            {profile?.is_available ? "Online" : "Offline"}
+            {profile?.is_available ? t("driver.home.online") : t("driver.home.offline")}
           </Text>
           <Switch
             value={!!profile?.is_available}
@@ -114,7 +117,7 @@ export default function DriverHomeScreen() {
             disabled={togglingAvailability}
             trackColor={{ true: tokens.primary, false: tokens.muted }}
           />
-          <TouchableOpacity onPress={logout} className="ml-4">
+          <TouchableOpacity onPress={logout} className={isRTL ? "mr-4" : "ml-4"}>
             <LogOut size={22} color={tokens.destructive} />
           </TouchableOpacity>
         </View>
@@ -124,7 +127,7 @@ export default function DriverHomeScreen() {
         <TouchableOpacity
           onPress={() => router.push("/driver/available")}
           disabled={!profile?.is_available}
-          className="flex-row items-center rounded-2xl border p-4 mb-3"
+          className={isRTL ? "flex-row-reverse items-center rounded-2xl border p-4 mb-3" : "flex-row items-center rounded-2xl border p-4 mb-3"}
           style={{
             borderColor: tokens.border,
             backgroundColor: tokens.card,
@@ -132,56 +135,58 @@ export default function DriverHomeScreen() {
           }}
         >
           <ListChecks size={22} color={tokens.primary} />
-          <View className="ml-3">
+          <View className={isRTL ? "mr-3" : "ml-3"}>
             <Text
               className="text-lg font-semibold"
               style={{ color: tokens.foreground }}
             >
-              Available Jobs
+              {t("driver.home.availableJobs")}
             </Text>
             <Text style={{ color: tokens.mutedForeground }}>
               {profile?.is_available
-                ? "Browse jobs in your area"
-                : "Go online to see available jobs"}
+                ? t("driver.home.browseJobsInArea")
+                : t("driver.home.goOnlineToSee")}
             </Text>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => router.push("/driver/my-deliveries")}
-          className="flex-row items-center rounded-2xl border p-4 mb-3"
+          className={isRTL ? "flex-row-reverse items-center rounded-2xl border p-4 mb-3" : "flex-row items-center rounded-2xl border p-4 mb-3"}
           style={{ borderColor: tokens.border, backgroundColor: tokens.card }}
         >
           <ClipboardList size={22} color={tokens.primary} />
-          <View className="ml-3">
+          <View className={isRTL ? "mr-3" : "ml-3"}>
             <Text
               className="text-lg font-semibold"
               style={{ color: tokens.foreground }}
             >
-              My Deliveries
+              {t("driver.home.myDeliveries")}
             </Text>
             <Text style={{ color: tokens.mutedForeground }}>
-              Track your active jobs
+              {t("driver.home.trackActiveJobs")}
             </Text>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => router.push("/driver/profile")}
-          className="flex-row items-center rounded-2xl border p-4"
+          className={isRTL ? "flex-row-reverse items-center rounded-2xl border p-4" : "flex-row items-center rounded-2xl border p-4"}
           style={{ borderColor: tokens.border, backgroundColor: tokens.card }}
         >
           <UserIcon size={22} color={tokens.primary} />
-          <View className="ml-3">
+          <View className={isRTL ? "mr-3" : "ml-3"}>
             <Text
               className="text-lg font-semibold"
               style={{ color: tokens.foreground }}
             >
-              My Profile
+              {t("driver.home.myProfile")}
             </Text>
             <Text style={{ color: tokens.mutedForeground }}>
-              Rating: {profile?.rating ?? "—"} · Deliveries:{" "}
-              {profile?.total_deliveries ?? 0}
+              {t("driver.home.ratingDeliveries", {
+                rating: profile?.rating ?? "—",
+                count: profile?.total_deliveries ?? 0,
+              })}
             </Text>
           </View>
         </TouchableOpacity>

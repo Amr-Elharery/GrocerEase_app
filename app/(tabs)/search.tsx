@@ -22,20 +22,20 @@ import {
   ProductCard,
   SearchBar,
   SearchSuggestions,
-} from "@/components/domain/search";
+} from "@/features/search/components";
 import {
   useFindMatchingCategory,
   useSearchAutoComplete,
   useSearchFilterOptions,
   useSearchResults,
-} from "@/lib/hooks/useSearch";
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
-import { useToast } from "@/lib/hooks/useToast";
-import type { ProductSearchFilters, ProductSearchItem } from "@/lib/types";
-import { addToShoppingList } from "@/shared/shopping-list.service";
+} from "@/features/search/hooks/useSearch";
+import { THEME, useTheme } from "@/lib/theme";
+import { useToast } from "@/lib/toast/useToast";
+import type { ProductSearchFilters, ProductSearchItem } from "@/features/search/types";
+import { addToShoppingList } from "@/features/shopping-list/services/shopping-list.service";
 import { useRouter } from "expo-router";
 import { Filter } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
@@ -52,6 +52,7 @@ export default function SearchScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
   const toast = useToast();
+  const { t } = useTranslation();
 
   // Search state
   const {
@@ -181,7 +182,10 @@ export default function SearchScreen() {
   // Handle product card tap
   const handleProductPress = useCallback(
     (product: ProductSearchItem) => {
-      router.push(`/product-details?id=${product.id}`);
+      router.push({
+        pathname: "/products/[id]",
+        params: { id: String(product.id) },
+      });
     },
     [router],
   );
@@ -196,12 +200,12 @@ export default function SearchScreen() {
           brand: product.brand,
           qty: 1,
         });
-        toast(`Added ${product.product_name} to your list`, "success");
+        toast(t("shoppingList.addedToList", { name: product.product_name }), "success");
       } catch {
-        toast("Failed to add to shopping list", "error");
+        toast(t("shoppingList.addToListFailed"), "error");
       }
     },
-    [toast],
+    [toast, t],
   );
 
   // Handle infinite scroll

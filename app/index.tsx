@@ -1,5 +1,5 @@
-import { useAuth } from '@/lib/auth-context';
-import { useAddress } from '@/lib/context/addressContext';
+import { useAuth } from '@/features/auth/hooks/auth-context';
+import { useAddress } from '@/features/addresses/hooks/addressContext';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 

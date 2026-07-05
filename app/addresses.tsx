@@ -14,15 +14,17 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import * as Location from "expo-location";
-import { ChevronLeft, MapPin } from "lucide-react-native";
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
-import { useAddress } from "@/lib/context/addressContext";
-import { addressService } from "@/shared/address.service";
+import { MapPin } from "lucide-react-native";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useTranslation } from "react-i18next";
+import { THEME, useTheme } from "@/lib/theme";
+import { useAddress } from "@/features/addresses/hooks/addressContext";
+import { addressService } from "@/features/addresses/services/address.service";
 
 export default function AddressFormScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { t } = useTranslation();
   const { addAddress, selectAddress: selectAddressCtx } = useAddress();
 
   const [query, setQuery] = useState("");
@@ -88,7 +90,7 @@ export default function AddressFormScreen() {
       setLoading(true);
       const permission = await Location.requestForegroundPermissionsAsync();
       if (permission.status !== "granted") {
-        Alert.alert("Permission denied", "Location permission is required.");
+        Alert.alert(t("addresses.newAddressForm.permissionDeniedTitle"), t("addresses.newAddressForm.permissionDeniedMessage"));
         return;
       }
       const location = await Location.getCurrentPositionAsync({
@@ -123,7 +125,7 @@ export default function AddressFormScreen() {
         setStreet(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
       }
     } catch {
-      Alert.alert("Error", "Could not get current location.");
+      Alert.alert(t("common.error"), t("addresses.newAddressForm.locationFailed"));
     } finally {
       setLoading(false);
     }
@@ -131,15 +133,15 @@ export default function AddressFormScreen() {
 
   const handleSave = async () => {
     if (!selectedAreaId) {
-      Alert.alert("Missing Information", "Please select an area.");
+      Alert.alert(t("checkout.missingInfoTitle"), t("addresses.newAddressForm.selectArea"));
       return;
     }
     if (!street) {
-      Alert.alert("Missing Information", "Please enter or select a street address.");
+      Alert.alert(t("checkout.missingInfoTitle"), t("addresses.newAddressForm.enterStreet"));
       return;
     }
     if (!coords) {
-      Alert.alert("Missing Information", "Please select a location from the search or use GPS.");
+      Alert.alert(t("checkout.missingInfoTitle"), t("addresses.newAddressForm.selectLocation"));
       return;
     }
 
@@ -163,7 +165,7 @@ export default function AddressFormScreen() {
       selectAddressCtx(created.id);
       router.replace("/address-book");
     } catch {
-      Alert.alert("Error", "Something went wrong while saving the address.");
+      Alert.alert(t("common.error"), t("addresses.newAddressForm.saveFailed"));
     } finally {
       setLoading(false);
     }
@@ -185,15 +187,15 @@ export default function AddressFormScreen() {
           className="h-10 w-10 items-center justify-center rounded-full mb-4"
           style={{ backgroundColor: tokens.muted }}
         >
-          <ChevronLeft size={22} color={tokens.foreground} />
+          <BackIcon variant="chevron" size={22} color={tokens.foreground} />
         </TouchableOpacity>
 
         <View className="mb-6">
           <Text className="text-foreground text-3xl font-bold" style={{ color: tokens.foreground }}>
-            Add New Address
+            {t("addresses.newAddressForm.title")}
           </Text>
           <Text className="text-muted-foreground mt-1" style={{ color: tokens.mutedForeground }}>
-            Search for your location or use GPS
+            {t("addresses.newAddressForm.subtitle")}
           </Text>
         </View>
 
@@ -202,7 +204,7 @@ export default function AddressFormScreen() {
             <TextInput
               value={query}
               onChangeText={searchAddress}
-              placeholder="Search address"
+              placeholder={t("addresses.newAddressForm.searchPlaceholder")}
               placeholderTextColor={tokens.mutedForeground}
               className="border rounded-xl px-4 py-3"
               style={{ borderColor: tokens.border, color: tokens.foreground, backgroundColor: tokens.input }}
@@ -223,7 +225,7 @@ export default function AddressFormScreen() {
         </View>
         {searching && (
           <Text className="text-muted-foreground text-sm mt-1" style={{ color: tokens.mutedForeground }}>
-            Searching...
+            {t("addresses.newAddressForm.searching")}
           </Text>
         )}
 
@@ -246,12 +248,12 @@ export default function AddressFormScreen() {
 
         {coords && (
           <Text className="text-muted-foreground text-sm mb-3" style={{ color: tokens.mutedForeground }}>
-            Location: {coords.latitude.toFixed(6)}, {coords.longitude.toFixed(6)}
+            {t("addresses.newAddressForm.location", { lat: coords.latitude.toFixed(6), lon: coords.longitude.toFixed(6) })}
           </Text>
         )}
 
         <Text className="text-muted-foreground mb-2" style={{ color: tokens.mutedForeground }}>
-          Area
+          {t("driver.createProfile.area")}
         </Text>
         <View className="mb-4">
           <FlatList
@@ -284,72 +286,72 @@ export default function AddressFormScreen() {
         </View>
 
         <Text className="text-muted-foreground mb-2" style={{ color: tokens.mutedForeground }}>
-          Street
+          {t("addresses.newAddressForm.street")}
         </Text>
         <TextInput
           value={street}
           onChangeText={setStreet}
-          placeholder="Street address"
+          placeholder={t("addresses.newAddressForm.streetPlaceholder")}
           placeholderTextColor="#888"
           className="bg-background border border-border rounded-xl px-4 py-4 text-foreground mb-4"
           style={{ backgroundColor: tokens.background, borderColor: tokens.border, color: tokens.foreground }}
         />
 
         <Text className="text-muted-foreground mb-2" style={{ color: tokens.mutedForeground }}>
-          Building
+          {t("addresses.newAddressForm.building")}
         </Text>
         <TextInput
           value={building}
           onChangeText={setBuilding}
-          placeholder="Building name/number"
+          placeholder={t("addresses.newAddressForm.buildingPlaceholder")}
           placeholderTextColor="#888"
           className="bg-background border border-border rounded-xl px-4 py-4 text-foreground mb-4"
           style={{ backgroundColor: tokens.background, borderColor: tokens.border, color: tokens.foreground }}
         />
 
         <Text className="text-muted-foreground mb-2" style={{ color: tokens.mutedForeground }}>
-          Floor
+          {t("addresses.newAddressForm.floor")}
         </Text>
         <TextInput
           value={floor}
           onChangeText={setFloor}
-          placeholder="Floor"
+          placeholder={t("addresses.newAddressForm.floor")}
           placeholderTextColor="#888"
           className="bg-background border border-border rounded-xl px-4 py-4 text-foreground mb-4"
           style={{ backgroundColor: tokens.background, borderColor: tokens.border, color: tokens.foreground }}
         />
 
         <Text className="text-muted-foreground mb-2" style={{ color: tokens.mutedForeground }}>
-          Apartment Number
+          {t("addresses.newAddressForm.aptNumber")}
         </Text>
         <TextInput
           value={aptNumber}
           onChangeText={setAptNumber}
-          placeholder="Apartment number"
+          placeholder={t("addresses.newAddressForm.aptNumberPlaceholder")}
           placeholderTextColor="#888"
           className="bg-background border border-border rounded-xl px-4 py-4 text-foreground mb-4"
           style={{ backgroundColor: tokens.background, borderColor: tokens.border, color: tokens.foreground }}
         />
 
         <Text className="text-muted-foreground mb-2" style={{ color: tokens.mutedForeground }}>
-          Label
+          {t("addresses.newAddressForm.label")}
         </Text>
         <TextInput
           value={label}
           onChangeText={setLabel}
-          placeholder="e.g., Home, Work"
+          placeholder={t("addresses.newAddressForm.labelPlaceholder")}
           placeholderTextColor="#888"
           className="bg-background border border-border rounded-xl px-4 py-4 text-foreground mb-4"
           style={{ backgroundColor: tokens.background, borderColor: tokens.border, color: tokens.foreground }}
         />
 
         <Text className="text-muted-foreground mb-2" style={{ color: tokens.mutedForeground }}>
-          Additional Directions
+          {t("addresses.newAddressForm.additionalDirections")}
         </Text>
         <TextInput
           value={additionalDirections}
           onChangeText={setAdditionalDirections}
-          placeholder="Optional directions"
+          placeholder={t("addresses.newAddressForm.additionalDirectionsPlaceholder")}
           placeholderTextColor="#888"
           multiline
           numberOfLines={4}
@@ -364,7 +366,7 @@ export default function AddressFormScreen() {
           className={`py-4 rounded-2xl ${loading ? "bg-gray-400" : "bg-primary"}`}
         >
           <Text className="text-white text-center text-lg font-bold">
-            {loading ? "Saving..." : "Save Address"}
+            {loading ? t("common.saving") : t("addresses.newAddressForm.saveButton")}
           </Text>
         </TouchableOpacity>
       </ScrollView>

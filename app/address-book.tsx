@@ -9,26 +9,30 @@ import {
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
-import { useAddress } from "@/lib/context/addressContext";
-import { addressService } from "@/shared/address.service";
-import { ChevronLeft, Trash2 } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useRTL } from "@/lib/i18n/RTLContext";
+import { THEME, useTheme } from "@/lib/theme";
+import { useAddress } from "@/features/addresses/hooks/addressContext";
+import { addressService } from "@/features/addresses/services/address.service";
+import { Trash2 } from "lucide-react-native";
 
 export default function AddressBookScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const { addresses, selectedAddressId, selectAddress, removeAddress } =
     useAddress();
 
   const handleDelete = async (address: any) => {
     Alert.alert(
-      "Delete Address",
-      "Are you sure you want to remove this address?",
+      t("addresses.addressBook.deleteTitle"),
+      t("addresses.addressBook.deleteConfirm"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: t("common.delete"),
           style: "destructive",
           onPress: async () => {
             try {
@@ -37,7 +41,7 @@ export default function AddressBookScreen() {
               }
               removeAddress(address.id);
             } catch {
-              Alert.alert("Error", "Could not delete address.");
+              Alert.alert(t("common.error"), t("addresses.addressBook.deleteFailed"));
             }
           },
         },
@@ -62,13 +66,13 @@ export default function AddressBookScreen() {
           borderColor: isSelected ? tokens.primary : tokens.border,
         }}
       >
-        <View className="flex-row items-start justify-between">
+        <View className={isRTL ? "flex-row-reverse items-start justify-between" : "flex-row items-start justify-between"}>
           <View className="flex-1">
             <Text
               className="text-foreground font-bold text-base"
               style={{ color: tokens.foreground }}
             >
-              {item.label || "Address"}
+              {item.label || t("checkout.address")}
             </Text>
 
             <Text
@@ -77,15 +81,15 @@ export default function AddressBookScreen() {
             >
               {item.street}
               {item.building ? `, ${item.building}` : ""}
-              {item.floor ? `, Floor ${item.floor}` : ""}
-              {item.apt_number ? `, Apt ${item.apt_number}` : ""}
+              {item.floor ? `, ${t("checkout.floor", { floor: item.floor })}` : ""}
+              {item.apt_number ? `, ${t("checkout.apt", { apt: item.apt_number })}` : ""}
             </Text>
 
             <Text
               className="text-muted-foreground text-sm mt-1"
               style={{ color: tokens.mutedForeground }}
             >
-              Area ID: {item.area_id}
+              {t("checkout.areaId", { id: item.area_id })}
             </Text>
 
             <Text
@@ -131,7 +135,7 @@ export default function AddressBookScreen() {
           className="h-10 w-10 items-center justify-center rounded-full mb-4"
           style={{ backgroundColor: tokens.muted }}
         >
-          <ChevronLeft size={22} color={tokens.foreground} />
+          <BackIcon variant="chevron" size={22} color={tokens.foreground} />
         </TouchableOpacity>
 
         <View className="flex-row items-center justify-between mb-6">
@@ -139,7 +143,7 @@ export default function AddressBookScreen() {
             className="text-foreground text-3xl font-bold"
             style={{ color: tokens.foreground }}
           >
-            My Addresses
+            {t("addresses.addressBook.title")}
           </Text>
 
           <TouchableOpacity
@@ -151,7 +155,7 @@ export default function AddressBookScreen() {
               className="text-primary-foreground text-sm font-bold"
               style={{ color: tokens.primaryForeground }}
             >
-              + Add New
+              {t("checkout.addNew")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -162,14 +166,14 @@ export default function AddressBookScreen() {
               className="text-foreground text-xl font-bold text-center"
               style={{ color: tokens.foreground }}
             >
-              No saved addresses
+              {t("addresses.addressBook.noneSaved")}
             </Text>
 
             <Text
               className="text-muted-foreground mt-2 text-center"
               style={{ color: tokens.mutedForeground }}
             >
-              Tap Add New to create your first address
+              {t("addresses.addressBook.tapAddNew")}
             </Text>
           </View>
         ) : (

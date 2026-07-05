@@ -8,21 +8,23 @@ import {
   View,
 } from "react-native";
 
-import { ProtectedScreen } from "@/components/domain/ProtectedScreen";
-import { useAddress } from "@/lib/context/addressContext";
-import { useCart } from "@/lib/context/cartContext";
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
+import { ProtectedScreen } from "@/features/auth/components/ProtectedScreen";
+import { useAddress } from "@/features/addresses/hooks/addressContext";
+import { useCart } from "@/features/cart/hooks/cartContext";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useRTL } from "@/lib/i18n/RTLContext";
+import { THEME, useTheme } from "@/lib/theme";
 import httpService from "@/shared/httpService";
+import { placeOrder } from "@/features/checkout/services/checkout.service";
 import { router } from "expo-router";
-import { ChevronLeft } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const API_URL = "/orders";
 
 export default function CheckoutScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const { cart, shopId, subtotal, clearCart } = useCart();
   const { addresses, selectedAddressId, selectAddress } = useAddress();
 
@@ -43,12 +45,12 @@ export default function CheckoutScreen() {
     });
 
     if (!selectedAddress) {
-      Alert.alert("Missing Information", "Please select a delivery address.");
+      Alert.alert(t("checkout.missingInfoTitle"), t("checkout.missingAddress"));
       return;
     }
 
     if (cart.length === 0) {
-      Alert.alert("Empty Cart", "Your cart is empty.");
+      Alert.alert(t("checkout.emptyCartTitle"), t("cart.empty"));
       return;
     }
 
@@ -82,10 +84,10 @@ export default function CheckoutScreen() {
         })),
       };
 
-      const response = await httpService.post(API_URL, payload);
+      const response = await placeOrder(payload);
       console.log(response);
       if (!response?.data) {
-        throw new Error("Failed to place order");
+        throw new Error(t("checkout.placeOrderFailed"));
       }
 
       clearCart();
@@ -93,10 +95,10 @@ export default function CheckoutScreen() {
     } catch (error: any) {
       console.error("[checkout] place order failed", error);
       Alert.alert(
-        "Error",
+        t("common.error"),
         error?.response?.data?.message ||
           error?.message ||
-          "Something went wrong while placing the order.",
+          t("checkout.placeOrderFailed"),
       );
     } finally {
       setLoading(false);
@@ -114,13 +116,13 @@ export default function CheckoutScreen() {
           borderColor: isSelected ? tokens.primary : tokens.border,
         }}
       >
-        <View className="flex-row items-start justify-between">
+        <View className={isRTL ? "flex-row-reverse items-start justify-between" : "flex-row items-start justify-between"}>
           <View className="flex-1">
             <Text
               className="text-foreground font-bold text-base"
               style={{ color: tokens.foreground }}
             >
-              {item.label || "Address"}
+              {item.label || t("checkout.address")}
             </Text>
             <Text
               className="text-muted-foreground mt-1"
@@ -128,14 +130,14 @@ export default function CheckoutScreen() {
             >
               {item.street}
               {item.building ? `, ${item.building}` : ""}
-              {item.floor ? `, Floor ${item.floor}` : ""}
-              {item.apt_number ? `, Apt ${item.apt_number}` : ""}
+              {item.floor ? `, ${t("checkout.floor", { floor: item.floor })}` : ""}
+              {item.apt_number ? `, ${t("checkout.apt", { apt: item.apt_number })}` : ""}
             </Text>
             <Text
               className="text-muted-foreground text-sm mt-1"
               style={{ color: tokens.mutedForeground }}
             >
-              Area ID: {item.area_id}
+              {t("checkout.areaId", { id: item.area_id })}
             </Text>
           </View>
           {isSelected && (
@@ -152,7 +154,7 @@ export default function CheckoutScreen() {
   };
 
   return (
-    <ProtectedScreen screenName="Checkout">
+    <ProtectedScreen screenName={t("checkout.title")}>
       <SafeAreaView
         className="flex-1 bg-background"
         edges={["top"]}
@@ -172,7 +174,7 @@ export default function CheckoutScreen() {
             className="h-10 w-10 items-center justify-center rounded-full mb-4"
             style={{ backgroundColor: tokens.muted }}
           >
-            <ChevronLeft size={22} color={tokens.foreground} />
+            <BackIcon variant="chevron" size={22} color={tokens.foreground} />
           </TouchableOpacity>
 
           <View className="mb-6">
@@ -180,14 +182,14 @@ export default function CheckoutScreen() {
               className="text-foreground text-3xl font-bold"
               style={{ color: tokens.foreground }}
             >
-              Checkout
+              {t("checkout.title")}
             </Text>
 
             <Text
               className="text-muted-foreground mt-1"
               style={{ color: tokens.mutedForeground }}
             >
-              Complete your order details
+              {t("checkout.subtitle")}
             </Text>
           </View>
 
@@ -198,7 +200,7 @@ export default function CheckoutScreen() {
                 className="text-foreground text-lg font-bold"
                 style={{ color: tokens.foreground }}
               >
-                Delivery Address
+                {t("checkout.deliveryAddress")}
               </Text>
 
               <TouchableOpacity
@@ -210,7 +212,7 @@ export default function CheckoutScreen() {
                   className="text-primary-foreground text-sm font-bold"
                   style={{ color: tokens.primaryForeground }}
                 >
-                  + Add New
+                  {t("checkout.addNew")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -221,7 +223,7 @@ export default function CheckoutScreen() {
                   className="text-muted-foreground text-center"
                   style={{ color: tokens.mutedForeground }}
                 >
-                  No saved addresses. Tap Add New to create one.
+                  {t("checkout.noSavedAddresses")}
                 </Text>
               </View>
             ) : (
@@ -247,13 +249,13 @@ export default function CheckoutScreen() {
                   className="text-foreground font-semibold"
                   style={{ color: tokens.foreground }}
                 >
-                  Selected:
+                  {t("checkout.selected")}
                 </Text>
                 <Text
                   className="text-muted-foreground"
                   style={{ color: tokens.mutedForeground }}
                 >
-                  {selectedAddress.label || "Address"} —{" "}
+                  {selectedAddress.label || t("checkout.address")} —{" "}
                   {selectedAddress.street}
                   {selectedAddress.building
                     ? `, ${selectedAddress.building}`
@@ -269,7 +271,7 @@ export default function CheckoutScreen() {
               className="text-foreground text-lg font-bold mb-4"
               style={{ color: tokens.foreground }}
             >
-              Payment Method
+              {t("checkout.paymentMethod")}
             </Text>
 
             <TouchableOpacity
@@ -289,14 +291,14 @@ export default function CheckoutScreen() {
                     className="text-foreground font-semibold"
                     style={{ color: tokens.foreground }}
                   >
-                    Cash On Delivery (COD)
+                    {t("checkout.cod")}
                   </Text>
 
                   <Text
                     className="text-muted-foreground text-sm mt-1"
                     style={{ color: tokens.mutedForeground }}
                   >
-                    Pay with cash upon delivery
+                    {t("checkout.codHint")}
                   </Text>
                 </View>
 
@@ -318,7 +320,7 @@ export default function CheckoutScreen() {
               className="text-foreground text-lg font-bold mb-4"
               style={{ color: tokens.foreground }}
             >
-              Order Summary
+              {t("checkout.orderSummary")}
             </Text>
 
             <View className="flex-row justify-between mb-3">
@@ -326,14 +328,14 @@ export default function CheckoutScreen() {
                 className="text-muted-foreground"
                 style={{ color: tokens.mutedForeground }}
               >
-                Subtotal ({cart.length} items)
+                {t("checkout.subtotalItems", { count: cart.length })}
               </Text>
 
               <Text
                 className="text-foreground font-semibold"
                 style={{ color: tokens.foreground }}
               >
-                {subtotal.toFixed(2)} EGP
+                {subtotal.toFixed(2)} {t("common.egp")}
               </Text>
             </View>
 
@@ -342,14 +344,14 @@ export default function CheckoutScreen() {
                 className="text-muted-foreground"
                 style={{ color: tokens.mutedForeground }}
               >
-                Delivery Fee
+                {t("checkout.deliveryFee")}
               </Text>
 
               <Text
                 className="text-foreground font-semibold"
                 style={{ color: tokens.foreground }}
               >
-                {deliveryFee.toFixed(2)} EGP
+                {deliveryFee.toFixed(2)} {t("common.egp")}
               </Text>
             </View>
 
@@ -363,14 +365,14 @@ export default function CheckoutScreen() {
                 className="text-foreground text-lg font-bold"
                 style={{ color: tokens.foreground }}
               >
-                Total
+                {t("checkout.total")}
               </Text>
 
               <Text
                 className="text-primary text-lg font-bold"
                 style={{ color: tokens.primary }}
               >
-                {total.toFixed(2)} EGP
+                {total.toFixed(2)} {t("common.egp")}
               </Text>
             </View>
           </View>
@@ -384,7 +386,7 @@ export default function CheckoutScreen() {
             }`}
           >
             <Text className="text-white text-center text-lg font-bold">
-              {loading ? "Placing Order..." : "Place Order"}
+              {loading ? t("checkout.placingOrder") : t("checkout.placeOrder")}
             </Text>
           </TouchableOpacity>
         </ScrollView>

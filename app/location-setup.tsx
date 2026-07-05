@@ -1,5 +1,4 @@
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
+import { THEME, useTheme } from "@/lib/theme";
 
 import * as Location from "expo-location";
 
@@ -17,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { MapPin } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
@@ -27,6 +27,8 @@ export default function LocationSetupScreen() {
   const { theme } = useTheme();
 
   const tokens = THEME[theme];
+
+  const { t } = useTranslation();
 
   const [query, setQuery] = useState("");
 
@@ -88,7 +90,7 @@ export default function LocationSetupScreen() {
       const permission = await Location.requestForegroundPermissionsAsync();
 
       if (permission.status !== "granted") {
-        alert("Permission denied");
+        alert(t("addresses.locationSetup.permissionDenied"));
 
         return;
       }
@@ -127,7 +129,7 @@ export default function LocationSetupScreen() {
         longitude,
       });
     } catch (e) {
-      alert("Cannot get location");
+      alert(t("addresses.locationSetup.cannotGetLocation"));
     } finally {
       setLoading(false);
     }
@@ -135,7 +137,7 @@ export default function LocationSetupScreen() {
 
   const continueHandler = async () => {
     if (!coords) {
-      alert("Select address");
+      alert(t("addresses.locationSetup.selectAddress"));
 
       return;
     }
@@ -159,7 +161,7 @@ export default function LocationSetupScreen() {
       router.replace("/(tabs)");
     } catch (error) {
       console.error("Error saving location:", error);
-      alert("Failed to save location");
+      alert(t("addresses.locationSetup.saveFailed"));
     } finally {
       setLoading(false);
     }
@@ -179,13 +181,13 @@ export default function LocationSetupScreen() {
             color: tokens.foreground,
           }}
         >
-          Delivery Location
+          {t("addresses.locationPicker.title")}
         </Text>
 
         <TextInput
           value={query}
           onChangeText={searchAddress}
-          placeholder="Search address"
+          placeholder={t("addresses.newAddressForm.searchPlaceholder")}
           placeholderTextColor={tokens.mutedForeground}
           className="border rounded-xl px-4 py-3"
           style={{
@@ -238,7 +240,7 @@ export default function LocationSetupScreen() {
                   color: tokens.primaryForeground,
                 }}
               >
-                Use Current Location
+                {t("addresses.locationPicker.useCurrentLocation")}
               </Text>
             </>
           )}
@@ -258,7 +260,7 @@ export default function LocationSetupScreen() {
             }}
             className="font-bold"
           >
-            Continue
+            {t("common.continue")}
           </Text>
         </Pressable>
       </View>

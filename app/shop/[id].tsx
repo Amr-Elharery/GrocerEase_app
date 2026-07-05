@@ -1,12 +1,15 @@
-import { CartConflictModal } from "@/components/domain/CartConflictModal";
-import { ProductCard } from "@/components/domain/product-card";
-import { THEME } from "@/lib/theme";
-import { useCart } from "@/lib/context/cartContext";
-import { useTheme } from "@/lib/theme-context";
-import type { ProductDisplay, ShopDisplay } from "@/lib/types";
-import { shopService } from "@/shared/shop.service";
+import { CartConflictModal } from "@/features/cart/components/CartConflictModal";
+import { ProductCard } from "@/features/products/components/ProductCard";
+import { THEME, useTheme } from "@/lib/theme";
+import { useCart } from "@/features/cart/hooks/cartContext";
+import type { ProductDisplay } from "@/features/products/types";
+import type { ShopDisplay } from "@/features/stores/types";
+import { shopService } from "@/features/stores/services/shop.service";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { ChevronLeft, Search, ShoppingCart, X } from "lucide-react-native";
+import { Search, ShoppingCart, X } from "lucide-react-native";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useRTL } from "@/lib/i18n/RTLContext";
+import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -27,6 +30,8 @@ export default function ShopProductsScreen() {
   const router = useRouter();
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const { shopId, addItem, clearCart, conflictAddItem, cartCount } =
     useCart();
 
@@ -119,20 +124,20 @@ export default function ShopProductsScreen() {
         return;
       }
       addItem(product);
-      Alert.alert("Success", "Added to cart successfully");
+      Alert.alert(t("common.success"), t("stores.shopScreen.addedToCart"));
     },
-    [addItem, shopId]
+    [addItem, shopId, t]
   );
 
   const handleConfirmConflict = useCallback(() => {
     if (pendingProduct) {
       clearCart();
       conflictAddItem(pendingProduct);
-      Alert.alert("Success", "Added to cart successfully");
+      Alert.alert(t("common.success"), t("stores.shopScreen.addedToCart"));
     }
     setShowConflictModal(false);
     setPendingProduct(null);
-  }, [pendingProduct, clearCart, conflictAddItem]);
+  }, [pendingProduct, clearCart, conflictAddItem, t]);
 
   const handleCancelConflict = useCallback(() => {
     setShowConflictModal(false);
@@ -166,7 +171,7 @@ export default function ShopProductsScreen() {
           style={{ backgroundColor: tokens.background }}
         >
           <View className="flex-1 items-center justify-center">
-            <Text className="text-foreground">Shop not found</Text>
+            <Text className="text-foreground">{t("stores.shopScreen.notFound")}</Text>
           </View>
         </SafeAreaView>
   
@@ -184,13 +189,13 @@ export default function ShopProductsScreen() {
           style={{ backgroundColor: tokens.background }}
         >
           <View className="flex-1 px-4 pt-4">
-            <View className="flex-row items-center justify-between mb-4">
+            <View className={isRTL ? "flex-row-reverse items-center justify-between mb-4" : "flex-row items-center justify-between mb-4"}>
               <TouchableOpacity
                 onPress={() => router.back()}
                 className="h-10 w-10 items-center justify-center rounded-full"
                 style={{ backgroundColor: tokens.muted }}
               >
-                <ChevronLeft size={22} color={tokens.foreground} />
+                <BackIcon variant="chevron" size={22} color={tokens.foreground} />
               </TouchableOpacity>
 
               <Text
@@ -228,7 +233,7 @@ export default function ShopProductsScreen() {
               <TextInput
                 value={searchQuery}
                 onChangeText={setSearchQuery}
-                placeholder="Search products in this shop"
+                placeholder={t("stores.shopScreen.searchPlaceholder")}
                 placeholderTextColor={tokens.mutedForeground}
                 className="flex-1 px-2 py-3"
                 style={{ color: tokens.foreground }}
@@ -268,8 +273,8 @@ export default function ShopProductsScreen() {
                 <View className="flex-1 items-center justify-center py-20">
                   <Text className="text-muted-foreground">
                     {searchQuery
-                      ? "No products match your search"
-                      : "No products found"}
+                      ? t("stores.shopScreen.noMatch")
+                      : t("stores.shopScreen.noProductsFound")}
                   </Text>
                 </View>
               }

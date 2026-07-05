@@ -8,17 +8,20 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronLeft } from "lucide-react-native";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useTranslation } from "react-i18next";
 
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
-import { useToast } from "@/lib/hooks/useToast";
-import { acceptGroupOrder, acceptOrder } from "@/shared/delivery.service";
-import { AvailableJob, DeliveryOrder } from "@/lib/types/delivery";
+import { useRTL } from "@/lib/i18n/RTLContext";
+import { THEME, useTheme } from "@/lib/theme";
+import { useToast } from "@/lib/toast/useToast";
+import { acceptGroupOrder, acceptOrder } from "@/features/driver/services/delivery.service";
+import { AvailableJob, DeliveryOrder } from "@/features/driver/types";
 
 export default function JobDetailScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const showToast = useToast();
   const params = useLocalSearchParams<{ id: string; job: string }>();
 
@@ -38,7 +41,7 @@ export default function JobDetailScreen() {
         className="flex-1 items-center justify-center"
         style={{ backgroundColor: tokens.background }}
       >
-        <Text style={{ color: tokens.mutedForeground }}>Job not found</Text>
+        <Text style={{ color: tokens.mutedForeground }}>{t("driver.job.notFound")}</Text>
       </SafeAreaView>
     );
   }
@@ -54,10 +57,10 @@ export default function JobDetailScreen() {
       router.replace("/driver/my-deliveries");
     } catch (error: any) {
       if (error?.response?.status === 409) {
-        showToast("This order was just taken by another driver", "error");
+        showToast(t("driver.job.alreadyTaken"), "error");
         router.back();
       } else {
-        showToast("Could not accept this job", "error");
+        showToast(t("driver.job.acceptFailed"), "error");
       }
     } finally {
       setAccepting(false);
@@ -71,7 +74,7 @@ export default function JobDetailScreen() {
       style={{ borderColor: tokens.border, backgroundColor: tokens.card }}
     >
       <Text className="font-bold text-base mb-1" style={{ color: tokens.foreground }}>
-        {order.shop_name ?? "Shop"}
+        {order.shop_name ?? t("driver.available.shop")}
       </Text>
       <Text style={{ color: tokens.mutedForeground }}>{order.shop_address}</Text>
 
@@ -79,7 +82,7 @@ export default function JobDetailScreen() {
         className="mt-3 mb-1 text-sm"
         style={{ color: tokens.mutedForeground }}
       >
-        Items
+        {t("driver.job.items")}
       </Text>
       {(order.items ?? []).map((item) => (
         <View
@@ -87,14 +90,14 @@ export default function JobDetailScreen() {
           className="flex-row justify-between py-1"
         >
           <Text style={{ color: tokens.foreground }}>
-            {item.quantity ?? 1}x {item.product_name ?? "Item"}
+            {item.quantity ?? 1}x {item.product_name ?? t("driver.job.item")}
           </Text>
           <Text style={{ color: tokens.foreground }}>{item.subtotal ?? 0}</Text>
         </View>
       ))}
 
       <View className="flex-row justify-between mt-3 pt-3 border-t" style={{ borderColor: tokens.border }}>
-        <Text style={{ color: tokens.mutedForeground }}>Subtotal + Fee</Text>
+        <Text style={{ color: tokens.mutedForeground }}>{t("driver.job.subtotalFee")}</Text>
         <Text className="font-semibold" style={{ color: tokens.foreground }}>
           {order.subtotal ?? 0} + {order.delivery_fee ?? 0}
         </Text>
@@ -117,11 +120,11 @@ export default function JobDetailScreen() {
         className="flex-row items-center px-4 py-4 border-b"
         style={{ borderColor: tokens.border }}
       >
-        <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <ChevronLeft size={24} color={tokens.foreground} />
+        <TouchableOpacity onPress={() => router.back()} className={isRTL ? "ml-3" : "mr-3"}>
+          <BackIcon variant="chevron" size={24} color={tokens.foreground} />
         </TouchableOpacity>
         <Text className="text-xl font-bold" style={{ color: tokens.foreground }}>
-          {job.type === "group" ? "Multi-stop Delivery" : "Order Detail"}
+          {job.type === "group" ? t("driver.job.multiStopTitle") : t("driver.job.orderDetailTitle")}
         </Text>
       </View>
 
@@ -140,7 +143,7 @@ export default function JobDetailScreen() {
             className="text-sm mb-1"
             style={{ color: tokens.mutedForeground }}
           >
-            Customer Drop-off Address
+            {t("driver.job.customerDropoffAddress")}
           </Text>
           <Text style={{ color: tokens.foreground }}>{customerAddress}</Text>
         </View>
@@ -163,7 +166,7 @@ export default function JobDetailScreen() {
               className="text-center text-lg font-bold"
               style={{ color: tokens.primaryForeground }}
             >
-              Accept
+              {t("driver.job.accept")}
             </Text>
           )}
         </TouchableOpacity>

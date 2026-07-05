@@ -6,9 +6,9 @@ import { I18nManager, Platform } from 'react-native';
 
 import ar from '@/locales/ar.json';
 import en from '@/locales/en.json';
+import { isRTLLanguage } from './rtl';
 
 const LANGUAGE_KEY = 'app.language';
-const RTL_LANGUAGES = new Set(['ar']);
 
 const resources = {
   en: { translation: en },
@@ -25,8 +25,13 @@ const getDeviceLanguage = () => {
   return normalizeLanguage(locale);
 };
 
-const setRtl = (language: string) => {
-  const isRtl = RTL_LANGUAGES.has(language);
+// Only safe to call before the app has mounted (cold start). Calling this
+// after mount doesn't visually apply until the next app restart, and has
+// documented reload-loop bugs on some platforms when done live - so it is
+// intentionally NOT called from setLanguage(). Live RTL mirroring is instead
+// driven by lib/i18n/RTLContext.tsx, which every screen reads directly.
+const applyNativeRtlOnColdStart = (language: string) => {
+  const isRtl = isRTLLanguage(language);
   if (Platform.OS === 'web') {
     I18nManager.allowRTL(isRtl);
     return;
@@ -55,7 +60,7 @@ export const initI18n = async () => {
     },
   });
 
-  setRtl(language);
+  applyNativeRtlOnColdStart(language);
   initialized = true;
 
   return i18n;
@@ -65,7 +70,6 @@ export const setLanguage = async (language: string) => {
   const normalized = normalizeLanguage(language);
   await i18n.changeLanguage(normalized);
   await AsyncStorage.setItem(LANGUAGE_KEY, normalized);
-  setRtl(normalized);
 };
 
 export default i18n;

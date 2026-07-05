@@ -3,14 +3,16 @@ import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import * as Location from "expo-location";
-import { ChevronLeft, MapPin } from "lucide-react-native";
+import { MapPin } from "lucide-react-native";
+import { BackIcon } from "@/components/ui/back-icon";
+import { useTranslation } from "react-i18next";
 
-import { THEME } from "@/lib/theme";
-import { useTheme } from "@/lib/theme-context";
+import { THEME, useTheme } from "@/lib/theme";
 
 export default function LocationPermissionScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
+  const { t } = useTranslation();
   const [requesting, setRequesting] = useState(false);
 
   const handleEnableLocation = async () => {
@@ -35,7 +37,7 @@ export default function LocationPermissionScreen() {
           className="h-10 w-10 items-center justify-center rounded-full"
           style={{ backgroundColor: tokens.muted }}
         >
-          <ChevronLeft size={22} color={tokens.foreground} />
+          <BackIcon variant="chevron" size={22} color={tokens.foreground} />
         </TouchableOpacity>
       </View>
 
@@ -51,14 +53,13 @@ export default function LocationPermissionScreen() {
           className="text-2xl font-bold text-center mb-3"
           style={{ color: tokens.foreground }}
         >
-          Enable Your Location
+          {t("addresses.locationPermission.title")}
         </Text>
         <Text
           className="text-center mb-10"
           style={{ color: tokens.mutedForeground }}
         >
-          We use your location to show you shops near you and deliver your
-          orders to the right place.
+          {t("addresses.locationPermission.subtitle")}
         </Text>
 
         <TouchableOpacity
@@ -74,7 +75,7 @@ export default function LocationPermissionScreen() {
               className="text-lg font-bold"
               style={{ color: tokens.primaryForeground }}
             >
-              Enable Location
+              {t("addresses.locationPermission.enableButton")}
             </Text>
           )}
         </TouchableOpacity>
