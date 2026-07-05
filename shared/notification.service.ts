@@ -3,20 +3,29 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export interface NotificationItem {
   id: string | number;
   title?: string;
-  message?: string;
   body?: string;
-  description?: string;
   read?: boolean;
   is_read?: boolean;
-  status?: string;
   created_at?: string;
-  createdAt?: string;
-  updated_at?: string;
+}
+
+// The real backend nests the actual title/body under `notification`:
+// {id, user_id, notification_id, is_read, read_at, created_at,
+//  notification: {id, title, body, data, created_at}}
+function normalizeNotification(raw: any): NotificationItem {
+  return {
+    id: raw?.id,
+    title: raw?.notification?.title ?? raw?.title,
+    body: raw?.notification?.body ?? raw?.body,
+    is_read: raw?.is_read ?? raw?.read,
+    read: raw?.is_read ?? raw?.read,
+    created_at: raw?.created_at ?? raw?.notification?.created_at,
+  };
 }
 
 function normalizeNotifications(payload: any): NotificationItem[] {
   if (Array.isArray(payload)) {
-    return payload;
+    return payload.map(normalizeNotification);
   }
 
   if (payload && typeof payload === "object") {
@@ -29,7 +38,7 @@ function normalizeNotifications(payload: any): NotificationItem[] {
 
     for (const candidate of candidates) {
       if (Array.isArray(candidate)) {
-        return candidate;
+        return candidate.map(normalizeNotification);
       }
     }
   }

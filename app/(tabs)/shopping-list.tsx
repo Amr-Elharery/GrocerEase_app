@@ -24,6 +24,8 @@ import {
 } from "react-native";
 
 import { ProtectedScreen } from "@/components/domain/ProtectedScreen";
+import { THEME } from "@/lib/theme";
+import { useTheme } from "@/lib/theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const fallbackProductImage = require("../../assets/images/icon.png");
@@ -32,6 +34,8 @@ const MAX_STORES = 3;
 export default function ShoppingListScreen() {
   const router = useRouter();
   const toast = useToast();
+  const { theme } = useTheme();
+  const tokens = THEME[theme];
   const { addresses, selectedAddressId } = useAddress();
 
   const [items, setItems] = useState<ShoppingListItem[]>([]);
@@ -197,11 +201,25 @@ export default function ShoppingListScreen() {
                 <Text className="text-4xl">📋</Text>
               </View>
 
-              <Text className="text-foreground text-xl font-semibold mb-2">
+              <Text
+                style={{
+                  color: tokens.foreground,
+                  fontSize: 20,
+                  fontWeight: "600",
+                  marginBottom: 8,
+                  textAlign: "center",
+                }}
+              >
                 Your list is empty
               </Text>
 
-              <Text className="text-muted-foreground text-center mb-6">
+              <Text
+                style={{
+                  color: tokens.mutedForeground,
+                  textAlign: "center",
+                  marginBottom: 24,
+                }}
+              >
                 Add products from the browse screen.
               </Text>
 

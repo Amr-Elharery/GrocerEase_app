@@ -119,6 +119,10 @@ export default function RootLayout() {
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen
+                    name="profile-orders"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
                     name="addresses"
                     options={{ headerShown: false }}
                   />

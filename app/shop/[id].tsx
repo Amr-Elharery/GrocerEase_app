@@ -6,7 +6,7 @@ import { useTheme } from "@/lib/theme-context";
 import type { ProductDisplay, ShopDisplay } from "@/lib/types";
 import { shopService } from "@/shared/shop.service";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { Search, ShoppingCart, Store, X } from "lucide-react-native";
+import { ChevronLeft, Search, ShoppingCart, X } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -175,48 +175,51 @@ export default function ShopProductsScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: shop.shop_name,
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.push("/(tabs)/shops")}
-              className="ml-4 mr-2 flex-row items-center"
-            >
-              <Store size={20} color={tokens.foreground} />
-              <Text className="ml-1 text-sm font-medium" style={{ color: tokens.foreground }}>
-                Shops
-              </Text>
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => router.push("/(tabs)/cart")}
-              className="mr-4 relative"
-            >
-              <ShoppingCart size={24} color={tokens.foreground} />
-              {cartCount > 0 && (
-                <View
-                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full items-center justify-center"
-                  style={{ backgroundColor: tokens.primary }}
-                >
-                  <Text className="text-xs font-bold text-white">
-                    {cartCount}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          ),
-        }}
-      />
+      <Stack.Screen options={{ title: shop.shop_name }} />
 
- 
+
         <SafeAreaView
           className="flex-1 bg-background"
           edges={["top"]}
           style={{ backgroundColor: tokens.background }}
         >
           <View className="flex-1 px-4 pt-4">
+            <View className="flex-row items-center justify-between mb-4">
+              <TouchableOpacity
+                onPress={() => router.back()}
+                className="h-10 w-10 items-center justify-center rounded-full"
+                style={{ backgroundColor: tokens.muted }}
+              >
+                <ChevronLeft size={22} color={tokens.foreground} />
+              </TouchableOpacity>
+
+              <Text
+                className="text-lg font-bold flex-1 mx-2"
+                numberOfLines={1}
+                style={{ color: tokens.foreground }}
+              >
+                {shop.shop_name}
+              </Text>
+
+              <TouchableOpacity
+                onPress={() => router.push("/(tabs)/cart")}
+                className="relative h-10 w-10 items-center justify-center rounded-full"
+                style={{ backgroundColor: tokens.muted }}
+              >
+                <ShoppingCart size={20} color={tokens.foreground} />
+                {cartCount > 0 && (
+                  <View
+                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full items-center justify-center"
+                    style={{ backgroundColor: tokens.primary }}
+                  >
+                    <Text className="text-xs font-bold text-white">
+                      {cartCount}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+
             <View
               className="flex-row items-center border rounded-xl px-3 mb-4"
               style={{ borderColor: tokens.border, backgroundColor: tokens.input }}

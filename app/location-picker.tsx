@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import * as Location from "expo-location";
-import { MapPin } from "lucide-react-native";
+import { ChevronLeft, MapPin } from "lucide-react-native";
 
 import { THEME } from "@/lib/theme";
 import { useTheme } from "@/lib/theme-context";
@@ -109,6 +109,14 @@ export default function LocationPickerScreen() {
       style={{ backgroundColor: tokens.background }}
     >
       <View className="flex-1 px-6 py-6">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="h-10 w-10 items-center justify-center rounded-full mb-4"
+          style={{ backgroundColor: tokens.muted }}
+        >
+          <ChevronLeft size={22} color={tokens.foreground} />
+        </TouchableOpacity>
+
         <Text
           className="text-3xl font-bold mb-2"
           style={{ color: tokens.foreground }}

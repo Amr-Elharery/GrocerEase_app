@@ -104,7 +104,7 @@ export default function CartScreen() {
 
                         <TouchableOpacity
                           onPress={() => removeItem(item.id)}
-                          className="bg-red-500 px-4 py-2 rounded-xl"
+                          className="bg-destructive px-4 py-2 rounded-xl"
                         >
                           <Text className="text-white font-bold">Remove</Text>
                         </TouchableOpacity>
@@ -127,7 +127,7 @@ export default function CartScreen() {
 
                 <TouchableOpacity
                   onPress={() => router.push("/checkout")}
-                  className="bg-green-600 py-4 rounded-2xl mt-5"
+                  className="bg-primary py-4 rounded-2xl mt-5"
                 >
                   <Text className="text-white text-center text-lg font-bold">
                     Proceed To Checkout

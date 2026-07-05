@@ -68,7 +68,7 @@ export function Header({ onSearch }: HeaderProps) {
               onPress={handleZonePress}
               className="flex-row items-center min-w-0"
             >
-              <MapPin size={20} className="text-primary mr-1" />
+              <MapPin size={20} className="text-primary" style={{ marginRight: 8 }} />
               <Text
                 className="text-foreground font-semibold text-base flex-shrink"
                 numberOfLines={1}
@@ -84,7 +84,7 @@ export function Header({ onSearch }: HeaderProps) {
               onPress={handleSetLocation}
               className="flex-row items-center min-w-0"
             >
-              <MapPin size={20} className="text-primary mr-1" />
+              <MapPin size={20} className="text-primary" style={{ marginRight: 8 }} />
               <Text
                 className="text-foreground font-semibold text-base flex-shrink"
                 numberOfLines={1}

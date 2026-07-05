@@ -1,5 +1,6 @@
 import { fetchOrders, type OrderSummary } from "@/shared/order.service";
 import { useFocusEffect, useRouter } from "expo-router";
+import { ChevronLeft } from "lucide-react-native";
 import * as React from "react";
 import { useCallback, useState } from "react";
 import {
@@ -120,6 +121,13 @@ export default function ProfileOrdersScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
       <ScrollView className="flex-1" contentContainerClassName="px-4 pb-8">
+        <Pressable
+          onPress={() => router.back()}
+          className="mt-4 h-10 w-10 items-center justify-center rounded-full bg-muted"
+        >
+          <ChevronLeft size={22} className="text-foreground" />
+        </Pressable>
+
         <View className="mt-4 mb-4 flex-row items-center justify-between">
           <Text className="text-xl font-semibold text-foreground">
             My Orders

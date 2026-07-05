@@ -3,7 +3,7 @@ import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import * as Location from "expo-location";
-import { MapPin } from "lucide-react-native";
+import { ChevronLeft, MapPin } from "lucide-react-native";
 
 import { THEME } from "@/lib/theme";
 import { useTheme } from "@/lib/theme-context";
@@ -26,8 +26,19 @@ export default function LocationPermissionScreen() {
   return (
     <SafeAreaView
       className="flex-1"
+      edges={["top"]}
       style={{ backgroundColor: tokens.background }}
     >
+      <View className="px-4 pt-4">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="h-10 w-10 items-center justify-center rounded-full"
+          style={{ backgroundColor: tokens.muted }}
+        >
+          <ChevronLeft size={22} color={tokens.foreground} />
+        </TouchableOpacity>
+      </View>
+
       <View className="flex-1 justify-center items-center px-8">
         <View
           className="h-24 w-24 rounded-full items-center justify-center mb-6"
