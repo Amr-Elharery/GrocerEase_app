@@ -129,6 +129,7 @@ export default function ProductDetailsScreen() {
         product_id: productId,
         product_name: product?.product_name ?? '',
         brand: product?.brand,
+        image_url: images[0]?.thumbnail_url || undefined,
         qty: 1,
       });
       toast(t('shoppingList.addedToList', { name: product?.product_name ?? t('driver.job.item') }), 'success');

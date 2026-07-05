@@ -198,6 +198,7 @@ export default function SearchScreen() {
           product_id: product.id,
           product_name: product.product_name,
           brand: product.brand,
+          image_url: product.thumbnail || undefined,
           qty: 1,
         });
         toast(t("shoppingList.addedToList", { name: product.product_name }), "success");

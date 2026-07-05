@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-  Alert,
   Image,
   ScrollView,
   Text,
@@ -15,6 +14,7 @@ import { useTranslation } from "react-i18next";
 
 import { CartConflictModal } from "@/features/cart/components/CartConflictModal";
 import { useRTL } from "@/lib/i18n/RTLContext";
+import { useToast } from "@/lib/toast/useToast";
 import { THEME, useTheme } from "@/lib/theme";
 import { useCart } from "@/features/cart/hooks/cartContext";
 import type { ProductDisplay } from "@/features/products/types";
@@ -26,6 +26,7 @@ export default function ShopProductDetailScreen() {
   const tokens = THEME[theme];
   const { isRTL } = useRTL();
   const { t } = useTranslation();
+  const toast = useToast();
   const params = useLocalSearchParams<{ id: string; product: string }>();
   const { cart, shopId, addItem, clearCart, conflictAddItem } = useCart();
 
@@ -65,7 +66,7 @@ export default function ShopProductDetailScreen() {
     for (let i = 0; i < quantity; i++) {
       addItem(product);
     }
-    Alert.alert(t("common.success"), t("stores.shopScreen.addedToCart"));
+    toast(t("stores.shopScreen.addedToCart"), "success");
   };
 
   const handleConfirmConflict = () => {
@@ -73,7 +74,7 @@ export default function ShopProductDetailScreen() {
     for (let i = 0; i < quantity; i++) {
       conflictAddItem(product);
     }
-    Alert.alert(t("common.success"), t("stores.shopScreen.addedToCart"));
+    toast(t("stores.shopScreen.addedToCart"), "success");
     setShowConflictModal(false);
   };
 

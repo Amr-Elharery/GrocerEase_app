@@ -9,11 +9,11 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Search, ShoppingCart, X } from "lucide-react-native";
 import { BackIcon } from "@/components/ui/back-icon";
 import { useRTL } from "@/lib/i18n/RTLContext";
+import { useToast } from "@/lib/toast/useToast";
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Pressable,
   Text,
@@ -32,6 +32,7 @@ export default function ShopProductsScreen() {
   const tokens = THEME[theme];
   const { isRTL } = useRTL();
   const { t } = useTranslation();
+  const toast = useToast();
   const { shopId, addItem, clearCart, conflictAddItem, cartCount } =
     useCart();
 
@@ -124,20 +125,20 @@ export default function ShopProductsScreen() {
         return;
       }
       addItem(product);
-      Alert.alert(t("common.success"), t("stores.shopScreen.addedToCart"));
+      toast(t("stores.shopScreen.addedToCart"), "success");
     },
-    [addItem, shopId, t]
+    [addItem, shopId, t, toast]
   );
 
   const handleConfirmConflict = useCallback(() => {
     if (pendingProduct) {
       clearCart();
       conflictAddItem(pendingProduct);
-      Alert.alert(t("common.success"), t("stores.shopScreen.addedToCart"));
+      toast(t("stores.shopScreen.addedToCart"), "success");
     }
     setShowConflictModal(false);
     setPendingProduct(null);
-  }, [pendingProduct, clearCart, conflictAddItem, t]);
+  }, [pendingProduct, clearCart, conflictAddItem, t, toast]);
 
   const handleCancelConflict = useCallback(() => {
     setShowConflictModal(false);

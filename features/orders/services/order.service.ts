@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import httpService from "@/shared/httpService";
 import { addressService, formatAddress } from "@/features/addresses/services/address.service";
+import { shopService } from "@/features/stores/services/shop.service";
 import type { OrderSummary } from "@/features/orders/types";
 
 export type { OrderAddress, OrderItem, OrderSummary } from "@/features/orders/types";
@@ -110,23 +111,54 @@ export async function fetchOrders(): Promise<OrderSummary[]> {
   return normalizeOrderList(response?.data ?? response);
 }
 
+// The backend's order_items only carry {id, shop_product_id, quantity, total} -
+// no product name/image - so those have to be resolved separately per item.
+// Likewise, orders only carry customer_address_id, never an embedded address.
+export async function hydrateOrderDetails(
+  order: OrderSummary,
+): Promise<OrderSummary> {
+  const hydrated = { ...order };
+
+  if (!hydrated.address?.full_address && hydrated.customer_address_id) {
+    try {
+      const fullAddress = await addressService.getAddress(
+        hydrated.customer_address_id,
+      );
+      hydrated.address = { full_address: formatAddress(fullAddress) };
+    } catch {}
+  }
+
+  if (Array.isArray(hydrated.items) && hydrated.items.length > 0) {
+    hydrated.items = await Promise.all(
+      hydrated.items.map(async (item) => {
+        if (item.product_name || !item.shop_product_id) return item;
+        try {
+          const product = await shopService.getShopProduct(
+            item.shop_product_id,
+          );
+          if (!product) return item;
+          return {
+            ...item,
+            product_name: product.product_name,
+            image_url: product.primaryImage,
+          };
+        } catch {
+          return item;
+        }
+      }),
+    );
+  }
+
+  return hydrated;
+}
+
 export async function fetchOrderById(
   orderId: string | number,
 ): Promise<OrderSummary> {
   const config = await getAuthConfig();
   const response = await httpService.get(`/orders/${orderId}`, config);
   const order = normalizeOrder(response?.data ?? response);
-
-  if (!order.address?.full_address && order.customer_address_id) {
-    try {
-      const fullAddress = await addressService.getAddress(
-        order.customer_address_id,
-      );
-      order.address = { full_address: formatAddress(fullAddress) };
-    } catch {}
-  }
-
-  return order;
+  return hydrateOrderDetails(order);
 }
 
 export async function cancelOrder(orderId: string | number): Promise<any> {

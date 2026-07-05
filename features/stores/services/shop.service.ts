@@ -92,6 +92,16 @@ function groupProductsByCategory(products: ProductDisplay[]): { category_name: s
 }
 
 export const shopService = {
+async getShopProduct(shopProductId: number | string): Promise<ProductDisplay | null> {
+  try {
+    const response = await httpService.get(`/shop-products/${shopProductId}`);
+    const payload = response.data?.data ?? response.data ?? null;
+    return payload ? normalizeProduct(payload) : null;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+},
 async getShops(areaId?: number, limit = 20, offset = 0): Promise<ShopDisplay[]> {
   try {
     const response = await httpService.get('/shops', {

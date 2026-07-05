@@ -1,6 +1,8 @@
 export interface OrderItem {
   id: string | number;
+  shop_product_id?: string | number;
   product_name?: string;
+  image_url?: string;
   quantity?: number;
   price?: number;
   subtotal?: number;

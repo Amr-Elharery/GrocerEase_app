@@ -121,7 +121,9 @@ export default function OptimizationScreen() {
     } catch (error: any) {
       console.error("Order submission failed", error);
       toast(
-        t("optimization.orderFailed"),
+        error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          t("optimization.orderFailed"),
         "error",
       );
     } finally {
