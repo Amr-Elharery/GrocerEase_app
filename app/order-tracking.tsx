@@ -1,6 +1,7 @@
 import {
   cancelOrder,
   fetchOrderById,
+  hydrateOrderDetails,
   type OrderSummary,
 } from "@/features/orders/services/order.service";
 import { useRTL } from "@/lib/i18n/RTLContext";
@@ -12,6 +13,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Image,
   Pressable,
   ScrollView,
   Text,
@@ -97,7 +99,9 @@ export default function OrderTrackingScreen() {
       if (preloadGroup) {
         try {
           const parsed = JSON.parse(preloadGroup);
-          setOrders(Array.isArray(parsed) ? parsed : [parsed]);
+          const rawOrders: OrderSummary[] = Array.isArray(parsed) ? parsed : [parsed];
+          const hydrated = await Promise.all(rawOrders.map(hydrateOrderDetails));
+          setOrders(hydrated);
           return;
         } catch (e) {
           console.warn("Invalid group preload data", e);
@@ -113,7 +117,8 @@ export default function OrderTrackingScreen() {
       if (preload) {
         try {
           const parsed = JSON.parse(preload);
-          setOrders([parsed]);
+          const hydrated = await hydrateOrderDetails(parsed);
+          setOrders([hydrated]);
           return;
         } catch (e) {
           console.warn("Invalid preload data", e);
@@ -308,7 +313,20 @@ export default function OrderTrackingScreen() {
                   data={combinedItems}
                   keyExtractor={(item, index) => `${item.id}-${index}`}
                   renderItem={({ item }) => (
-                    <View className="mb-3 flex-row items-center justify-between">
+                    <View className={isRTL ? "mb-3 flex-row-reverse items-center justify-between" : "mb-3 flex-row items-center justify-between"}>
+                      {item.image_url ? (
+                        <Image
+                          source={{ uri: item.image_url }}
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 8,
+                            marginRight: isRTL ? 0 : 8,
+                            marginLeft: isRTL ? 8 : 0,
+                          }}
+                          resizeMode="cover"
+                        />
+                      ) : null}
                       <View className={isRTL ? "flex-1 pl-2" : "flex-1 pr-2"}>
                         <Text className="text-sm font-medium text-foreground">
                           {item.product_name || t("driver.job.item")}

@@ -332,8 +332,7 @@
     "areaId": "Area ID: {{id}}",
     "deliveryAddress": "Delivery Address",
     "addNew": "+ Add New",
-    "noSavedAddresses": "No saved addresses. Tap Add New to create one.",
-    "selected": "Selected:",
+    "noSavedAddresses": "No delivery address selected. Set one from your profile.",
     "paymentMethod": "Payment Method",
     "cod": "Cash On Delivery (COD)",
     "codHint": "Pay with cash upon delivery",
@@ -343,7 +342,8 @@
     "deliveryFee": "Delivery Fee",
     "total": "Total",
     "placingOrder": "Placing Order...",
-    "placeOrder": "Place Order"
+    "placeOrder": "Place Order",
+    "orderPlaced": "Order placed successfully"
   },
   "notifications": {
     "title": "Notifications",

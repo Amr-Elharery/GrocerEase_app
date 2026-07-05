@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Alert,
-  FlatList,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -12,8 +11,8 @@ import { ProtectedScreen } from "@/features/auth/components/ProtectedScreen";
 import { useAddress } from "@/features/addresses/hooks/addressContext";
 import { useCart } from "@/features/cart/hooks/cartContext";
 import { BackIcon } from "@/components/ui/back-icon";
-import { useRTL } from "@/lib/i18n/RTLContext";
 import { THEME, useTheme } from "@/lib/theme";
+import { useToast } from "@/lib/toast/useToast";
 import httpService from "@/shared/httpService";
 import { placeOrder } from "@/features/checkout/services/checkout.service";
 import { router } from "expo-router";
@@ -23,10 +22,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function CheckoutScreen() {
   const { theme } = useTheme();
   const tokens = THEME[theme];
-  const { isRTL } = useRTL();
   const { t } = useTranslation();
+  const toast = useToast();
   const { cart, shopId, subtotal, clearCart } = useCart();
-  const { addresses, selectedAddressId, selectAddress } = useAddress();
+  const { addresses, selectedAddressId } = useAddress();
 
   const [paymentMethod, setPaymentMethod] = useState("cash_on_delivery");
   const [loading, setLoading] = useState(false);
@@ -91,66 +90,20 @@ export default function CheckoutScreen() {
       }
 
       clearCart();
-      router.replace("/");
+      toast(t("checkout.orderPlaced"), "success");
+      router.replace("/profile-orders");
     } catch (error: any) {
       console.error("[checkout] place order failed", error);
       Alert.alert(
         t("common.error"),
-        error?.response?.data?.message ||
+        error?.response?.data?.detail ||
+          error?.response?.data?.message ||
           error?.message ||
           t("checkout.placeOrderFailed"),
       );
     } finally {
       setLoading(false);
     }
-  };
-
-  const renderAddressItem = ({ item }: { item: any }) => {
-    const isSelected = selectedAddressId === item.id;
-    return (
-      <TouchableOpacity
-        onPress={() => selectAddress(item.id)}
-        className="bg-card border rounded-2xl p-4 mb-3"
-        style={{
-          backgroundColor: tokens.card,
-          borderColor: isSelected ? tokens.primary : tokens.border,
-        }}
-      >
-        <View className={isRTL ? "flex-row-reverse items-start justify-between" : "flex-row items-start justify-between"}>
-          <View className="flex-1">
-            <Text
-              className="text-foreground font-bold text-base"
-              style={{ color: tokens.foreground }}
-            >
-              {item.label || t("checkout.address")}
-            </Text>
-            <Text
-              className="text-muted-foreground mt-1"
-              style={{ color: tokens.mutedForeground }}
-            >
-              {item.street}
-              {item.building ? `, ${item.building}` : ""}
-              {item.floor ? `, ${t("checkout.floor", { floor: item.floor })}` : ""}
-              {item.apt_number ? `, ${t("checkout.apt", { apt: item.apt_number })}` : ""}
-            </Text>
-            <Text
-              className="text-muted-foreground text-sm mt-1"
-              style={{ color: tokens.mutedForeground }}
-            >
-              {t("checkout.areaId", { id: item.area_id })}
-            </Text>
-          </View>
-          {isSelected && (
-            <View
-              className="w-5 h-5 rounded-full items-center justify-center"
-              style={{ backgroundColor: tokens.primary }}
-            >
-              <Text className="text-white text-xs font-bold">✓</Text>
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
-    );
   };
 
   return (
@@ -193,53 +146,18 @@ export default function CheckoutScreen() {
             </Text>
           </View>
 
-          {/* Saved Addresses */}
+          {/* Delivery Address (read-only: the customer's currently selected address) */}
           <View className="bg-card border border-border rounded-2xl p-4 mb-5">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text
-                className="text-foreground text-lg font-bold"
-                style={{ color: tokens.foreground }}
-              >
-                {t("checkout.deliveryAddress")}
-              </Text>
+            <Text
+              className="text-foreground text-lg font-bold mb-4"
+              style={{ color: tokens.foreground }}
+            >
+              {t("checkout.deliveryAddress")}
+            </Text>
 
-              <TouchableOpacity
-                onPress={() => router.push("/address-book")}
-                className="bg-primary px-3 py-1 rounded-lg"
-                style={{ backgroundColor: tokens.primary }}
-              >
-                <Text
-                  className="text-primary-foreground text-sm font-bold"
-                  style={{ color: tokens.primaryForeground }}
-                >
-                  {t("checkout.addNew")}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {addresses.length === 0 ? (
-              <View className="items-center py-6">
-                <Text
-                  className="text-muted-foreground text-center"
-                  style={{ color: tokens.mutedForeground }}
-                >
-                  {t("checkout.noSavedAddresses")}
-                </Text>
-              </View>
-            ) : (
-              <FlatList
-                data={addresses}
-                keyExtractor={(item) =>
-                  item.id ? item.id.toString() : Math.random().toString()
-                }
-                renderItem={renderAddressItem}
-                scrollEnabled={false}
-              />
-            )}
-
-            {selectedAddress && (
+            {selectedAddress ? (
               <View
-                className="mt-3 p-3 rounded-xl border"
+                className="p-3 rounded-xl border"
                 style={{
                   backgroundColor: tokens.background,
                   borderColor: tokens.border,
@@ -249,17 +167,31 @@ export default function CheckoutScreen() {
                   className="text-foreground font-semibold"
                   style={{ color: tokens.foreground }}
                 >
-                  {t("checkout.selected")}
+                  {selectedAddress.label || t("checkout.address")}
                 </Text>
                 <Text
-                  className="text-muted-foreground"
+                  className="text-muted-foreground mt-1"
                   style={{ color: tokens.mutedForeground }}
                 >
-                  {selectedAddress.label || t("checkout.address")} —{" "}
                   {selectedAddress.street}
                   {selectedAddress.building
                     ? `, ${selectedAddress.building}`
                     : ""}
+                  {selectedAddress.floor
+                    ? `, ${t("checkout.floor", { floor: selectedAddress.floor })}`
+                    : ""}
+                  {selectedAddress.apt_number
+                    ? `, ${t("checkout.apt", { apt: selectedAddress.apt_number })}`
+                    : ""}
+                </Text>
+              </View>
+            ) : (
+              <View className="items-center py-6">
+                <Text
+                  className="text-muted-foreground text-center"
+                  style={{ color: tokens.mutedForeground }}
+                >
+                  {t("checkout.noSavedAddresses")}
                 </Text>
               </View>
             )}

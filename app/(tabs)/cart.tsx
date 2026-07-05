@@ -8,6 +8,8 @@ import { useTranslation } from "react-i18next";
 import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const fallbackProductImage = require("../../assets/images/icon.png");
+
 export default function CartScreen() {
   const { cart, shopId, removeItem, updateQty, subtotal } = useCart();
   const { theme } = useTheme();
@@ -68,7 +70,11 @@ export default function CartScreen() {
                 renderItem={({ item }) => (
                   <View className={isRTL ? "bg-card border border-border p-4 rounded-2xl mb-4 flex-row-reverse" : "bg-card border border-border p-4 rounded-2xl mb-4 flex-row"}>
                     <Image
-                      source={item.primaryImage || { uri: item.image }}
+                      source={
+                        item.primaryImage
+                          ? { uri: item.primaryImage }
+                          : fallbackProductImage
+                      }
                       className="w-24 h-24 rounded-xl"
                       resizeMode="cover"
                     />
