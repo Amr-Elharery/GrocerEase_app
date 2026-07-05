@@ -1,27 +1,5 @@
-/**
- * Reset Password Screen
- * Part of Authentication Feature
- *
- * Architecture: Feature-Based Design Pattern
- * - Validation logic: shared/validators.ts
- * - Form state: lib/hooks/useFormValidation.ts
- * - API calls: shared/auth.service.ts
- * - UI Components: components/domain/auth/
- */
-
-import {
-  AuthButton,
-  AuthSuccess,
-  PasswordInput,
-} from "@/features/auth/components";
-import { useResetPasswordForm } from "@/features/auth/hooks/useFormValidation";
-import { BackIcon } from "@/components/ui/back-icon";
-import { useRTL } from "@/lib/i18n/RTLContext";
-import { THEME, useTheme } from "@/lib/theme";
-import { authService } from "@/features/auth/services/auth.service";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
+ import * as React from "react";
+import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -31,61 +9,65 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams, useRouter } from "expo-router";
+
+import {
+  PasswordInput,
+  AuthButton,
+} from "@/features/auth/components";
+
+import { BackIcon } from "@/components/ui/back-icon";
+import { THEME, useTheme } from "@/lib/theme";
+import { useRTL } from "@/lib/i18n/RTLContext";
+import { authService } from "@/features/auth/services/auth.service";
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
+
+  const { token } = useLocalSearchParams<{ token: string }>();
+
   const { theme } = useTheme();
-  const { email, code } = useLocalSearchParams<{
-    email: string;
-    code: string;
-  }>();
   const tokens = THEME[theme];
   const { isRTL } = useRTL();
-  const { t } = useTranslation();
 
-  // Form state managed by custom hook with validation
-  const { values, errors, touched, handleChange, handleBlur, validateAll } =
-    useResetPasswordForm();
-
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-
-  // Auto-navigate after success
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        router.replace("/auth/login");
-      }, 2500);
-      return () => clearTimeout(timer);
-    }
-  }, [success, router]);
 
   const handleResetPassword = async () => {
-    // Validate all fields
-    if (!validateAll()) {
+    if (!newPassword.trim() || !confirmPassword.trim()) {
+      alert("Please fill in all fields.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert("Passwords do not match.");
+      return;
+    }
+
+    if (!token) {
+      alert("Invalid or missing reset token.");
       return;
     }
 
     setLoading(true);
+
     try {
-      // Call auth service to reset password
-      if (email && code) {
-        await authService.resetPassword({
-          email,
-          code,
-          newPassword: values.newPassword,
-        });
-        setSuccess(true);
-      } else {
-        throw new Error(t("auth.resetPassword.missingInfo"));
-      }
-    } catch (error) {
-      console.error("Reset password error:", error);
+      await authService.resetPassword({
+        token,
+        newPassword,
+      });
+
+      alert("Password updated successfully.");
+
+      router.replace("/auth/login");
+    } catch (error: any) {
       alert(
-        error instanceof Error
-          ? error.message
-          : t("auth.resetPassword.failed"),
+        error?.message ||
+          "This reset link is invalid or has expired."
       );
+
+      router.replace("/auth/forgot-password");
     } finally {
       setLoading(false);
     }
@@ -93,94 +75,77 @@ export default function ResetPasswordScreen() {
 
   return (
     <SafeAreaView
-      style={{ backgroundColor: tokens.background }}
       className="flex-1"
+      style={{ backgroundColor: tokens.background }}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView className="flex-1 px-6 py-4">
+
           {/* Header */}
           <View className="flex-row items-center mb-8">
             <Pressable onPress={() => router.back()}>
-              <BackIcon variant="arrow" size={24} color={tokens.foreground} />
+              <BackIcon
+                variant="arrow"
+                size={24}
+                color={tokens.foreground}
+              />
             </Pressable>
+
             <Text
-              className={isRTL ? "text-2xl font-bold mr-3" : "text-2xl font-bold ml-3"}
+              className={
+                isRTL
+                  ? "text-2xl font-bold mr-3"
+                  : "text-2xl font-bold ml-3"
+              }
               style={{ color: tokens.foreground }}
             >
-              {t("auth.resetPassword.title")}
+              Reset Password
             </Text>
           </View>
 
-          {/* Success State */}
-          {success ? (
-            <View className="flex-1 justify-center items-center pb-20">
-              <AuthSuccess
-                title={t("auth.resetPassword.successTitle")}
-                message={t("auth.resetPassword.successMessage")}
-              />
-              <Text
-                className="text-center mt-6 text-sm"
-                style={{ color: tokens.mutedForeground }}
-              >
-                {t("auth.resetPassword.redirecting")}
-              </Text>
-            </View>
-          ) : (
-            <>
-              {/* Description */}
-              <View className="mb-8">
-                <Text
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: tokens.foreground }}
-                >
-                  {t("auth.resetPassword.createNewPassword")}
-                </Text>
-                <Text style={{ color: tokens.mutedForeground }}>
-                  {t("auth.resetPassword.subtitle")}
-                </Text>
-              </View>
+          {/* Description */}
+          <View className="mb-8">
+            <Text
+              className="text-lg font-semibold mb-2"
+              style={{ color: tokens.foreground }}
+            >
+              Create New Password
+            </Text>
 
-              {/* New Password Input */}
-              <PasswordInput
-                value={values.newPassword}
-                onChangeText={(value: string) =>
-                  handleChange("newPassword", value)
-                }
-                onBlur={() => handleBlur("newPassword")}
-                error={touched.newPassword ? errors.newPassword : undefined}
-                label={t("auth.resetPassword.newPassword")}
-                placeholder={t("auth.resetPassword.newPasswordPlaceholder")}
-                editable={!loading}
-              />
+            <Text style={{ color: tokens.mutedForeground }}>
+              Enter your new password below.
+            </Text>
+          </View>
 
-              {/* Confirm Password Input */}
-              <PasswordInput
-                value={values.confirmPassword}
-                onChangeText={(value: string) =>
-                  handleChange("confirmPassword", value)
-                }
-                onBlur={() => handleBlur("confirmPassword")}
-                error={
-                  touched.confirmPassword ? errors.confirmPassword : undefined
-                }
-                label={t("auth.resetPassword.confirmPassword")}
-                placeholder={t("auth.resetPassword.confirmPasswordPlaceholder")}
-                editable={!loading}
-              />
+          {/* New Password */}
+          <PasswordInput
+          label={"New Password"}
+            value={newPassword}
+            onChangeText={setNewPassword}
+            placeholder="New Password"
+            editable={!loading}
+          />
 
-              {/* Reset Button */}
-              <AuthButton
-                onPress={handleResetPassword}
-                disabled={loading}
-                loading={loading}
-              >
-                {t("auth.resetPassword.resetButton")}
-              </AuthButton>
-            </>
-          )}
+          {/* Confirm Password */}
+          <PasswordInput
+          label={"Confirm Password"}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            placeholder="Confirm Password"
+            editable={!loading}
+          />
+
+          {/* Button */}
+          <AuthButton
+            onPress={handleResetPassword}
+            loading={loading}
+          >
+            Update Password
+          </AuthButton>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

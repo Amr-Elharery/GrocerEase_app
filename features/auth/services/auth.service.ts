@@ -3,8 +3,10 @@
  * Handles all auth-related API calls and business logic
  * Separated from components following Feature-Based Design Pattern
  */
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import httpService from "@/shared/httpService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import type {
   AuthResponse,
   ChangePasswordPayload,
@@ -12,7 +14,6 @@ import type {
   LoginPayload,
   ResetPasswordPayload,
   SignUpPayload,
-  VerifyCodePayload,
 } from "@/features/auth/types";
 
 /**
@@ -23,6 +24,7 @@ function handleError(error: any): Error {
     error?.response?.data?.message ||
     error?.message ||
     "An error occurred during authentication";
+
   return new Error(message);
 }
 
@@ -36,19 +38,11 @@ export const authService = {
   async login(payload: LoginPayload): Promise<AuthResponse> {
     try {
       const response = await httpService.post("/auth/login", payload);
-       
 
-await AsyncStorage.setItem(
-  "access_token",
-  response.data.access_token
-);
+      await AsyncStorage.setItem("access_token", response.data.access_token);
 
-await AsyncStorage.setItem(
-  "refresh_token",
-  response.data.refresh_token
-);
+      await AsyncStorage.setItem("refresh_token", response.data.refresh_token);
 
- 
       return response.data;
     } catch (error) {
       throw handleError(error);
@@ -56,60 +50,64 @@ await AsyncStorage.setItem(
   },
 
   /**
-   * Sign up new user
+   * Customer registration
    */
- async signup(payload: SignUpPayload): Promise<AuthResponse> {
-  try {
-    const apiPayload = {
-      full_name: payload.full_name,
-      email: payload.email,
-      phone: payload.phone,
-      password: payload.password,
-      confirmPassword: payload.confirmPassword,
-    };
+  async signup(payload: SignUpPayload): Promise<AuthResponse> {
+    try {
+      const apiPayload = {
+        full_name: payload.full_name,
+        email: payload.email,
+        phone: payload.phone,
+        password: payload.password,
+        confirmPassword: payload.confirmPassword,
+      };
 
-    const response = await httpService.post(
-      "/auth/customer/register",
-      apiPayload
-    );
+      const response = await httpService.post(
+        "/auth/customer/register",
+        apiPayload,
+      );
 
-    console.log("Signup response:", response.data);
-
-    return response.data;
-
-  } catch (error: any) {
-    console.log("Signup API error:", error);
-
-    throw error; // keep axios error
-  }
-},
-
-  /**
-   * Sign up as a delivery driver
-   */
-  async registerDelivery(payload: SignUpPayload): Promise<AuthResponse> {
-    const apiPayload = {
-      full_name: payload.full_name,
-      email: payload.email,
-      phone: payload.phone,
-      password: payload.password,
-      confirmPassword: payload.confirmPassword,
-    };
-
-    const response = await httpService.post(
-      "/auth/delivery/register",
-      apiPayload,
-    );
-
-    return response.data;
+      return response.data;
+    } catch (error) {
+      throw handleError(error);
+    }
   },
 
   /**
-   * Request password reset
+   * Delivery registration
+   */
+  async registerDelivery(payload: SignUpPayload): Promise<AuthResponse> {
+    try {
+      const apiPayload = {
+        full_name: payload.full_name,
+        email: payload.email,
+        phone: payload.phone,
+        password: payload.password,
+        confirmPassword: payload.confirmPassword,
+      };
+
+      const response = await httpService.post(
+        "/auth/delivery/register",
+        apiPayload,
+      );
+
+      return response.data;
+    } catch (error) {
+      throw handleError(error);
+    }
+  },
+
+  /**
+   * Forgot Password
+   * POST /auth/mobile/forgot-password
    */
   async forgotPassword(payload: ForgotPasswordPayload): Promise<AuthResponse> {
     try {
-      const response = await httpService.post("auth/forgot-password", payload);
+      const response = await httpService.post(
+        "/auth/web/forgot-password",
+        payload,
+      );
+
       return response.data;
     } catch (error) {
       throw handleError(error);
@@ -117,23 +115,19 @@ await AsyncStorage.setItem(
   },
 
   /**
-   * Verify reset code
-   */
-  async verifyResetCode(payload: VerifyCodePayload): Promise<AuthResponse> {
-    try {
-      const response = await httpService.post("/auth/verify-code", payload);
-      return response.data;
-    } catch (error) {
-      throw handleError(error);
-    }
-  },
-
-  /**
-   * Reset password with verification code
+   * Reset Password
+   * POST /auth/reset-password
+   *
+   * Body:
+   * {
+   *   token: string;
+   *   newPassword: string;
+   * }
    */
   async resetPassword(payload: ResetPasswordPayload): Promise<AuthResponse> {
     try {
       const response = await httpService.post("/auth/reset-password", payload);
+
       return response.data;
     } catch (error) {
       throw handleError(error);
@@ -141,23 +135,22 @@ await AsyncStorage.setItem(
   },
 
   /**
-   * Change password for authenticated user
+   * Change Password
    */
   async changePassword(payload: ChangePasswordPayload): Promise<AuthResponse> {
     try {
-      // Convert camelCase to snake_case for API
       const apiPayload = {
         current_password: payload.currentPassword,
         new_password: payload.newPassword,
       };
+
       const response = await httpService.post(
         "/auth/change-password",
         apiPayload,
       );
-      console.log(response)
+
       return response.data;
     } catch (error) {
-      console.log(error)
       throw handleError(error);
     }
   },

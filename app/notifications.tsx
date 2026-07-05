@@ -1,13 +1,15 @@
+import { BackIcon } from "@/components/ui/back-icon";
+import { ProtectedScreen } from "@/features/auth/components/ProtectedScreen";
 import {
   getNotifications,
   markNotificationAsRead,
   type NotificationItem,
 } from "@/features/notifications/services/notification.service";
+import { useRTL } from "@/lib/i18n/RTLContext";
 import { useRouter } from "expo-router";
 import { Bell, CheckCircle2 } from "lucide-react-native";
-import { BackIcon } from "@/components/ui/back-icon";
-import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -17,8 +19,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ProtectedScreen } from "@/features/auth/components/ProtectedScreen";
-import { useRTL } from "@/lib/i18n/RTLContext";
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function NotificationsScreen() {
   const [loading, setLoading] = useState(true);
   const [markingIds, setMarkingIds] = useState<(string | number)[]>([]);
 
-const loadNotifications = useCallback(async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getNotifications();
@@ -37,7 +37,10 @@ const loadNotifications = useCallback(async () => {
       console.error("Failed to load notifications", error);
       const status = error?.response?.status;
       if (status === 401) {
-        Alert.alert(t("notifications.sessionExpiredTitle"), t("notifications.sessionExpiredMessage"));
+        Alert.alert(
+          t("notifications.sessionExpiredTitle"),
+          t("notifications.sessionExpiredMessage"),
+        );
       } else {
         Alert.alert(
           t("notifications.title"),
@@ -54,13 +57,14 @@ const loadNotifications = useCallback(async () => {
   }, [loadNotifications]);
 
   const handleMarkRead = async (notificationId: string | number) => {
+    console.log(notifications)
     if (markingIds.includes(notificationId)) {
       return;
     }
-
     try {
       setMarkingIds((current) => [...current, notificationId]);
-      await markNotificationAsRead(notificationId);
+      const respone = await markNotificationAsRead(notificationId);
+     
       setNotifications((current) =>
         current.map((item) =>
           item.id === notificationId
@@ -87,7 +91,13 @@ const loadNotifications = useCallback(async () => {
 
     return (
       <View className="mb-3 rounded-2xl border border-border bg-card p-4">
-        <View className={isRTL ? "flex-row-reverse items-start justify-between gap-3" : "flex-row items-start justify-between gap-3"}>
+        <View
+          className={
+            isRTL
+              ? "flex-row-reverse items-start justify-between gap-3"
+              : "flex-row items-start justify-between gap-3"
+          }
+        >
           <View className="flex-1">
             <Text className="text-base font-semibold text-foreground">
               {title}
@@ -108,7 +118,11 @@ const loadNotifications = useCallback(async () => {
         {!isRead && (
           <Pressable
             onPress={() => handleMarkRead(item.id)}
-            className={isRTL ? "mt-4 self-end rounded-full bg-primary px-3 py-2" : "mt-4 self-start rounded-full bg-primary px-3 py-2"}
+            className={
+              isRTL
+                ? "mt-4 self-end rounded-full bg-primary px-3 py-2"
+                : "mt-4 self-start rounded-full bg-primary px-3 py-2"
+            }
             disabled={markingIds.includes(item.id)}
           >
             {markingIds.includes(item.id) ? (
@@ -131,7 +145,9 @@ const loadNotifications = useCallback(async () => {
           <View className="mb-4 flex-row items-center justify-between py-4">
             <Pressable
               onPress={() => router.back()}
-              className={isRTL ? "ml-3 rounded-full p-2" : "mr-3 rounded-full p-2"}
+              className={
+                isRTL ? "ml-3 rounded-full p-2" : "mr-3 rounded-full p-2"
+              }
             >
               <BackIcon variant="arrow" size={20} className="text-foreground" />
             </Pressable>
