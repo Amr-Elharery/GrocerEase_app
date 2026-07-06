@@ -60,7 +60,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <I18nextProvider i18n={i18n}>
         <RTLProvider>
-        <ThemeProvider defaultTheme="system">
+        <ThemeProvider defaultTheme="light">
           <AddressProvider>
             <AuthProvider>
               <CartProvider>

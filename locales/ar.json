@@ -249,6 +249,7 @@
       "shop": "متجر",
       "itemsCount_one": "{{count}} عنصر",
       "itemsCount_other": "{{count}} عناصر",
+      "items": "العناصر: {{items}}",
       "subtotalFee": "الإجمالي الفرعي {{subtotal}} + الرسوم {{fee}}",
       "noJobsFound": "لا توجد مهام متاحة الآن"
     },
@@ -299,6 +300,8 @@
       "items": "العناصر",
       "item": "عنصر",
       "subtotalFee": "الإجمالي الفرعي + الرسوم",
+      "subtotalLabel": "الإجمالي الفرعي",
+      "deliveryFee": "رسوم التوصيل",
       "multiStopTitle": "توصيل متعدد المحطات",
       "orderDetailTitle": "تفاصيل الطلب",
       "customerDropoffAddress": "عنوان تسليم العميل",

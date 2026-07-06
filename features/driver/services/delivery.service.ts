@@ -44,25 +44,31 @@ const normalizeOrderItem = (payload: any) => ({
   subtotal: payload?.subtotal ?? payload?.total,
 });
 
-const normalizeDeliveryOrder = (payload: any): DeliveryOrder => ({
-  id: payload?.id ?? payload?.order_id,
-  shop_id: payload?.shop_id,
-  shop_name: payload?.shop_name ?? payload?.shop?.name ?? payload?.shop?.shop_name,
-  shop_address: formatAddress(payload?.shop_address ?? payload?.shop?.address),
-  customer_address: formatAddress(
-    payload?.customer_address ??
-      payload?.delivery_address ??
-      payload?.address,
-  ),
-  status: payload?.status ?? payload?.order_status,
-  items: Array.isArray(payload?.items)
-    ? payload.items.map(normalizeOrderItem)
-    : [],
-  item_count: payload?.item_count ?? payload?.items?.length ?? 0,
-  subtotal: payload?.subtotal ?? payload?.sub_total,
-  delivery_fee: payload?.delivery_fee ?? payload?.deliveryFee,
-  total: payload?.total ?? payload?.amount,
-});
+const normalizeDeliveryOrder = (payload: any): DeliveryOrder => {
+  const rawItems = payload?.order_items ?? payload?.items;
+  const items = Array.isArray(rawItems) ? rawItems.map(normalizeOrderItem) : [];
+  const subtotal = Number(payload?.subtotal ?? payload?.sub_total ?? 0);
+  const deliveryFee = Number(payload?.delivery_fee ?? payload?.deliveryFee ?? 0);
+  const rawTotal = payload?.total ?? payload?.amount;
+
+  return {
+    id: payload?.id ?? payload?.order_id,
+    shop_id: payload?.shop_id,
+    shop_name: payload?.shop_name ?? payload?.shop?.name ?? payload?.shop?.shop_name,
+    shop_address: formatAddress(payload?.shop_address ?? payload?.shop?.address),
+    customer_address: formatAddress(
+      payload?.customer_address ??
+        payload?.delivery_address ??
+        payload?.address,
+    ),
+    status: payload?.status ?? payload?.order_status,
+    items,
+    item_count: payload?.item_count ?? items.length,
+    subtotal,
+    delivery_fee: deliveryFee,
+    total: rawTotal != null ? Number(rawTotal) : subtotal + deliveryFee,
+  };
+};
 
 const normalizeDeliveryProfile = (payload: any): DeliveryProfile => ({
   id: payload?.id,

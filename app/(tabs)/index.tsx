@@ -106,6 +106,19 @@ export default function HomeScreen() {
 
         <HeroSection />
 
+        {(replenishmentLoading || replenishment.length > 0) && (
+          <View className="px-4 py-2">
+            <RecommendationSection
+              title={t('home.timeToReorder')}
+              items={replenishment}
+              isLoading={replenishmentLoading}
+              onItemPress={(item) =>
+                handleReplenishmentPress(item as ReplenishmentRecommendation)
+              }
+            />
+          </View>
+        )}
+
         {isLoading ? (
           <View className="items-center justify-center py-16">
             <ActivityIndicator size="large" />
@@ -124,19 +137,6 @@ export default function HomeScreen() {
               onProductPress={handleProductPress}
             />
           </>
-        )}
-
-        {(replenishmentLoading || replenishment.length > 0) && (
-          <View className="px-4 py-2">
-            <RecommendationSection
-              title={t('home.timeToReorder')}
-              items={replenishment}
-              isLoading={replenishmentLoading}
-              onItemPress={(item) =>
-                handleReplenishmentPress(item as ReplenishmentRecommendation)
-              }
-            />
-          </View>
         )}
       </ScrollView>
     </SafeAreaView>
