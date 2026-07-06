@@ -249,6 +249,7 @@
       "shop": "Shop",
       "itemsCount_one": "{{count}} item",
       "itemsCount_other": "{{count}} items",
+      "items": "Items: {{items}}",
       "subtotalFee": "Subtotal {{subtotal}} + Fee {{fee}}",
       "noJobsFound": "No available jobs right now"
     },
@@ -299,6 +300,8 @@
       "items": "Items",
       "item": "Item",
       "subtotalFee": "Subtotal + Fee",
+      "subtotalLabel": "Subtotal",
+      "deliveryFee": "Delivery Fee",
       "multiStopTitle": "Multi-stop Delivery",
       "orderDetailTitle": "Order Detail",
       "customerDropoffAddress": "Customer Drop-off Address",

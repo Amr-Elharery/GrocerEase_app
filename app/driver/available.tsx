@@ -84,7 +84,6 @@ export default function AvailableJobsScreen() {
 
   const renderItem = ({ item }: { item: AvailableJob }) => {
     if (item.type === "group") {
-      const shopNames = item.orders.map((o) => o.shop_name).filter(Boolean);
       const total = item.orders.reduce((sum, o) => sum + (o.total ?? 0), 0);
       return (
         <TouchableOpacity
@@ -101,9 +100,30 @@ export default function AvailableJobsScreen() {
               {t("driver.available.multiStopDelivery", { count: item.orders.length })}
             </Text>
           </View>
-          <Text style={{ color: tokens.mutedForeground }}>
-            {shopNames.join(", ")}
-          </Text>
+          {item.orders.map((o) => {
+            const itemNames = (o.items ?? [])
+              .map((i) => i.product_name)
+              .filter(Boolean)
+              .join(", ");
+            return (
+              <View key={o.id} className="mb-1">
+                <Text
+                  className="font-medium"
+                  style={{ color: tokens.foreground }}
+                >
+                  {o.shop_name ?? t("driver.available.shop")}
+                </Text>
+                {itemNames.length > 0 && (
+                  <Text
+                    style={{ color: tokens.mutedForeground }}
+                    numberOfLines={2}
+                  >
+                    {t("driver.available.items", { items: itemNames })}
+                  </Text>
+                )}
+              </View>
+            );
+          })}
           <View className="flex-row items-center mt-2">
             <MapPin size={14} color={tokens.mutedForeground} />
             <Text
@@ -153,6 +173,21 @@ export default function AvailableJobsScreen() {
             {order.customer_address}
           </Text>
         </View>
+        {(() => {
+          const itemNames = (order.items ?? [])
+            .map((i) => i.product_name)
+            .filter(Boolean)
+            .join(", ");
+          return itemNames.length > 0 ? (
+            <Text
+              className="mt-2"
+              style={{ color: tokens.mutedForeground }}
+              numberOfLines={2}
+            >
+              {t("driver.available.items", { items: itemNames })}
+            </Text>
+          ) : null;
+        })()}
         <View className="flex-row justify-between mt-2">
           <Text style={{ color: tokens.mutedForeground }}>
             {t("driver.available.itemsCount", { count: order.item_count ?? order.items?.length ?? 0 })}

@@ -67,7 +67,7 @@ export default function JobDetailScreen() {
     }
   };
 
-  const renderOrder = (order: DeliveryOrder) => (
+  const renderOrder = (order: DeliveryOrder, showFee: boolean = true) => (
     <View
       key={order.id}
       className="rounded-2xl border p-4 mb-3"
@@ -97,9 +97,13 @@ export default function JobDetailScreen() {
       ))}
 
       <View className="flex-row justify-between mt-3 pt-3 border-t" style={{ borderColor: tokens.border }}>
-        <Text style={{ color: tokens.mutedForeground }}>{t("driver.job.subtotalFee")}</Text>
+        <Text style={{ color: tokens.mutedForeground }}>
+          {showFee ? t("driver.job.subtotalFee") : t("driver.job.subtotalLabel")}
+        </Text>
         <Text className="font-semibold" style={{ color: tokens.foreground }}>
-          {order.subtotal ?? 0} + {order.delivery_fee ?? 0}
+          {showFee
+            ? `${order.subtotal ?? 0} + ${order.delivery_fee ?? 0}`
+            : order.subtotal ?? 0}
         </Text>
       </View>
     </View>
@@ -130,7 +134,20 @@ export default function JobDetailScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
         {job.type === "group" ? (
-          job.orders.map(renderOrder)
+          <>
+            {job.orders.map((order) => renderOrder(order, false))}
+            <View
+              className="rounded-2xl border p-4 mb-3 flex-row justify-between"
+              style={{ borderColor: tokens.border, backgroundColor: tokens.card }}
+            >
+              <Text style={{ color: tokens.mutedForeground }}>
+                {t("driver.job.deliveryFee")}
+              </Text>
+              <Text className="font-semibold" style={{ color: tokens.foreground }}>
+                {job.orders[0]?.delivery_fee ?? 0}
+              </Text>
+            </View>
+          </>
         ) : (
           renderOrder(job.order)
         )}

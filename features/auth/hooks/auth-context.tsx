@@ -215,8 +215,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setRefreshToken(null);
       setUser(null);
 
-      // Navigate to login
-      router.replace("/");
+      // Navigate to welcome page
+      router.replace("/welcome");
     } catch (error) {
       console.error("Logout error:", error);
       throw error;

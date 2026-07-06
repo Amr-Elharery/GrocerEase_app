@@ -75,15 +75,6 @@ export default function DriverProfileScreen() {
                 className="text-2xl font-bold"
                 style={{ color: tokens.foreground }}
               >
-                {profile?.rating ?? "—"}
-              </Text>
-              <Text style={{ color: tokens.mutedForeground }}>{t("driver.profile.rating")}</Text>
-            </View>
-            <View className="items-center">
-              <Text
-                className="text-2xl font-bold"
-                style={{ color: tokens.foreground }}
-              >
                 {profile?.total_deliveries ?? 0}
               </Text>
               <Text style={{ color: tokens.mutedForeground }}>{t("driver.profile.deliveries")}</Text>
