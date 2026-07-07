@@ -1,21 +1,54 @@
-import { ThemeProvider } from '@/lib/theme-context';
-import { Text, View } from 'react-native';
-import './global.css';
+import { useAuth } from '@/features/auth/hooks/auth-context';
+import { useAddress } from '@/features/addresses/hooks/addressContext';
+import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
+
 export default function Index() {
-  return (
-    <ThemeProvider defaultTheme="system">
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <Text>Edit app/index.tsx to edit this screen.</Text>
-        <Text className="text-2xl font-bold text-foreground">
-          NativeUI is working! 🎉
-        </Text>
-      </View>
-    </ThemeProvider>
-  );
+  const router = useRouter();
+  const { isLoading, isLoggedIn, user } = useAuth();
+  const {
+    addresses,
+    isLoading: addressesLoading,
+    selectedAddressId,
+    selectAddress,
+  } = useAddress();
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (!isLoggedIn) {
+      router.replace('/welcome');
+      return;
+    }
+
+    if (user?.role === 'delivery') {
+      router.replace('/driver');
+      return;
+    }
+
+    if (addressesLoading) return;
+
+    if (addresses.length === 0) {
+      router.replace('/location-permission');
+      return;
+    }
+
+    if (!selectedAddressId) {
+      const preferred = addresses.find((a) => a.is_default) ?? addresses[0];
+      if (preferred?.id) selectAddress(preferred.id);
+    }
+
+    router.replace('./(tabs)/');
+  }, [
+    isLoading,
+    isLoggedIn,
+    user,
+    addresses,
+    addressesLoading,
+    selectedAddressId,
+    selectAddress,
+    router,
+  ]);
+
+  return null;
 }

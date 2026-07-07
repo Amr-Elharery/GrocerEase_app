@@ -37,6 +37,26 @@ cd GrocerEase_app/prototype/grocerease_app
 npm install
 ```
 
+### I18n Setup
+
+We use `i18next` + `react-i18next` + `expo-localization`.
+
+Install the packages:
+
+```bash
+npm install i18next react-i18next expo-localization
+```
+
+Translations are stored in [locales/en.json](locales/en.json) and [locales/ar.json](locales/ar.json) using namespaces (e.g., `common`, `home`).
+
+Switch language in code with `setLanguage('en')` / `setLanguage('ar')` from [lib/i18n/index.ts](lib/i18n/index.ts).
+
+### Add new screen (i18n)
+
+1. Create the screen file under [app/](app/) (Expo Router uses file-based routing). Example: [app/profile.tsx](app/profile.tsx).
+2. Add translation keys to [locales/en.json](locales/en.json) and [locales/ar.json](locales/ar.json) under a namespace for the screen (e.g., `profile`).
+3. Use the keys in the screen with `t('profile.title')` or similar.
+
 ### Start Development Server
 
 ```bash

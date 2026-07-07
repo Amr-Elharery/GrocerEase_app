@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "grocerease_app",
-    "slug": "grocerease_app",
+    "name": "Zad",
+    "slug": "ZadApp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "grocereaseapp",
+    "scheme": "zad",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.amrelharery.ZadApp"
     },
     "web": {
       "output": "static",
@@ -39,11 +40,21 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-font",
+      "expo-localization",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "075a78c4-7b4b-4f53-8b3b-c2f36e2bc9e1"
+      }
+    },
+    "owner": "amrelharery"
   }
 }
