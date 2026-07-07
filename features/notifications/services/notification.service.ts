@@ -9,7 +9,7 @@ export type { NotificationItem } from "@/features/notifications/types";
 //  notification: {id, title, body, data, created_at}}
 function normalizeNotification(raw: any): NotificationItem {
   return {
-    id: raw?.id,
+    id: raw?.notification_id,
     title: raw?.notification?.title ?? raw?.title,
     body: raw?.notification?.body ?? raw?.body,
     is_read: raw?.is_read ?? raw?.read,

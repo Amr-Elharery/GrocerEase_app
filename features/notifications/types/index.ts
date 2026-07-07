@@ -5,4 +5,6 @@ export interface NotificationItem {
   read?: boolean;
   is_read?: boolean;
   created_at?: string;
+  notification_id?:string;
+  
 }

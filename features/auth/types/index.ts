@@ -11,19 +11,18 @@ export interface SignUpPayload {
   phone: string;
 }
 
-export interface ResetPasswordPayload {
+export interface VerifyCodePayload {
   email: string;
   code: string;
-  newPassword: string;
 }
 
 export interface ForgotPasswordPayload {
   email: string;
 }
 
-export interface VerifyCodePayload {
-  email: string;
-  code: string;
+export interface ResetPasswordPayload {
+  token: string;
+  newPassword: string;
 }
 
 export interface ChangePasswordPayload {
@@ -65,4 +64,6 @@ export interface AuthContextType {
     confirmPassword: string,
   ) => Promise<void>;
   logout: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<any>;
+  resetPassword: (token: string, newPassword: string) => Promise<any>;
 }
